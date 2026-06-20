@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LocalEyes - Lead Generation for Local Businesses</title>
+  <meta name="description" content="LocalEyes helps local businesses generate more leads through AI-powered ad campaigns, voiceover, and visual content that converts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #06060F;
+      --bg-2:      #0C0C1E;
+      --bg-3:      #111128;
+      --blue:      #00CFFF;
+      --blue-dim:  rgba(0,207,255,0.1);
+      --blue-glow: rgba(0,207,255,0.25);
+      --gold:      #FFB800;
+      --gold-dim:  rgba(255,184,0,0.1);
+      --text:      #F0F0FF;
+      --text-2:    #8888AA;
+      --border:    rgba(0,207,255,0.12);
+      --r:         12px;
+      --r-pill:    100px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; line-height: 1.08; }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 5vw, 64px);
+      transition: background 0.35s, border-color 0.35s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(6,6,15,0.90);
+      backdrop-filter: blur(18px);
+      border-color: var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 21px;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .logo span { color: var(--blue); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: var(--r-pill);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+      white-space: nowrap;
+      border: none;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary { background: var(--blue); color: #06060F; }
+    .btn-primary:hover { box-shadow: 0 0 28px var(--blue-glow); opacity: 0.9; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* HERO */
+    #hero {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 100px clamp(20px, 5vw, 64px) 60px;
+      gap: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 55% at 72% 50%, rgba(0,207,255,0.07) 0%, transparent 65%),
+        radial-gradient(ellipse 35% 40% at 8% 80%, rgba(255,184,0,0.05) 0%, transparent 60%);
+    }
+
+    .hero-text { position: relative; z-index: 2; }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: var(--blue-dim);
+      border: 1px solid rgba(0,207,255,0.22);
+      padding: 5px 14px;
+      border-radius: var(--r-pill);
+      margin-bottom: 26px;
+    }
+
+    .hero-title {
+      font-size: clamp(42px, 5.2vw, 72px);
+      font-weight: 800;
+      letter-spacing: -2.5px;
+      line-height: 1.02;
+      margin-bottom: 22px;
+    }
+    .hero-title .accent { color: var(--blue); }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-2);
+      max-width: 460px;
+      line-height: 1.7;
+      margin-bottom: 38px;
+      font-weight: 400;
+    }
+
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-ctas .btn { font-size: 15px; padding: 13px 28px; }
+
+    .hero-canvas-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    #hero-canvas { width: 100%; height: 580px; display: block; }
+
+    /* CLIENTS */
+    #clients {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 26px clamp(20px,5vw,64px);
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      overflow: hidden;
+    }
+    .clients-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .marquee-wrap { overflow: hidden; flex: 1; }
+    .marquee-track {
+      display: flex;
+      gap: 52px;
+      align-items: center;
+      width: max-content;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-track span {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--text);
+      opacity: 0.3;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .marquee-track span:hover { opacity: 0.7; }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* SECTION SHARED */
+    section { padding: 96px clamp(20px,5vw,64px); }
+
+    .section-title {
+      font-size: clamp(30px, 3.8vw, 50px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: var(--text-2);
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .section-header { margin-bottom: 52px; }
+
+    /* SERVICES */
+    #services { background: var(--bg); }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      grid-template-rows: 230px 230px;
+      gap: 12px;
+    }
+
+    .svc {
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      transition: border-color 0.25s, transform 0.25s;
+      background: var(--bg-2);
+    }
+    .svc:hover { border-color: rgba(0,207,255,0.38); transform: translateY(-3px); }
+    .svc.tall { grid-row: span 2; }
+    .svc.wide { grid-column: span 2; flex-direction: row; align-items: center; gap: 48px; }
+    .svc.gold-tint {
+      background: linear-gradient(135deg, rgba(255,184,0,0.07) 0%, var(--bg-2) 55%);
+      border-color: rgba(255,184,0,0.18);
+    }
+    .svc.gold-tint:hover { border-color: rgba(255,184,0,0.45); }
+
+    .svc-bg-img {
+      position: absolute; inset: 0;
+      object-fit: cover; width: 100%; height: 100%;
+      opacity: 0.14; border-radius: var(--r);
+    }
+
+    .svc-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .svc-icon.blue { background: var(--blue-dim); color: var(--blue); }
+    .svc-icon.gold { background: var(--gold-dim); color: var(--gold); }
+
+    .svc-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 19px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .svc-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+    .svc-wave {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 52px; opacity: 0.1; pointer-events: none;
+    }
+
+    .platforms {
+      display: flex; gap: 14px; flex-shrink: 0;
+    }
+    .plat {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-2); font-weight: 500;
+    }
+    .plat-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* HOW IT WORKS */
+    #how {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 27px;
+      left: calc(100% / 6);
+      right: calc(100% / 6);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--blue), transparent);
+      opacity: 0.22;
+    }
+
+    .step { padding-right: 40px; }
+    .step:last-child { padding-right: 0; }
+
+    .step-num {
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      background: var(--blue-dim);
+      border: 1px solid rgba(0,207,255,0.32);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 26px;
+      position: relative; z-index: 1;
+    }
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .step-desc { font-size: 15px; color: var(--text-2); line-height: 1.65; }
+
+    /* STATS */
+    #stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      padding: 68px clamp(20px,5vw,64px);
+      border-right: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(44px,5.5vw,76px);
+      font-weight: 800;
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .stat-num.blue { color: var(--blue); }
+    .stat-num.gold { color: var(--gold); }
+    .stat-label { font-size: 15px; color: var(--text-2); }
+    .stat-glow {
+      position: absolute; top: -40px; left: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      filter: blur(70px); opacity: 0.12;
+      pointer-events: none;
+    }
+
+    /* CTA */
+    #cta {
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 640px; height: 360px;
+      background: radial-gradient(ellipse, rgba(0,207,255,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    #cta .section-title { max-width: 600px; position: relative; }
+    #cta .section-sub { margin: 0 auto 44px; position: relative; text-align: center; }
+
+    .cta-form {
+      display: flex; gap: 10px;
+      max-width: 440px; width: 100%;
+      position: relative;
+    }
+    .cta-input {
+      flex: 1;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      padding: 13px 22px;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .cta-input::placeholder { color: var(--text-2); }
+    .cta-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0,207,255,0.1);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px clamp(20px,5vw,64px);
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    }
+    .footer-links { display: flex; gap: 28px; list-style: none; }
+    .footer-links a {
+      font-size: 13px; color: var(--text-2);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--text-2); }
+
+    /* REVEAL */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.65s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: 0.08s; }
+    .d2 { transition-delay: 0.16s; }
+    .d3 { transition-delay: 0.24s; }
+
+    /* RESPONSIVE */
+    @media (max-width: 860px) {
+      #hero { grid-template-columns: 1fr; padding-top: 110px; text-align: center; }
+      .hero-sub { max-width: 100%; }
+      .hero-ctas { justify-content: center; }
+      #hero-canvas { height: 300px; }
+      .hero-canvas-wrap { order: -1; }
+      .services-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .svc.tall, .svc.wide { grid-row: auto; grid-column: auto; flex-direction: column; }
+      .steps { grid-template-columns: 1fr; gap: 44px; }
+      .steps::before { display: none; }
+      .step { padding-right: 0; }
+      #stats { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .cta-form { flex-direction: column; }
+      footer { flex-direction: column; align-items: flex-start; }
+      .nav-links { gap: 18px; }
+      .nav-links li:not(:last-child) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .marquee-track { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">Local<span>Eyes</span></a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#cta">Contact</a></li>
+    <li><a href="#cta" class="btn btn-primary" style="padding:9px 20px;font-size:13px;">Get Started</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">Local Lead Generation Agency</div>
+    <h1 class="hero-title">
+      More leads.<br>
+      More calls.<br>
+      <span class="accent">More growth.</span>
+    </h1>
+    <p class="hero-sub">We help local businesses attract more customers through AI-powered ads, voiceover, and visual content built to convert.</p>
+    <div class="hero-ctas">
+      <a href="#cta" class="btn btn-primary">Start Your Campaign</a>
+      <a href="#how" class="btn btn-ghost">See How It Works</a>
+    </div>
+  </div>
+  <div class="hero-canvas-wrap">
+    <canvas id="hero-canvas"></canvas>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<div id="clients">
+  <span class="clients-label">Trusted by local brands</span>
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+      <span>LegalEdge</span><span>FreshBite</span>
+      <!-- duplicate for seamless loop -->
+      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+      <span>LegalEdge</span><span>FreshBite</span>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-header reveal">
+    <h2 class="section-title">Everything you need to get more leads</h2>
+    <p class="section-sub">Every campaign is AI-generated, human-reviewed, and built specifically for your local market and audience.</p>
+  </div>
+  <div class="services-grid">
+
+    <div class="svc tall reveal d1">
+      <img class="svc-bg-img" src="https://picsum.photos/seed/studio-mic-dark/600/500" alt="" />
+      <div class="svc-icon blue">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+      </div>
+      <h3 class="svc-name">AI Voiceover</h3>
+      <p class="svc-desc">Studio-quality AI voices in any tone or accent. Compelling scripts written for your audience, delivered in seconds.</p>
+      <svg class="svc-wave" viewBox="0 0 400 52"><path d="M0 26Q20 8 40 26Q60 44 80 26Q100 8 120 26Q140 44 160 26Q180 8 200 26Q220 44 240 26Q260 8 280 26Q300 44 320 26Q340 8 360 26Q380 44 400 26" stroke="#00CFFF" stroke-width="2" fill="none"/></svg>
+    </div>
+
+    <div class="svc reveal d2">
+      <img class="svc-bg-img" src="https://picsum.photos/seed/neon-creative-digital/500/280" alt="" />
+      <div class="svc-icon blue">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      </div>
+      <h3 class="svc-name">AI-Generated Visuals</h3>
+      <p class="svc-desc">Scroll-stopping images and video assets created for your brand and campaign goals.</p>
+    </div>
+
+    <div class="svc reveal d3">
+      <div class="svc-icon gold">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      </div>
+      <h3 class="svc-name">Ad Campaign Management</h3>
+      <p class="svc-desc">We launch, monitor, and optimize across Meta, TikTok, and Google — tracking every lead and dollar.</p>
+    </div>
+
+    <div class="svc wide gold-tint reveal">
+      <div style="flex:1">
+        <div class="svc-icon gold">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="svc-name">Social Media Growth</h3>
+        <p class="svc-desc" style="max-width:380px">Consistent posting, AI content, and engagement management so your local following grows while you focus on your business.</p>
+      </div>
+      <div class="platforms">
+        <div class="plat">
+          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#FFB800" stroke="none"/></svg></div>
+          Instagram
+        </div>
+        <div class="plat">
+          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></div>
+          TikTok
+        </div>
+        <div class="plat">
+          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div>
+          Facebook
+        </div>
+        <div class="plat">
+          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FFB800" stroke="none"/></svg></div>
+          YouTube
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-header reveal">
+    <h2 class="section-title">From brief to live in 48 hours</h2>
+    <p class="section-sub">No long agency timelines. We move fast so you start getting leads faster.</p>
+  </div>
+  <div class="steps">
+    <div class="step reveal d1">
+      <div class="step-num">1</div>
+      <h3 class="step-title">Share Your Brief</h3>
+      <p class="step-desc">Tell us about your business, your target customers, and your goals. Takes about 10 minutes.</p>
+    </div>
+    <div class="step reveal d2">
+      <div class="step-num">2</div>
+      <h3 class="step-title">AI Builds Your Ads</h3>
+      <p class="step-desc">We generate voiceovers, visuals, and ad copy tailored to your local market. You approve before anything goes live.</p>
+    </div>
+    <div class="step reveal d3">
+      <div class="step-num">3</div>
+      <h3 class="step-title">Launch and Grow</h3>
+      <p class="step-desc">Your campaigns go live across the right platforms. We track every lead, optimize spend, and scale what works.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat reveal">
+    <div class="stat-glow" style="background:#00CFFF"></div>
+    <div class="stat-num blue">3.2x</div>
+    <div class="stat-label">Average return on ad spend</div>
+  </div>
+  <div class="stat reveal d1">
+    <div class="stat-glow" style="background:#FFB800"></div>
+    <div class="stat-num gold">48hr</div>
+    <div class="stat-label">From brief to first live ad</div>
+  </div>
+  <div class="stat reveal d2">
+    <div class="stat-glow" style="background:#00CFFF"></div>
+    <div class="stat-num blue">200+</div>
+    <div class="stat-label">Local businesses served</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <h2 class="section-title reveal" style="margin-bottom:14px;">Ready to be seen<br>by your whole market?</h2>
+  <p class="section-sub reveal d1">Drop your email and we'll send you a custom campaign plan within 24 hours.</p>
+  <form class="cta-form reveal d2" onsubmit="handleSubmit(event)">
+    <input class="cta-input" type="email" placeholder="your@email.com" required />
+    <button type="submit" class="btn btn-primary">Get My Plan</button>
+  </form>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="logo" style="font-size:18px;">Local<span>Eyes</span></a>
+  <ul class="footer-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#cta">Contact</a></li>
+  </ul>
+  <p class="footer-copy">2025 LOCALeyes. All rights reserved.</p>
+</footer>
+
+<script>
+/* NAV scroll */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), { passive: true });
+
+/* Scroll reveal */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+/* Form */
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Sent!';
+  btn.style.background = '#00D67A';
+  setTimeout(() => { btn.textContent = 'Get My Plan'; btn.style.background = ''; }, 3000);
+}
+
+/* THREE.JS 3D EYE */
+(function () {
+  const canvas = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(62, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+  camera.position.z = 5.8;
+
+  /* Fibonacci sphere of particles */
+  const COUNT = 2600;
+  const pos = new Float32Array(COUNT * 3);
+  const col = new Float32Array(COUNT * 3);
+  for (let i = 0; i < COUNT; i++) {
+    const phi   = Math.acos(-1 + (2 * i) / COUNT);
+    const theta = Math.sqrt(COUNT * Math.PI) * phi;
+    const r = 2.3;
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    pos[i*3+2] = r * Math.cos(phi);
+    const gold = Math.random() > 0.87;
+    col[i*3]   = gold ? 1.0 : 0.0;
+    col[i*3+1] = gold ? 0.72 : 0.81;
+    col[i*3+2] = gold ? 0.0 : 1.0;
+  }
+  const sGeo = new THREE.BufferGeometry();
+  sGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  sGeo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+  const sMat = new THREE.PointsMaterial({ size: 0.026, vertexColors: true, transparent: true, opacity: 0.88 });
+  const sphere = new THREE.Points(sGeo, sMat);
+  scene.add(sphere);
+
+  /* Outer iris ring */
+  const irisGeo = new THREE.TorusGeometry(2.6, 0.014, 12, 130);
+  const irisMat = new THREE.MeshBasicMaterial({ color: 0x00CFFF, transparent: true, opacity: 0.5 });
+  const iris = new THREE.Mesh(irisGeo, irisMat);
+  iris.rotation.x = Math.PI / 2;
+  scene.add(iris);
+
+  /* Inner pupil ring */
+  const pupilGeo = new THREE.TorusGeometry(0.85, 0.011, 12, 80);
+  const pupilMat = new THREE.MeshBasicMaterial({ color: 0xFFB800, transparent: true, opacity: 0.65 });
+  const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+  scene.add(pupil);
+
+  /* Background stars */
+  const bgPos = new Float32Array(700 * 3);
+  for (let i = 0; i < 700; i++) {
+    bgPos[i*3]   = (Math.random() - 0.5) * 16;
+    bgPos[i*3+1] = (Math.random() - 0.5) * 16;
+    bgPos[i*3+2] = (Math.random() - 0.5) * 8 - 3;
+  }
+  const bgGeo = new THREE.BufferGeometry();
+  bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+  const bgMat = new THREE.PointsMaterial({ size: 0.01, color: 0x3355AA, transparent: true, opacity: 0.4 });
+  scene.add(new THREE.Points(bgGeo, bgMat));
+
+  /* Mouse parallax */
+  let mx = 0, my = 0, tx = 0, ty = 0;
+  document.addEventListener('mousemove', e => {
+    mx = (e.clientX / innerWidth  - 0.5) * 2;
+    my = (e.clientY / innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  let frame = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    frame++;
+    tx += (mx - tx) * 0.038;
+    ty += (my - ty) * 0.038;
+    sphere.rotation.y = frame * 0.0028 + tx * 0.32;
+    sphere.rotation.x = frame * 0.001  + ty * 0.18;
+    iris.rotation.z   = frame * 0.004;
+    pupil.rotation.y  = frame * 0.007;
+    pupil.rotation.x  = Math.sin(frame * 0.005) * 0.28;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
