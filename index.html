@@ -13,22 +13,24 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #06060F;
-      --bg-2:      #0C0C1E;
-      --bg-3:      #111128;
-      --blue:      #00CFFF;
-      --blue-dim:  rgba(0,207,255,0.1);
-      --blue-glow: rgba(0,207,255,0.25);
-      --gold:      #FFB800;
-      --gold-dim:  rgba(255,184,0,0.1);
-      --text:      #F0F0FF;
-      --text-2:    #8888AA;
-      --border:    rgba(0,207,255,0.12);
-      --r:         12px;
-      --r-pill:    100px;
+      --bg:          #07050F;
+      --bg-2:        #0E0B1C;
+      --bg-3:        #14112B;
+      --violet:      #8B5CF6;
+      --violet-dim:  rgba(139,92,246,0.12);
+      --violet-glow: rgba(139,92,246,0.32);
+      --orange:      #FF6B00;
+      --orange-dim:  rgba(255,107,0,0.1);
+      --text:        #F0EEFF;
+      --text-2:      #9988BB;
+      --border:      rgba(139,92,246,0.15);
+      --r:           12px;
+      --r-pill:      100px;
+      --expo:        cubic-bezier(0.16, 1, 0.3, 1);
+      --quart:       cubic-bezier(0.25, 1, 0.5, 1);
     }
 
-    html { scroll-behavior: smooth; }
+    html, body { height: 100%; overflow: hidden; }
 
     body {
       background: var(--bg);
@@ -36,16 +38,29 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 16px;
       line-height: 1.6;
-      overflow-x: hidden;
     }
 
     h1, h2, h3, h4 { font-family: 'Syne', sans-serif; line-height: 1.08; }
 
-    /* NAV */
+    /* ── SCROLL ROOT ── */
+    .scroll-root {
+      height: 100dvh;
+      overflow-y: scroll;
+      scroll-snap-type: y proximity;
+      scroll-behavior: smooth;
+    }
+
+    .snap-page {
+      min-height: 100dvh;
+      scroll-snap-align: start;
+      position: relative;
+    }
+
+    /* ── NAV ── */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
-      z-index: 100;
+      z-index: 200;
       height: 68px;
       display: flex;
       align-items: center;
@@ -55,383 +70,431 @@
       border-bottom: 1px solid transparent;
     }
     nav.scrolled {
-      background: rgba(6,6,15,0.90);
-      backdrop-filter: blur(18px);
+      background: rgba(7,5,15,0.92);
+      backdrop-filter: blur(20px);
       border-color: var(--border);
     }
 
     .logo {
       font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 21px;
-      letter-spacing: -0.5px;
-      text-decoration: none;
-      color: var(--text);
+      font-weight: 800; font-size: 21px; letter-spacing: -0.5px;
+      text-decoration: none; color: var(--text);
     }
-    .logo span { color: var(--blue); }
+    .logo span { color: var(--violet); }
 
     .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      list-style: none;
+      display: flex; align-items: center;
+      gap: 32px; list-style: none;
     }
     .nav-links a {
-      color: var(--text-2);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: color 0.2s;
+      color: var(--text-2); text-decoration: none;
+      font-size: 14px; font-weight: 500; transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--text); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 22px;
       border-radius: var(--r-pill);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: none;
       transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
       white-space: nowrap;
-      border: none;
     }
     .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--violet); color: #fff; }
+    .btn-primary:hover { box-shadow: 0 0 32px var(--violet-glow); opacity: 0.9; }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--violet); color: var(--violet); }
 
-    .btn-primary { background: var(--blue); color: #06060F; }
-    .btn-primary:hover { box-shadow: 0 0 28px var(--blue-glow); opacity: 0.9; }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
+    /* ── SIDE NAV DOTS ── */
+    .nav-dots {
+      position: fixed; right: 24px; top: 50%;
+      transform: translateY(-50%);
+      z-index: 150;
+      display: flex; flex-direction: column; gap: 12px;
     }
-    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .nav-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.16);
+      border: none; cursor: pointer; padding: 0;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .nav-dot.active { background: var(--violet); transform: scale(1.7); }
+    .nav-dot:hover:not(.active) { background: rgba(255,255,255,0.42); }
 
-    /* HERO */
-    #hero {
-      min-height: 100dvh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    /* ── SCAN LINE ── */
+    .scan-line {
+      position: fixed; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--violet) 20%, var(--violet) 80%, transparent 100%);
+      z-index: 190; pointer-events: none; top: 0; opacity: 0;
+    }
+    .scan-line.sweep { animation: scanSweep 0.65s var(--expo) forwards; }
+    @keyframes scanSweep {
+      0%   { top: 0;    opacity: 0; }
+      8%   { opacity: 0.9; }
+      90%  { opacity: 0.6; }
+      100% { top: 100vh; opacity: 0; }
+    }
+
+    /* ── HERO ── */
+    #hero-snap { display: flex; flex-direction: column; }
+
+    .hero-main {
+      flex: 1;
+      display: grid; grid-template-columns: 1fr 1fr;
       align-items: center;
-      padding: 100px clamp(20px, 5vw, 64px) 60px;
+      padding: 88px clamp(20px, 5vw, 64px) 24px;
       gap: 32px;
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
+      min-height: calc(100dvh - 58px);
     }
 
     .hero-bg {
       position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 55% 55% at 72% 50%, rgba(0,207,255,0.07) 0%, transparent 65%),
-        radial-gradient(ellipse 35% 40% at 8% 80%, rgba(255,184,0,0.05) 0%, transparent 60%);
+        radial-gradient(ellipse 55% 55% at 72% 50%, rgba(139,92,246,0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 35% 40% at 8% 80%, rgba(255,107,0,0.06) 0%, transparent 60%);
     }
 
     .hero-text { position: relative; z-index: 2; }
 
+    .hero-eyebrow,
+    .hero-title,
+    .hero-sub,
+    .hero-ctas,
+    .hero-canvas-wrap { opacity: 0; }
+
+    body.loaded .hero-eyebrow     { animation: slideUp    0.65s var(--expo) 0.10s forwards; }
+    body.loaded .hero-title       { animation: slideUp    0.75s var(--expo) 0.22s forwards; }
+    body.loaded .hero-sub         { animation: slideUp    0.65s var(--expo) 0.38s forwards; }
+    body.loaded .hero-ctas        { animation: slideUp    0.60s var(--expo) 0.52s forwards; }
+    body.loaded .hero-canvas-wrap { animation: slideRight 0.85s var(--expo) 0.16s forwards; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(36px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(44px) scale(0.95); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
     .hero-eyebrow {
       display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--blue);
-      background: var(--blue-dim);
-      border: 1px solid rgba(0,207,255,0.22);
-      padding: 5px 14px;
-      border-radius: var(--r-pill);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--violet);
+      background: var(--violet-dim);
+      border: 1px solid rgba(139,92,246,0.28);
+      padding: 5px 14px; border-radius: var(--r-pill);
       margin-bottom: 26px;
     }
 
     .hero-title {
       font-size: clamp(42px, 5.2vw, 72px);
-      font-weight: 800;
-      letter-spacing: -2.5px;
-      line-height: 1.02;
+      font-weight: 800; letter-spacing: -2.5px; line-height: 1.02;
       margin-bottom: 22px;
     }
-    .hero-title .accent { color: var(--blue); }
+    .hero-title .accent { color: var(--violet); }
 
     .hero-sub {
-      font-size: 17px;
-      color: var(--text-2);
-      max-width: 460px;
-      line-height: 1.7;
-      margin-bottom: 38px;
-      font-weight: 400;
+      font-size: 17px; color: var(--text-2);
+      max-width: 460px; line-height: 1.7; margin-bottom: 38px;
     }
 
     .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
     .hero-ctas .btn { font-size: 15px; padding: 13px 28px; }
 
     .hero-canvas-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
+      display: flex; align-items: center; justify-content: center;
     }
-    #hero-canvas { width: 100%; height: 580px; display: block; }
+    #hero-canvas { width: 100%; height: 540px; display: block; }
 
-    /* CLIENTS */
+    /* ── CLIENTS BAR ── */
     #clients {
       border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 26px clamp(20px,5vw,64px);
-      display: flex;
-      align-items: center;
-      gap: 40px;
+      padding: 18px clamp(20px,5vw,64px);
+      display: flex; align-items: center; gap: 40px;
       overflow: hidden;
+      background: rgba(7,5,15,0.5);
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
     }
     .clients-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-2);
-      white-space: nowrap;
-      flex-shrink: 0;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-2); white-space: nowrap; flex-shrink: 0;
     }
     .marquee-wrap { overflow: hidden; flex: 1; }
     .marquee-track {
-      display: flex;
-      gap: 52px;
-      align-items: center;
+      display: flex; gap: 52px; align-items: center;
       width: max-content;
-      animation: marquee 20s linear infinite;
+      animation: marquee 22s linear infinite;
     }
     .marquee-track span {
       font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 17px;
-      color: var(--text);
-      opacity: 0.3;
-      white-space: nowrap;
-      transition: opacity 0.2s;
+      font-weight: 700; font-size: 16px;
+      color: var(--text); opacity: 0.28; white-space: nowrap;
     }
-    .marquee-track span:hover { opacity: 0.7; }
     @keyframes marquee {
       from { transform: translateX(0); }
       to   { transform: translateX(-50%); }
     }
 
-    /* SECTION SHARED */
-    section { padding: 96px clamp(20px,5vw,64px); }
+    /* ── SERVICES ── */
+    #services {
+      min-height: 100dvh;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px clamp(20px,5vw,64px) 52px;
+      background: var(--bg);
+    }
 
     .section-title {
-      font-size: clamp(30px, 3.8vw, 50px);
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      margin-bottom: 14px;
+      font-size: clamp(28px, 3.5vw, 46px);
+      font-weight: 800; letter-spacing: -1.5px; margin-bottom: 10px;
     }
     .section-sub {
-      font-size: 16px;
-      color: var(--text-2);
-      max-width: 480px;
-      line-height: 1.7;
+      font-size: 15px; color: var(--text-2);
+      max-width: 480px; line-height: 1.7;
     }
-    .section-header { margin-bottom: 52px; }
-
-    /* SERVICES */
-    #services { background: var(--bg); }
+    .section-header {
+      margin-bottom: 36px;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s var(--expo), transform 0.6s var(--expo);
+    }
+    .section-header.in { opacity: 1; transform: translateY(0); }
 
     .services-grid {
       display: grid;
       grid-template-columns: 1.5fr 1fr;
-      grid-template-rows: 230px 230px;
-      gap: 12px;
+      grid-template-rows: 195px 195px;
+      gap: 10px;
     }
 
     .svc {
       border-radius: var(--r);
       border: 1px solid var(--border);
-      padding: 32px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      transition: border-color 0.25s, transform 0.25s;
+      padding: 24px 26px;
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: flex-end;
       background: var(--bg-2);
+      opacity: 0; transform: translateY(22px);
+      transition:
+        opacity 0.6s var(--expo),
+        transform 0.6s var(--expo),
+        border-color 0.25s,
+        box-shadow 0.25s;
     }
-    .svc:hover { border-color: rgba(0,207,255,0.38); transform: translateY(-3px); }
+    .svc.in { opacity: 1; transform: translateY(0); }
+    .svc.in:hover {
+      border-color: rgba(139,92,246,0.42);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 36px rgba(139,92,246,0.1);
+    }
     .svc.tall { grid-row: span 2; }
     .svc.wide { grid-column: span 2; flex-direction: row; align-items: center; gap: 48px; }
-    .svc.gold-tint {
-      background: linear-gradient(135deg, rgba(255,184,0,0.07) 0%, var(--bg-2) 55%);
-      border-color: rgba(255,184,0,0.18);
+    .svc.orange-tint {
+      background: linear-gradient(135deg, rgba(255,107,0,0.08) 0%, var(--bg-2) 55%);
+      border-color: rgba(255,107,0,0.2);
     }
-    .svc.gold-tint:hover { border-color: rgba(255,184,0,0.45); }
+    .svc.orange-tint.in:hover { border-color: rgba(255,107,0,0.48); }
 
     .svc-bg-img {
       position: absolute; inset: 0;
       object-fit: cover; width: 100%; height: 100%;
-      opacity: 0.14; border-radius: var(--r);
+      opacity: 0.1; border-radius: var(--r);
     }
-
     .svc-icon {
-      width: 42px; height: 42px;
-      border-radius: 10px;
+      width: 38px; height: 38px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px;
+      margin-bottom: 14px; flex-shrink: 0;
     }
-    .svc-icon.blue { background: var(--blue-dim); color: var(--blue); }
-    .svc-icon.gold { background: var(--gold-dim); color: var(--gold); }
-
+    .svc-icon.violet  { background: var(--violet-dim);  color: var(--violet); }
+    .svc-icon.orange  { background: var(--orange-dim);  color: var(--orange); }
     .svc-name {
       font-family: 'Syne', sans-serif;
-      font-size: 19px; font-weight: 700;
-      margin-bottom: 8px;
+      font-size: 16px; font-weight: 700; margin-bottom: 5px;
     }
-    .svc-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; }
-
+    .svc-desc { font-size: 13px; color: var(--text-2); line-height: 1.55; }
     .svc-wave {
       position: absolute; bottom: 0; left: 0; right: 0;
-      height: 52px; opacity: 0.1; pointer-events: none;
+      height: 44px; opacity: 0.12; pointer-events: none;
     }
 
-    .platforms {
-      display: flex; gap: 14px; flex-shrink: 0;
-    }
+    .platforms { display: flex; gap: 12px; flex-shrink: 0; }
     .plat {
       display: flex; flex-direction: column;
       align-items: center; gap: 6px;
-      font-size: 11px; color: var(--text-2); font-weight: 500;
+      font-size: 10px; color: var(--text-2); font-weight: 500;
     }
     .plat-icon {
-      width: 46px; height: 46px;
-      border-radius: 12px;
+      width: 40px; height: 40px; border-radius: 10px;
       background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* HOW IT WORKS */
+    /* ── HOW IT WORKS ── */
     #how {
+      min-height: 100dvh;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px clamp(20px,5vw,64px) 64px;
       background: var(--bg-2);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
 
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      position: relative;
-    }
-    .steps::before {
-      content: '';
-      position: absolute;
-      top: 27px;
-      left: calc(100% / 6);
-      right: calc(100% / 6);
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--blue), var(--blue), transparent);
-      opacity: 0.22;
+    .steps-slideshow {
+      position: relative; height: 260px;
+      margin-top: 52px; overflow: hidden;
     }
 
-    .step { padding-right: 40px; }
-    .step:last-child { padding-right: 0; }
+    .step-slide {
+      position: absolute; inset: 0;
+      display: flex; align-items: flex-start; gap: 36px;
+      opacity: 0; transform: translateX(56px);
+      transition: opacity 0.55s var(--expo), transform 0.55s var(--expo);
+      pointer-events: none;
+    }
+    .step-slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .step-slide.exit   { opacity: 0; transform: translateX(-56px); }
 
     .step-num {
-      width: 54px; height: 54px;
-      border-radius: 50%;
-      background: var(--blue-dim);
-      border: 1px solid rgba(0,207,255,0.32);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--violet-dim);
+      border: 1px solid rgba(139,92,246,0.36);
       display: flex; align-items: center; justify-content: center;
       font-family: 'Syne', sans-serif;
-      font-size: 17px; font-weight: 700;
-      color: var(--blue);
-      margin-bottom: 26px;
-      position: relative; z-index: 1;
+      font-size: 17px; font-weight: 700; color: var(--violet);
+      flex-shrink: 0;
     }
+    .step-body { max-width: 580px; }
     .step-title {
       font-family: 'Syne', sans-serif;
-      font-size: 20px; font-weight: 700;
-      margin-bottom: 10px;
+      font-size: clamp(28px, 3.8vw, 48px);
+      font-weight: 700; letter-spacing: -1.2px; margin-bottom: 16px;
     }
-    .step-desc { font-size: 15px; color: var(--text-2); line-height: 1.65; }
+    .step-desc { font-size: 17px; color: var(--text-2); line-height: 1.7; }
 
-    /* STATS */
+    .steps-progress {
+      display: flex; align-items: center; gap: 10px; margin-top: 48px;
+    }
+    .step-pip {
+      height: 2px; width: 72px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px; border: none; cursor: pointer;
+      position: relative; overflow: hidden; padding: 0;
+    }
+    .step-pip-fill {
+      position: absolute; inset: 0;
+      background: var(--violet);
+      transform-origin: left; transform: scaleX(0);
+      border-radius: 2px;
+    }
+    .step-pip.playing .step-pip-fill {
+      animation: pipFill 3.2s linear forwards;
+    }
+    @keyframes pipFill {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    /* ── STATS ── */
     #stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      padding: 0;
+      min-height: 100dvh;
+      display: grid; grid-template-columns: repeat(3, 1fr);
       border-bottom: 1px solid var(--border);
     }
     .stat {
-      padding: 68px clamp(20px,5vw,64px);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0 clamp(24px,5vw,72px);
       border-right: 1px solid var(--border);
       position: relative; overflow: hidden;
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s var(--expo), transform 0.7s var(--expo);
     }
     .stat:last-child { border-right: none; }
+    .stat.in { opacity: 1; transform: translateY(0); }
+
     .stat-num {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(44px,5.5vw,76px);
-      font-weight: 800;
-      letter-spacing: -3px;
-      line-height: 1;
-      margin-bottom: 10px;
+      font-size: clamp(54px, 7.5vw, 100px);
+      font-weight: 800; letter-spacing: -4px; line-height: 1;
+      margin-bottom: 14px;
     }
-    .stat-num.blue { color: var(--blue); }
-    .stat-num.gold { color: var(--gold); }
+    .stat-num.violet { color: var(--violet); }
+    .stat-num.orange { color: var(--orange); }
     .stat-label { font-size: 15px; color: var(--text-2); }
     .stat-glow {
-      position: absolute; top: -40px; left: -40px;
-      width: 200px; height: 200px;
-      border-radius: 50%;
-      filter: blur(70px); opacity: 0.12;
-      pointer-events: none;
+      position: absolute; top: -60px; left: -60px;
+      width: 280px; height: 280px; border-radius: 50%;
+      filter: blur(90px); opacity: 0.12; pointer-events: none;
     }
 
-    /* CTA */
+    /* ── CTA ── */
     #cta {
+      min-height: calc(100dvh - 72px);
       background: var(--bg);
-      display: flex; flex-direction: column; align-items: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       text-align: center; position: relative; overflow: hidden;
+      padding: clamp(20px,5vw,64px);
     }
     .cta-glow {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
       width: 640px; height: 360px;
-      background: radial-gradient(ellipse, rgba(0,207,255,0.09) 0%, transparent 70%);
+      background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%);
       pointer-events: none;
     }
-    #cta .section-title { max-width: 600px; position: relative; }
-    #cta .section-sub { margin: 0 auto 44px; position: relative; text-align: center; }
 
+    .cta-title {
+      font-size: clamp(34px, 4.5vw, 62px);
+      font-weight: 800; letter-spacing: -2px;
+      margin-bottom: 14px; max-width: 640px; position: relative;
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.7s var(--expo), transform 0.7s var(--expo);
+    }
+    .cta-sub {
+      font-size: 16px; color: var(--text-2);
+      max-width: 460px; line-height: 1.7; margin-bottom: 44px;
+      position: relative;
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 0.7s var(--expo) 0.15s, transform 0.7s var(--expo) 0.15s;
+    }
     .cta-form {
       display: flex; gap: 10px;
-      max-width: 440px; width: 100%;
-      position: relative;
+      max-width: 440px; width: 100%; position: relative;
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 0.6s var(--expo) 0.3s, transform 0.6s var(--expo) 0.3s;
     }
+    .cta-title.in { opacity: 1; transform: translateY(0); }
+    .cta-sub.in   { opacity: 1; transform: translateY(0); }
+    .cta-form.in  { opacity: 1; transform: translateY(0); }
+
     .cta-input {
-      flex: 1;
-      background: var(--bg-3);
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      padding: 13px 22px;
-      color: var(--text);
+      flex: 1; background: var(--bg-3);
+      border: 1px solid var(--border); border-radius: var(--r-pill);
+      padding: 13px 22px; color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px;
-      outline: none;
+      font-size: 15px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     .cta-input::placeholder { color: var(--text-2); }
     .cta-input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(0,207,255,0.1);
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.14);
     }
 
-    /* FOOTER */
+    /* ── FOOTER ── */
     footer {
-      border-top: 1px solid var(--border);
-      padding: 32px clamp(20px,5vw,64px);
+      height: 72px; border-top: 1px solid var(--border);
+      padding: 0 clamp(20px,5vw,64px);
       display: flex; align-items: center;
       justify-content: space-between; gap: 20px; flex-wrap: wrap;
+      background: var(--bg);
     }
     .footer-links { display: flex; gap: 28px; list-style: none; }
     .footer-links a {
@@ -441,41 +504,46 @@
     .footer-links a:hover { color: var(--text); }
     .footer-copy { font-size: 13px; color: var(--text-2); }
 
-    /* REVEAL */
-    .reveal {
-      opacity: 0; transform: translateY(28px);
-      transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
-                  transform 0.65s cubic-bezier(0.16,1,0.3,1);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .d1 { transition-delay: 0.08s; }
-    .d2 { transition-delay: 0.16s; }
-    .d3 { transition-delay: 0.24s; }
-
-    /* RESPONSIVE */
+    /* ── RESPONSIVE ── */
     @media (max-width: 860px) {
-      #hero { grid-template-columns: 1fr; padding-top: 110px; text-align: center; }
+      .hero-main {
+        grid-template-columns: 1fr; padding-top: 90px;
+        text-align: center; min-height: 100dvh;
+      }
       .hero-sub { max-width: 100%; }
       .hero-ctas { justify-content: center; }
-      #hero-canvas { height: 300px; }
+      #hero-canvas { height: 260px; }
       .hero-canvas-wrap { order: -1; }
       .services-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .svc.tall, .svc.wide { grid-row: auto; grid-column: auto; flex-direction: column; }
-      .steps { grid-template-columns: 1fr; gap: 44px; }
-      .steps::before { display: none; }
-      .step { padding-right: 0; }
+      .svc.tall, .svc.wide {
+        grid-row: auto; grid-column: auto;
+        flex-direction: column; align-items: flex-start;
+      }
+      .step-slide { flex-direction: column; gap: 18px; }
+      .step-title { font-size: clamp(24px, 6vw, 36px); }
       #stats { grid-template-columns: 1fr; }
-      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat {
+        border-right: none; border-bottom: 1px solid var(--border);
+        padding: 48px clamp(20px,5vw,64px);
+      }
       .stat:last-child { border-bottom: none; }
       .cta-form { flex-direction: column; }
-      footer { flex-direction: column; align-items: flex-start; }
+      footer { height: auto; padding: 20px clamp(20px,5vw,64px); flex-direction: column; align-items: flex-start; }
       .nav-links { gap: 18px; }
       .nav-links li:not(:last-child) { display: none; }
+      .nav-dots { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .reveal { opacity: 1; transform: none; transition: none; }
+      .hero-eyebrow, .hero-title, .hero-sub,
+      .hero-ctas, .hero-canvas-wrap { opacity: 1; animation: none !important; }
+      .section-header, .svc, .stat,
+      .cta-title, .cta-sub, .cta-form {
+        opacity: 1; transform: none; transition: none !important;
+      }
+      .step-slide { transition: none !important; }
       .marquee-track { animation: none; }
+      .scan-line { display: none; }
     }
   </style>
 </head>
@@ -483,216 +551,387 @@
 
 <!-- NAV -->
 <nav id="nav">
-  <a href="#" class="logo">Local<span>Eyes</span></a>
+  <a href="#" class="logo" onclick="goTo(0);return false;">Local<span>Eyes</span></a>
   <ul class="nav-links">
-    <li><a href="#services">Services</a></li>
-    <li><a href="#how">How It Works</a></li>
-    <li><a href="#cta">Contact</a></li>
-    <li><a href="#cta" class="btn btn-primary" style="padding:9px 20px;font-size:13px;">Get Started</a></li>
+    <li><a href="#" onclick="goTo(1);return false;">Services</a></li>
+    <li><a href="#" onclick="goTo(2);return false;">How It Works</a></li>
+    <li><a href="#" onclick="goTo(4);return false;">Contact</a></li>
+    <li><a href="#" class="btn btn-primary" style="padding:9px 20px;font-size:13px;" onclick="goTo(4);return false;">Get Started</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
-<section id="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-text">
-    <div class="hero-eyebrow">Local Lead Generation Agency</div>
-    <h1 class="hero-title">
-      More leads.<br>
-      More calls.<br>
-      <span class="accent">More growth.</span>
-    </h1>
-    <p class="hero-sub">We help local businesses attract more customers through AI-powered ads, voiceover, and visual content built to convert.</p>
-    <div class="hero-ctas">
-      <a href="#cta" class="btn btn-primary">Start Your Campaign</a>
-      <a href="#how" class="btn btn-ghost">See How It Works</a>
-    </div>
-  </div>
-  <div class="hero-canvas-wrap">
-    <canvas id="hero-canvas"></canvas>
-  </div>
-</section>
-
-<!-- CLIENTS -->
-<div id="clients">
-  <span class="clients-label">Trusted by local brands</span>
-  <div class="marquee-wrap">
-    <div class="marquee-track">
-      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
-      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
-      <span>LegalEdge</span><span>FreshBite</span>
-      <!-- duplicate for seamless loop -->
-      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
-      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
-      <span>LegalEdge</span><span>FreshBite</span>
-    </div>
-  </div>
+<!-- Side nav dots -->
+<div class="nav-dots">
+  <button class="nav-dot active" aria-label="Hero"></button>
+  <button class="nav-dot" aria-label="Services"></button>
+  <button class="nav-dot" aria-label="How It Works"></button>
+  <button class="nav-dot" aria-label="Stats"></button>
+  <button class="nav-dot" aria-label="Contact"></button>
 </div>
 
-<!-- SERVICES -->
-<section id="services">
-  <div class="section-header reveal">
-    <h2 class="section-title">Everything you need to get more leads</h2>
-    <p class="section-sub">Every campaign is AI-generated, human-reviewed, and built specifically for your local market and audience.</p>
-  </div>
-  <div class="services-grid">
+<!-- Scan line -->
+<div class="scan-line" id="scan-line"></div>
 
-    <div class="svc tall reveal d1">
-      <img class="svc-bg-img" src="https://picsum.photos/seed/studio-mic-dark/600/500" alt="" />
-      <div class="svc-icon blue">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+<!-- ═══ SCROLL ROOT ═══ -->
+<div class="scroll-root" id="scroll-root">
+
+  <!-- PAGE 0: HERO -->
+  <div class="snap-page" id="hero-snap">
+    <div class="hero-main">
+      <div class="hero-bg"></div>
+      <div class="hero-text">
+        <div class="hero-eyebrow">Local Lead Generation Agency</div>
+        <h1 class="hero-title">
+          More leads.<br>
+          More calls.<br>
+          <span class="accent">More growth.</span>
+        </h1>
+        <p class="hero-sub">We help local businesses attract more customers through AI-powered ads, voiceover, and visual content built to convert.</p>
+        <div class="hero-ctas">
+          <a href="#" class="btn btn-primary" onclick="goTo(4);return false;">Start Your Campaign</a>
+          <a href="#" class="btn btn-ghost" onclick="goTo(2);return false;">See How It Works</a>
+        </div>
       </div>
-      <h3 class="svc-name">AI Voiceover</h3>
-      <p class="svc-desc">Studio-quality AI voices in any tone or accent. Compelling scripts written for your audience, delivered in seconds.</p>
-      <svg class="svc-wave" viewBox="0 0 400 52"><path d="M0 26Q20 8 40 26Q60 44 80 26Q100 8 120 26Q140 44 160 26Q180 8 200 26Q220 44 240 26Q260 8 280 26Q300 44 320 26Q340 8 360 26Q380 44 400 26" stroke="#00CFFF" stroke-width="2" fill="none"/></svg>
+      <div class="hero-canvas-wrap">
+        <canvas id="hero-canvas"></canvas>
+      </div>
     </div>
-
-    <div class="svc reveal d2">
-      <img class="svc-bg-img" src="https://picsum.photos/seed/neon-creative-digital/500/280" alt="" />
-      <div class="svc-icon blue">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-      </div>
-      <h3 class="svc-name">AI-Generated Visuals</h3>
-      <p class="svc-desc">Scroll-stopping images and video assets created for your brand and campaign goals.</p>
-    </div>
-
-    <div class="svc reveal d3">
-      <div class="svc-icon gold">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      </div>
-      <h3 class="svc-name">Ad Campaign Management</h3>
-      <p class="svc-desc">We launch, monitor, and optimize across Meta, TikTok, and Google — tracking every lead and dollar.</p>
-    </div>
-
-    <div class="svc wide gold-tint reveal">
-      <div style="flex:1">
-        <div class="svc-icon gold">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h3 class="svc-name">Social Media Growth</h3>
-        <p class="svc-desc" style="max-width:380px">Consistent posting, AI content, and engagement management so your local following grows while you focus on your business.</p>
-      </div>
-      <div class="platforms">
-        <div class="plat">
-          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#FFB800" stroke="none"/></svg></div>
-          Instagram
-        </div>
-        <div class="plat">
-          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></div>
-          TikTok
-        </div>
-        <div class="plat">
-          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div>
-          Facebook
-        </div>
-        <div class="plat">
-          <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.8"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FFB800" stroke="none"/></svg></div>
-          YouTube
+    <div id="clients">
+      <span class="clients-label">Trusted by local brands</span>
+      <div class="marquee-wrap">
+        <div class="marquee-track">
+          <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+          <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+          <span>LegalEdge</span><span>FreshBite</span>
+          <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+          <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+          <span>LegalEdge</span><span>FreshBite</span>
         </div>
       </div>
     </div>
+  </div>
 
-  </div>
-</section>
+  <!-- PAGE 1: SERVICES -->
+  <div class="snap-page">
+    <section id="services">
+      <div class="section-header">
+        <h2 class="section-title">Everything you need to get more leads</h2>
+        <p class="section-sub">Every campaign is AI-generated, human-reviewed, and built specifically for your local market.</p>
+      </div>
+      <div class="services-grid">
 
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section-header reveal">
-    <h2 class="section-title">From brief to live in 48 hours</h2>
-    <p class="section-sub">No long agency timelines. We move fast so you start getting leads faster.</p>
-  </div>
-  <div class="steps">
-    <div class="step reveal d1">
-      <div class="step-num">1</div>
-      <h3 class="step-title">Share Your Brief</h3>
-      <p class="step-desc">Tell us about your business, your target customers, and your goals. Takes about 10 minutes.</p>
-    </div>
-    <div class="step reveal d2">
-      <div class="step-num">2</div>
-      <h3 class="step-title">AI Builds Your Ads</h3>
-      <p class="step-desc">We generate voiceovers, visuals, and ad copy tailored to your local market. You approve before anything goes live.</p>
-    </div>
-    <div class="step reveal d3">
-      <div class="step-num">3</div>
-      <h3 class="step-title">Launch and Grow</h3>
-      <p class="step-desc">Your campaigns go live across the right platforms. We track every lead, optimize spend, and scale what works.</p>
-    </div>
-  </div>
-</section>
+        <div class="svc tall">
+          <img class="svc-bg-img" src="https://picsum.photos/seed/studio-mic-dark/600/500" alt="" />
+          <div class="svc-icon violet">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+          </div>
+          <h3 class="svc-name">AI Voiceover</h3>
+          <p class="svc-desc">Studio-quality AI voices in any tone or accent. Compelling scripts written for your audience, delivered in seconds.</p>
+          <svg class="svc-wave" viewBox="0 0 400 52"><path d="M0 26Q20 8 40 26Q60 44 80 26Q100 8 120 26Q140 44 160 26Q180 8 200 26Q220 44 240 26Q260 8 280 26Q300 44 320 26Q340 8 360 26Q380 44 400 26" stroke="#8B5CF6" stroke-width="2" fill="none"/></svg>
+        </div>
 
-<!-- STATS -->
-<section id="stats">
-  <div class="stat reveal">
-    <div class="stat-glow" style="background:#00CFFF"></div>
-    <div class="stat-num blue">3.2x</div>
-    <div class="stat-label">Average return on ad spend</div>
-  </div>
-  <div class="stat reveal d1">
-    <div class="stat-glow" style="background:#FFB800"></div>
-    <div class="stat-num gold">48hr</div>
-    <div class="stat-label">From brief to first live ad</div>
-  </div>
-  <div class="stat reveal d2">
-    <div class="stat-glow" style="background:#00CFFF"></div>
-    <div class="stat-num blue">200+</div>
-    <div class="stat-label">Local businesses served</div>
-  </div>
-</section>
+        <div class="svc">
+          <img class="svc-bg-img" src="https://picsum.photos/seed/neon-creative-digital/500/280" alt="" />
+          <div class="svc-icon violet">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          </div>
+          <h3 class="svc-name">AI-Generated Visuals</h3>
+          <p class="svc-desc">Scroll-stopping images and video assets created for your brand and campaign goals.</p>
+        </div>
 
-<!-- CTA -->
-<section id="cta">
-  <div class="cta-glow"></div>
-  <h2 class="section-title reveal" style="margin-bottom:14px;">Ready to be seen<br>by your whole market?</h2>
-  <p class="section-sub reveal d1">Drop your email and we'll send you a custom campaign plan within 24 hours.</p>
-  <form class="cta-form reveal d2" onsubmit="handleSubmit(event)">
-    <input class="cta-input" type="email" placeholder="your@email.com" required />
-    <button type="submit" class="btn btn-primary">Get My Plan</button>
-  </form>
-</section>
+        <div class="svc">
+          <div class="svc-icon orange">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          </div>
+          <h3 class="svc-name">Ad Campaign Management</h3>
+          <p class="svc-desc">We launch, monitor, and optimize across Meta, TikTok, and Google — tracking every lead and dollar.</p>
+        </div>
 
-<!-- FOOTER -->
-<footer>
-  <a href="#" class="logo" style="font-size:18px;">Local<span>Eyes</span></a>
-  <ul class="footer-links">
-    <li><a href="#services">Services</a></li>
-    <li><a href="#how">How It Works</a></li>
-    <li><a href="#cta">Contact</a></li>
-  </ul>
-  <p class="footer-copy">2025 LOCALeyes. All rights reserved.</p>
-</footer>
+        <div class="svc wide orange-tint">
+          <div style="flex:1">
+            <div class="svc-icon orange">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="svc-name">Social Media Growth</h3>
+            <p class="svc-desc" style="max-width:380px">Consistent posting, AI content, and engagement management so your local following grows while you focus on your business.</p>
+          </div>
+          <div class="platforms">
+            <div class="plat">
+              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#FF6B00" stroke="none"/></svg></div>
+              Instagram
+            </div>
+            <div class="plat">
+              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></div>
+              TikTok
+            </div>
+            <div class="plat">
+              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div>
+              Facebook
+            </div>
+            <div class="plat">
+              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF6B00" stroke="none"/></svg></div>
+              YouTube
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE 2: HOW IT WORKS -->
+  <div class="snap-page">
+    <section id="how">
+      <div class="section-header">
+        <h2 class="section-title">From brief to live in 48 hours</h2>
+        <p class="section-sub">No long agency timelines. We move fast so you start getting leads faster.</p>
+      </div>
+      <div class="steps-slideshow" id="steps-slideshow">
+        <div class="step-slide active" data-step="0">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3 class="step-title">Share Your Brief</h3>
+            <p class="step-desc">Tell us about your business, your target customers, and your goals. Takes about 10 minutes.</p>
+          </div>
+        </div>
+        <div class="step-slide" data-step="1">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3 class="step-title">AI Builds Your Ads</h3>
+            <p class="step-desc">We generate voiceovers, visuals, and ad copy tailored to your local market. You approve before anything goes live.</p>
+          </div>
+        </div>
+        <div class="step-slide" data-step="2">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3 class="step-title">Launch and Grow</h3>
+            <p class="step-desc">Your campaigns go live across the right platforms. We track every lead, optimize spend, and scale what works.</p>
+          </div>
+        </div>
+      </div>
+      <div class="steps-progress">
+        <button class="step-pip" data-pip="0" aria-label="Step 1"><div class="step-pip-fill"></div></button>
+        <button class="step-pip" data-pip="1" aria-label="Step 2"><div class="step-pip-fill"></div></button>
+        <button class="step-pip" data-pip="2" aria-label="Step 3"><div class="step-pip-fill"></div></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE 3: STATS -->
+  <div class="snap-page">
+    <section id="stats">
+      <div class="stat">
+        <div class="stat-glow" style="background:#8B5CF6"></div>
+        <div class="stat-num violet" data-count="3.2" data-suffix="x">3.2x</div>
+        <div class="stat-label">Average return on ad spend</div>
+      </div>
+      <div class="stat">
+        <div class="stat-glow" style="background:#FF6B00"></div>
+        <div class="stat-num orange">48hr</div>
+        <div class="stat-label">From brief to first live ad</div>
+      </div>
+      <div class="stat">
+        <div class="stat-glow" style="background:#8B5CF6"></div>
+        <div class="stat-num violet" data-count="200" data-suffix="+">200+</div>
+        <div class="stat-label">Local businesses served</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE 4: CTA + FOOTER -->
+  <div class="snap-page">
+    <section id="cta">
+      <div class="cta-glow"></div>
+      <h2 class="cta-title">Ready to be seen<br>by your whole market?</h2>
+      <p class="cta-sub">Drop your email and we'll send you a custom campaign plan within 24 hours.</p>
+      <form class="cta-form" onsubmit="handleSubmit(event)">
+        <input class="cta-input" type="email" placeholder="your@email.com" required />
+        <button type="submit" class="btn btn-primary">Get My Plan</button>
+      </form>
+    </section>
+    <footer>
+      <a href="#" class="logo" style="font-size:18px;" onclick="goTo(0);return false;">Local<span>Eyes</span></a>
+      <ul class="footer-links">
+        <li><a href="#" onclick="goTo(1);return false;">Services</a></li>
+        <li><a href="#" onclick="goTo(2);return false;">How It Works</a></li>
+        <li><a href="#" onclick="goTo(4);return false;">Contact</a></li>
+      </ul>
+      <p class="footer-copy">2025 LOCALeyes. All rights reserved.</p>
+    </footer>
+  </div>
+
+</div><!-- /scroll-root -->
 
 <script>
-/* NAV scroll */
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), { passive: true });
+/* ══ SCROLL + NAV ══ */
+const root  = document.getElementById('scroll-root');
+const nav   = document.getElementById('nav');
+const dots  = Array.from(document.querySelectorAll('.nav-dot'));
+const pages = Array.from(document.querySelectorAll('.snap-page'));
+const scan  = document.getElementById('scan-line');
 
-/* Scroll reveal */
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+root.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', root.scrollTop > 40);
+}, { passive: true });
 
-/* Form */
+function goTo(i) { pages[i]?.scrollIntoView({ behavior: 'smooth' }); }
+dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+/* ══ SNAP PAGE OBSERVER (dots + scan) ══ */
+let activeSnap = 0, scanReady = false;
+setTimeout(() => { scanReady = true; }, 800);
+
+const snapObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const idx = pages.indexOf(e.target);
+    if (idx === activeSnap) return;
+    activeSnap = idx;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    if (scanReady) {
+      scan.classList.remove('sweep');
+      void scan.offsetWidth;
+      scan.classList.add('sweep');
+      setTimeout(() => scan.classList.remove('sweep'), 700);
+    }
+  });
+}, { root, threshold: 0.55 });
+
+pages.forEach(p => snapObs.observe(p));
+
+/* ══ SECTION REVEALS ══ */
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    revealSection(e.target);
+    revealObs.unobserve(e.target);
+  });
+}, { root, threshold: 0.35 });
+
+['services', 'how', 'stats', 'cta'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) revealObs.observe(el);
+});
+
+function revealSection(section) {
+  section.querySelector('.section-header')?.classList.add('in');
+  const id = section.id;
+
+  if (id === 'services') {
+    section.querySelectorAll('.svc').forEach((c, i) => {
+      setTimeout(() => {
+        c.style.transitionDelay = '0s';
+        c.classList.add('in');
+        setTimeout(() => { c.style.transitionDelay = ''; }, 700);
+      }, 60 + i * 100);
+    });
+  }
+  if (id === 'how')   startSlideshow();
+  if (id === 'stats') {
+    section.querySelectorAll('.stat').forEach((s, i) => {
+      setTimeout(() => {
+        s.style.transitionDelay = '0s';
+        s.classList.add('in');
+        setTimeout(() => { s.style.transitionDelay = ''; }, 800);
+      }, 60 + i * 140);
+    });
+    startCounters();
+  }
+  if (id === 'cta') {
+    section.querySelector('.cta-title')?.classList.add('in');
+    section.querySelector('.cta-sub')?.classList.add('in');
+    section.querySelector('.cta-form')?.classList.add('in');
+  }
+}
+
+/* ══ HOW IT WORKS SLIDESHOW ══ */
+const slides = Array.from(document.querySelectorAll('.step-slide'));
+const pips   = Array.from(document.querySelectorAll('.step-pip'));
+let curStep = 0, slideshowInterval = null, slideshowStarted = false;
+
+function goToStep(next) {
+  const prev = curStep;
+  if (prev === next) return;
+  slides[prev].classList.add('exit');
+  slides[prev].classList.remove('active');
+  setTimeout(() => slides[prev].classList.remove('exit'), 600);
+  slides[next].classList.add('active');
+  pips[prev].classList.remove('playing');
+  pips[prev].querySelector('.step-pip-fill').style.animation = 'none';
+  armPip(next);
+  curStep = next;
+}
+
+function armPip(i) {
+  const fill = pips[i].querySelector('.step-pip-fill');
+  pips[i].classList.add('playing');
+  fill.style.animation = 'none';
+  void fill.offsetWidth;
+  fill.style.animation = 'pipFill 3.2s linear forwards';
+}
+
+function startSlideshow() {
+  if (slideshowStarted) return;
+  slideshowStarted = true;
+  armPip(0);
+  slideshowInterval = setInterval(() => {
+    goToStep((curStep + 1) % slides.length);
+  }, 3400);
+}
+
+pips.forEach((pip, i) => {
+  pip.addEventListener('click', () => {
+    clearInterval(slideshowInterval);
+    goToStep(i);
+    slideshowInterval = setInterval(() => {
+      goToStep((curStep + 1) % slides.length);
+    }, 3400);
+  });
+});
+
+/* ══ STAT COUNTERS ══ */
+let countersRun = false;
+function startCounters() {
+  if (countersRun) return;
+  countersRun = true;
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseFloat(el.dataset.count);
+    const suffix = el.dataset.suffix || '';
+    const isFloat = String(target).includes('.');
+    const dur = 1500, t0 = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 4);
+      el.textContent = (isFloat ? (target * e).toFixed(1) : Math.round(target * e)) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  });
+}
+
+/* ══ FORM ══ */
 function handleSubmit(e) {
   e.preventDefault();
   const btn = e.target.querySelector('button');
   btn.textContent = 'Sent!';
-  btn.style.background = '#00D67A';
+  btn.style.background = '#22C55E';
   setTimeout(() => { btn.textContent = 'Get My Plan'; btn.style.background = ''; }, 3000);
 }
 
-/* THREE.JS 3D EYE */
+/* ══ HERO ENTRANCE ══ */
+window.addEventListener('load', () => document.body.classList.add('loaded'));
+
+/* ══ THREE.JS — VIOLET EYE ══ */
 (function () {
   const canvas = document.getElementById('hero-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
-  const scene = new THREE.Scene();
+  const scene  = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(62, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
   camera.position.z = 5.8;
 
-  /* Fibonacci sphere of particles */
+  /* Fibonacci particle sphere — violet + orange */
   const COUNT = 2600;
   const pos = new Float32Array(COUNT * 3);
   const col = new Float32Array(COUNT * 3);
@@ -703,29 +942,32 @@ function handleSubmit(e) {
     pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
     pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
     pos[i*3+2] = r * Math.cos(phi);
-    const gold = Math.random() > 0.87;
-    col[i*3]   = gold ? 1.0 : 0.0;
-    col[i*3+1] = gold ? 0.72 : 0.81;
-    col[i*3+2] = gold ? 0.0 : 1.0;
+    /* #8B5CF6 = (0.545, 0.361, 0.965)  |  #FF6B00 = (1.0, 0.420, 0.0) */
+    const warm = Math.random() > 0.84;
+    col[i*3]   = warm ? 1.000 : 0.545;
+    col[i*3+1] = warm ? 0.420 : 0.361;
+    col[i*3+2] = warm ? 0.000 : 0.965;
   }
   const sGeo = new THREE.BufferGeometry();
   sGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   sGeo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
-  const sMat = new THREE.PointsMaterial({ size: 0.026, vertexColors: true, transparent: true, opacity: 0.88 });
-  const sphere = new THREE.Points(sGeo, sMat);
+  const sphere = new THREE.Points(sGeo,
+    new THREE.PointsMaterial({ size: 0.026, vertexColors: true, transparent: true, opacity: 0.9 }));
   scene.add(sphere);
 
-  /* Outer iris ring */
-  const irisGeo = new THREE.TorusGeometry(2.6, 0.014, 12, 130);
-  const irisMat = new THREE.MeshBasicMaterial({ color: 0x00CFFF, transparent: true, opacity: 0.5 });
-  const iris = new THREE.Mesh(irisGeo, irisMat);
+  /* Iris ring — violet */
+  const iris = new THREE.Mesh(
+    new THREE.TorusGeometry(2.6, 0.014, 12, 130),
+    new THREE.MeshBasicMaterial({ color: 0x8B5CF6, transparent: true, opacity: 0.55 })
+  );
   iris.rotation.x = Math.PI / 2;
   scene.add(iris);
 
-  /* Inner pupil ring */
-  const pupilGeo = new THREE.TorusGeometry(0.85, 0.011, 12, 80);
-  const pupilMat = new THREE.MeshBasicMaterial({ color: 0xFFB800, transparent: true, opacity: 0.65 });
-  const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+  /* Pupil ring — orange */
+  const pupil = new THREE.Mesh(
+    new THREE.TorusGeometry(0.85, 0.011, 12, 80),
+    new THREE.MeshBasicMaterial({ color: 0xFF6B00, transparent: true, opacity: 0.7 })
+  );
   scene.add(pupil);
 
   /* Background stars */
@@ -737,10 +979,9 @@ function handleSubmit(e) {
   }
   const bgGeo = new THREE.BufferGeometry();
   bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
-  const bgMat = new THREE.PointsMaterial({ size: 0.01, color: 0x3355AA, transparent: true, opacity: 0.4 });
-  scene.add(new THREE.Points(bgGeo, bgMat));
+  scene.add(new THREE.Points(bgGeo,
+    new THREE.PointsMaterial({ size: 0.01, color: 0x4B2DAA, transparent: true, opacity: 0.4 })));
 
-  /* Mouse parallax */
   let mx = 0, my = 0, tx = 0, ty = 0;
   document.addEventListener('mousemove', e => {
     mx = (e.clientX / innerWidth  - 0.5) * 2;
@@ -748,7 +989,7 @@ function handleSubmit(e) {
   }, { passive: true });
 
   let frame = 0;
-  function animate() {
+  (function animate() {
     requestAnimationFrame(animate);
     frame++;
     tx += (mx - tx) * 0.038;
@@ -759,8 +1000,7 @@ function handleSubmit(e) {
     pupil.rotation.y  = frame * 0.007;
     pupil.rotation.x  = Math.sin(frame * 0.005) * 0.28;
     renderer.render(scene, camera);
-  }
-  animate();
+  })();
 
   window.addEventListener('resize', () => {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -770,6 +1010,5 @@ function handleSubmit(e) {
   }, { passive: true });
 })();
 </script>
-
 </body>
 </html>
