@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — LocalEyes</title>
+  <meta name="description" content="Who we are, how we work, and why UGC + AI video together outperform either one alone." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="index.html" class="logo">Local<span>Eyes</span></a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu"><span></span></button>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="ugc-ai-video.html">UGC &amp; AI Video</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="about.html" class="active">About</a></li>
+    <li class="nav-cta-item"><a href="contact.html" class="btn btn-primary" style="padding:9px 20px;font-size:13px;">Book a Call</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-eyebrow">About Us</div>
+  <h1 class="page-hero-title">Why UGC + AI, <span class="accent">together.</span></h1>
+  <p class="page-hero-sub">We started LocalEyes because most agencies force a trade-off between authenticity and speed. We didn't think you should have to choose.</p>
+</section>
+
+<!-- MISSION -->
+<section class="statement">
+  <p class="statement-text">Most agencies sell the same templated ad campaign, then disappear. We started LocalEyes because your business isn&rsquo;t generic <span class="accent">&mdash; and your marketing shouldn&rsquo;t be either.</span></p>
+  <p class="statement-note">Every voiceover, script, and visual is built from scratch, launched fast, and measured obsessively. LocalEyes is built for business owners who already have a great product &mdash; and are done getting mediocre marketing.</p>
+</section>
+
+<!-- SHOWCASE / 3D EYE -->
+<div id="showcase">
+  <canvas id="hero-canvas"></canvas>
+  <div class="showcase-caption">Built different. <span>Built to perform.</span></div>
+</div>
+
+<!-- WHY UGC + AI -->
+<section>
+  <div class="section-header reveal">
+    <div class="section-eyebrow">Our Philosophy</div>
+    <h2 class="section-title">Authenticity and speed aren't opposites</h2>
+    <p class="section-sub">Real creators build trust. AI video builds volume. Most agencies pick one — we run both, on purpose.</p>
+  </div>
+  <div class="compare-grid">
+    <div class="compare-col reveal">
+      <div class="compare-col-title">UGC brings the trust</div>
+      <p class="compare-col-sub">A real person talking to camera converts cold audiences better than polished brand video ever will.</p>
+      <ul class="compare-list">
+        <li>Builds credibility with new-to-brand audiences</li>
+        <li>Feels native to social feeds, not like an ad</li>
+        <li>Backed by a network of vetted creators</li>
+      </ul>
+    </div>
+    <div class="compare-col reveal">
+      <div class="compare-col-title">AI brings the speed</div>
+      <p class="compare-col-sub">You can't out-test a competitor if production takes three weeks per concept. AI video closes that gap.</p>
+      <ul class="compare-list">
+        <li>New hooks and variations in 48&ndash;72 hours</li>
+        <li>Lower cost per asset for high-volume testing</li>
+        <li>Keeps creative fresh as fatigue sets in</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- HOW WE WORK -->
+<section id="how" >
+  <div class="section-header reveal">
+    <div class="section-eyebrow">How We Work</div>
+    <h2 class="section-title">One team, start to finish</h2>
+    <p class="section-sub">No handoffs between disconnected vendors. The same team that writes your strategy builds your creative and runs your ads.</p>
+  </div>
+  <div class="steps-slideshow">
+    <div class="step-slide active" data-step="0">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3 class="step-title">Share Your Brief</h3>
+        <p class="step-desc">Tell us about your business, your customers, and your goals. Takes about 10 minutes.</p>
+      </div>
+    </div>
+    <div class="step-slide" data-step="1">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3 class="step-title">We Build the Plan</h3>
+        <p class="step-desc">Strategy, creative mix, and platform selection — mapped out before anything gets produced.</p>
+      </div>
+    </div>
+    <div class="step-slide" data-step="2">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3 class="step-title">Produce &amp; Launch</h3>
+        <p class="step-desc">Content gets produced, you approve it, and campaigns go live across the right platforms.</p>
+      </div>
+    </div>
+    <div class="step-slide" data-step="3">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3 class="step-title">Track &amp; Scale</h3>
+        <p class="step-desc">We report weekly, kill what's underperforming, and scale what's working.</p>
+      </div>
+    </div>
+  </div>
+  <div class="steps-progress">
+    <button class="step-pip" data-pip="0" aria-label="Step 1"><div class="step-pip-fill"></div></button>
+    <button class="step-pip" data-pip="1" aria-label="Step 2"><div class="step-pip-fill"></div></button>
+    <button class="step-pip" data-pip="2" aria-label="Step 3"><div class="step-pip-fill"></div></button>
+    <button class="step-pip" data-pip="3" aria-label="Step 4"><div class="step-pip-fill"></div></button>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section style="background:var(--bg-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">What We Value</div>
+    <h2 class="section-title">How we hold ourselves accountable</h2>
+  </div>
+  <div class="values-grid">
+    <div class="value-card reveal">
+      <div class="value-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div class="value-name">Speed</div>
+      <div class="value-desc">Briefs turn into live campaigns in 48 hours, not 48 days.</div>
+    </div>
+    <div class="value-card reveal">
+      <div class="value-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="value-name">Craft</div>
+      <div class="value-desc">Every asset is human-reviewed before it reaches your ad account.</div>
+    </div>
+    <div class="value-card reveal">
+      <div class="value-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></div>
+      <div class="value-name">Data-Driven</div>
+      <div class="value-desc">Opinions lose to test results. We report the truth, not the highlight reel.</div>
+    </div>
+    <div class="value-card reveal">
+      <div class="value-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="value-name">Partnership</div>
+      <div class="value-desc">We treat every ad account like it's our own business, not a line item.</div>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section id="results">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">Track Record</div>
+    <h2 class="section-title">Numbers that speak for themselves</h2>
+  </div>
+  <div class="metrics-grid">
+    <div class="metric reveal"><div class="metric-num" data-count="200" data-suffix="+">200+</div><div class="metric-label">Businesses served</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="3.2" data-suffix="x">3.2x</div><div class="metric-label">Average return on ad spend</div></div>
+    <div class="metric reveal"><div class="metric-num">48hr</div><div class="metric-label">Brief to first live ad</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="96" data-suffix="%">96%</div><div class="metric-label">Client retention rate</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title reveal">Ready to work with us?</h2>
+  <p class="cta-sub reveal">Book a free strategy call and see if we're the right fit.</p>
+  <div class="cta-ctas reveal">
+    <a href="contact.html" class="btn btn-primary">Book a Call</a>
+    <a href="case-studies.html" class="btn btn-ghost">See Case Studies</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">2026 LOCALeyes. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="#">Terms &amp; Conditions</a></li>
+  </ul>
+</footer>
+
+<script src="assets/main.js"></script>
+<script src="assets/eye.js"></script>
+</body>
+</html>

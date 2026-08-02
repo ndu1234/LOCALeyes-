@@ -1,0 +1,11 @@
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+.env.keys
+
+# OS
+.DS_Store
+
+# Dependencies
+node_modules/

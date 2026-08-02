@@ -3,1012 +3,208 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LocalEyes - Lead Generation for Local Businesses</title>
-  <meta name="description" content="LocalEyes helps local businesses generate more leads through AI-powered ad campaigns, voiceover, and visual content that converts." />
+  <title>LocalEyes — Full-Service Ad Agency for Local &amp; Online Businesses</title>
+  <meta name="description" content="LocalEyes is a full-service ad agency: paid ads, UGC content, AI video, creative strategy, and reporting — all under one roof." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:          #07050F;
-      --bg-2:        #0E0B1C;
-      --bg-3:        #14112B;
-      --violet:      #8B5CF6;
-      --violet-dim:  rgba(139,92,246,0.12);
-      --violet-glow: rgba(139,92,246,0.32);
-      --orange:      #FF6B00;
-      --orange-dim:  rgba(255,107,0,0.1);
-      --text:        #F0EEFF;
-      --text-2:      #9988BB;
-      --border:      rgba(139,92,246,0.15);
-      --r:           12px;
-      --r-pill:      100px;
-      --expo:        cubic-bezier(0.16, 1, 0.3, 1);
-      --quart:       cubic-bezier(0.25, 1, 0.5, 1);
-    }
-
-    html, body { height: 100%; overflow: hidden; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-    }
-
-    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; line-height: 1.08; }
-
-    /* ── SCROLL ROOT ── */
-    .scroll-root {
-      height: 100dvh;
-      overflow-y: scroll;
-      scroll-snap-type: y proximity;
-      scroll-behavior: smooth;
-    }
-
-    .snap-page {
-      min-height: 100dvh;
-      scroll-snap-align: start;
-      position: relative;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      height: 68px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 clamp(20px, 5vw, 64px);
-      transition: background 0.35s, border-color 0.35s;
-      border-bottom: 1px solid transparent;
-    }
-    nav.scrolled {
-      background: rgba(7,5,15,0.92);
-      backdrop-filter: blur(20px);
-      border-color: var(--border);
-    }
-
-    .logo {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800; font-size: 21px; letter-spacing: -0.5px;
-      text-decoration: none; color: var(--text);
-    }
-    .logo span { color: var(--violet); }
-
-    .nav-links {
-      display: flex; align-items: center;
-      gap: 32px; list-style: none;
-    }
-    .nav-links a {
-      color: var(--text-2); text-decoration: none;
-      font-size: 14px; font-weight: 500; transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 22px;
-      border-radius: var(--r-pill);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 14px; font-weight: 600;
-      cursor: pointer; text-decoration: none; border: none;
-      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
-      white-space: nowrap;
-    }
-    .btn:active { transform: scale(0.97); }
-    .btn-primary { background: var(--violet); color: #fff; }
-    .btn-primary:hover { box-shadow: 0 0 32px var(--violet-glow); opacity: 0.9; }
-    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .btn-ghost:hover { border-color: var(--violet); color: var(--violet); }
-
-    /* ── SIDE NAV DOTS ── */
-    .nav-dots {
-      position: fixed; right: 24px; top: 50%;
-      transform: translateY(-50%);
-      z-index: 150;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .nav-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: rgba(255,255,255,0.16);
-      border: none; cursor: pointer; padding: 0;
-      transition: background 0.3s, transform 0.3s;
-    }
-    .nav-dot.active { background: var(--violet); transform: scale(1.7); }
-    .nav-dot:hover:not(.active) { background: rgba(255,255,255,0.42); }
-
-    /* ── SCAN LINE ── */
-    .scan-line {
-      position: fixed; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent 0%, var(--violet) 20%, var(--violet) 80%, transparent 100%);
-      z-index: 190; pointer-events: none; top: 0; opacity: 0;
-    }
-    .scan-line.sweep { animation: scanSweep 0.65s var(--expo) forwards; }
-    @keyframes scanSweep {
-      0%   { top: 0;    opacity: 0; }
-      8%   { opacity: 0.9; }
-      90%  { opacity: 0.6; }
-      100% { top: 100vh; opacity: 0; }
-    }
-
-    /* ── HERO ── */
-    #hero-snap { display: flex; flex-direction: column; }
-
-    .hero-main {
-      flex: 1;
-      display: grid; grid-template-columns: 1fr 1fr;
-      align-items: center;
-      padding: 88px clamp(20px, 5vw, 64px) 24px;
-      gap: 32px;
-      position: relative; overflow: hidden;
-      min-height: calc(100dvh - 58px);
-    }
-
-    .hero-bg {
-      position: absolute; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 55% 55% at 72% 50%, rgba(139,92,246,0.09) 0%, transparent 65%),
-        radial-gradient(ellipse 35% 40% at 8% 80%, rgba(255,107,0,0.06) 0%, transparent 60%);
-    }
-
-    .hero-text { position: relative; z-index: 2; }
-
-    .hero-eyebrow,
-    .hero-title,
-    .hero-sub,
-    .hero-ctas,
-    .hero-canvas-wrap { opacity: 0; }
-
-    body.loaded .hero-eyebrow     { animation: slideUp    0.65s var(--expo) 0.10s forwards; }
-    body.loaded .hero-title       { animation: slideUp    0.75s var(--expo) 0.22s forwards; }
-    body.loaded .hero-sub         { animation: slideUp    0.65s var(--expo) 0.38s forwards; }
-    body.loaded .hero-ctas        { animation: slideUp    0.60s var(--expo) 0.52s forwards; }
-    body.loaded .hero-canvas-wrap { animation: slideRight 0.85s var(--expo) 0.16s forwards; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(36px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideRight {
-      from { opacity: 0; transform: translateX(44px) scale(0.95); }
-      to   { opacity: 1; transform: translateX(0) scale(1); }
-    }
-
-    .hero-eyebrow {
-      display: inline-block;
-      font-size: 11px; font-weight: 600;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--violet);
-      background: var(--violet-dim);
-      border: 1px solid rgba(139,92,246,0.28);
-      padding: 5px 14px; border-radius: var(--r-pill);
-      margin-bottom: 26px;
-    }
-
-    .hero-title {
-      font-size: clamp(42px, 5.2vw, 72px);
-      font-weight: 800; letter-spacing: -2.5px; line-height: 1.02;
-      margin-bottom: 22px;
-    }
-    .hero-title .accent { color: var(--violet); }
-
-    .hero-sub {
-      font-size: 17px; color: var(--text-2);
-      max-width: 460px; line-height: 1.7; margin-bottom: 38px;
-    }
-
-    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-    .hero-ctas .btn { font-size: 15px; padding: 13px 28px; }
-
-    .hero-canvas-wrap {
-      display: flex; align-items: center; justify-content: center;
-    }
-    #hero-canvas { width: 100%; height: 540px; display: block; }
-
-    /* ── CLIENTS BAR ── */
-    #clients {
-      border-top: 1px solid var(--border);
-      padding: 18px clamp(20px,5vw,64px);
-      display: flex; align-items: center; gap: 40px;
-      overflow: hidden;
-      background: rgba(7,5,15,0.5);
-      backdrop-filter: blur(8px);
-      flex-shrink: 0;
-    }
-    .clients-label {
-      font-size: 11px; font-weight: 600;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--text-2); white-space: nowrap; flex-shrink: 0;
-    }
-    .marquee-wrap { overflow: hidden; flex: 1; }
-    .marquee-track {
-      display: flex; gap: 52px; align-items: center;
-      width: max-content;
-      animation: marquee 22s linear infinite;
-    }
-    .marquee-track span {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700; font-size: 16px;
-      color: var(--text); opacity: 0.28; white-space: nowrap;
-    }
-    @keyframes marquee {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-
-    /* ── SERVICES ── */
-    #services {
-      min-height: 100dvh;
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 80px clamp(20px,5vw,64px) 52px;
-      background: var(--bg);
-    }
-
-    .section-title {
-      font-size: clamp(28px, 3.5vw, 46px);
-      font-weight: 800; letter-spacing: -1.5px; margin-bottom: 10px;
-    }
-    .section-sub {
-      font-size: 15px; color: var(--text-2);
-      max-width: 480px; line-height: 1.7;
-    }
-    .section-header {
-      margin-bottom: 36px;
-      opacity: 0; transform: translateY(20px);
-      transition: opacity 0.6s var(--expo), transform 0.6s var(--expo);
-    }
-    .section-header.in { opacity: 1; transform: translateY(0); }
-
-    .services-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      grid-template-rows: 195px 195px;
-      gap: 10px;
-    }
-
-    .svc {
-      border-radius: var(--r);
-      border: 1px solid var(--border);
-      padding: 24px 26px;
-      position: relative; overflow: hidden;
-      display: flex; flex-direction: column; justify-content: flex-end;
-      background: var(--bg-2);
-      opacity: 0; transform: translateY(22px);
-      transition:
-        opacity 0.6s var(--expo),
-        transform 0.6s var(--expo),
-        border-color 0.25s,
-        box-shadow 0.25s;
-    }
-    .svc.in { opacity: 1; transform: translateY(0); }
-    .svc.in:hover {
-      border-color: rgba(139,92,246,0.42);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 36px rgba(139,92,246,0.1);
-    }
-    .svc.tall { grid-row: span 2; }
-    .svc.wide { grid-column: span 2; flex-direction: row; align-items: center; gap: 48px; }
-    .svc.orange-tint {
-      background: linear-gradient(135deg, rgba(255,107,0,0.08) 0%, var(--bg-2) 55%);
-      border-color: rgba(255,107,0,0.2);
-    }
-    .svc.orange-tint.in:hover { border-color: rgba(255,107,0,0.48); }
-
-    .svc-bg-img {
-      position: absolute; inset: 0;
-      object-fit: cover; width: 100%; height: 100%;
-      opacity: 0.1; border-radius: var(--r);
-    }
-    .svc-icon {
-      width: 38px; height: 38px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 14px; flex-shrink: 0;
-    }
-    .svc-icon.violet  { background: var(--violet-dim);  color: var(--violet); }
-    .svc-icon.orange  { background: var(--orange-dim);  color: var(--orange); }
-    .svc-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px; font-weight: 700; margin-bottom: 5px;
-    }
-    .svc-desc { font-size: 13px; color: var(--text-2); line-height: 1.55; }
-    .svc-wave {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: 44px; opacity: 0.12; pointer-events: none;
-    }
-
-    .platforms { display: flex; gap: 12px; flex-shrink: 0; }
-    .plat {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 6px;
-      font-size: 10px; color: var(--text-2); font-weight: 500;
-    }
-    .plat-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* ── HOW IT WORKS ── */
-    #how {
-      min-height: 100dvh;
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 80px clamp(20px,5vw,64px) 64px;
-      background: var(--bg-2);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .steps-slideshow {
-      position: relative; height: 260px;
-      margin-top: 52px; overflow: hidden;
-    }
-
-    .step-slide {
-      position: absolute; inset: 0;
-      display: flex; align-items: flex-start; gap: 36px;
-      opacity: 0; transform: translateX(56px);
-      transition: opacity 0.55s var(--expo), transform 0.55s var(--expo);
-      pointer-events: none;
-    }
-    .step-slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
-    .step-slide.exit   { opacity: 0; transform: translateX(-56px); }
-
-    .step-num {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: var(--violet-dim);
-      border: 1px solid rgba(139,92,246,0.36);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-size: 17px; font-weight: 700; color: var(--violet);
-      flex-shrink: 0;
-    }
-    .step-body { max-width: 580px; }
-    .step-title {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(28px, 3.8vw, 48px);
-      font-weight: 700; letter-spacing: -1.2px; margin-bottom: 16px;
-    }
-    .step-desc { font-size: 17px; color: var(--text-2); line-height: 1.7; }
-
-    .steps-progress {
-      display: flex; align-items: center; gap: 10px; margin-top: 48px;
-    }
-    .step-pip {
-      height: 2px; width: 72px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 2px; border: none; cursor: pointer;
-      position: relative; overflow: hidden; padding: 0;
-    }
-    .step-pip-fill {
-      position: absolute; inset: 0;
-      background: var(--violet);
-      transform-origin: left; transform: scaleX(0);
-      border-radius: 2px;
-    }
-    .step-pip.playing .step-pip-fill {
-      animation: pipFill 3.2s linear forwards;
-    }
-    @keyframes pipFill {
-      from { transform: scaleX(0); }
-      to   { transform: scaleX(1); }
-    }
-
-    /* ── STATS ── */
-    #stats {
-      min-height: 100dvh;
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      border-bottom: 1px solid var(--border);
-    }
-    .stat {
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 0 clamp(24px,5vw,72px);
-      border-right: 1px solid var(--border);
-      position: relative; overflow: hidden;
-      opacity: 0; transform: translateY(28px);
-      transition: opacity 0.7s var(--expo), transform 0.7s var(--expo);
-    }
-    .stat:last-child { border-right: none; }
-    .stat.in { opacity: 1; transform: translateY(0); }
-
-    .stat-num {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(54px, 7.5vw, 100px);
-      font-weight: 800; letter-spacing: -4px; line-height: 1;
-      margin-bottom: 14px;
-    }
-    .stat-num.violet { color: var(--violet); }
-    .stat-num.orange { color: var(--orange); }
-    .stat-label { font-size: 15px; color: var(--text-2); }
-    .stat-glow {
-      position: absolute; top: -60px; left: -60px;
-      width: 280px; height: 280px; border-radius: 50%;
-      filter: blur(90px); opacity: 0.12; pointer-events: none;
-    }
-
-    /* ── CTA ── */
-    #cta {
-      min-height: calc(100dvh - 72px);
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; position: relative; overflow: hidden;
-      padding: clamp(20px,5vw,64px);
-    }
-    .cta-glow {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      width: 640px; height: 360px;
-      background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-title {
-      font-size: clamp(34px, 4.5vw, 62px);
-      font-weight: 800; letter-spacing: -2px;
-      margin-bottom: 14px; max-width: 640px; position: relative;
-      opacity: 0; transform: translateY(24px);
-      transition: opacity 0.7s var(--expo), transform 0.7s var(--expo);
-    }
-    .cta-sub {
-      font-size: 16px; color: var(--text-2);
-      max-width: 460px; line-height: 1.7; margin-bottom: 44px;
-      position: relative;
-      opacity: 0; transform: translateY(18px);
-      transition: opacity 0.7s var(--expo) 0.15s, transform 0.7s var(--expo) 0.15s;
-    }
-    .cta-form {
-      display: flex; gap: 10px;
-      max-width: 440px; width: 100%; position: relative;
-      opacity: 0; transform: translateY(14px);
-      transition: opacity 0.6s var(--expo) 0.3s, transform 0.6s var(--expo) 0.3s;
-    }
-    .cta-title.in { opacity: 1; transform: translateY(0); }
-    .cta-sub.in   { opacity: 1; transform: translateY(0); }
-    .cta-form.in  { opacity: 1; transform: translateY(0); }
-
-    .cta-input {
-      flex: 1; background: var(--bg-3);
-      border: 1px solid var(--border); border-radius: var(--r-pill);
-      padding: 13px 22px; color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .cta-input::placeholder { color: var(--text-2); }
-    .cta-input:focus {
-      border-color: var(--violet);
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.14);
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      height: 72px; border-top: 1px solid var(--border);
-      padding: 0 clamp(20px,5vw,64px);
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 20px; flex-wrap: wrap;
-      background: var(--bg);
-    }
-    .footer-links { display: flex; gap: 28px; list-style: none; }
-    .footer-links a {
-      font-size: 13px; color: var(--text-2);
-      text-decoration: none; transition: color 0.2s;
-    }
-    .footer-links a:hover { color: var(--text); }
-    .footer-copy { font-size: 13px; color: var(--text-2); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 860px) {
-      .hero-main {
-        grid-template-columns: 1fr; padding-top: 90px;
-        text-align: center; min-height: 100dvh;
-      }
-      .hero-sub { max-width: 100%; }
-      .hero-ctas { justify-content: center; }
-      #hero-canvas { height: 260px; }
-      .hero-canvas-wrap { order: -1; }
-      .services-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .svc.tall, .svc.wide {
-        grid-row: auto; grid-column: auto;
-        flex-direction: column; align-items: flex-start;
-      }
-      .step-slide { flex-direction: column; gap: 18px; }
-      .step-title { font-size: clamp(24px, 6vw, 36px); }
-      #stats { grid-template-columns: 1fr; }
-      .stat {
-        border-right: none; border-bottom: 1px solid var(--border);
-        padding: 48px clamp(20px,5vw,64px);
-      }
-      .stat:last-child { border-bottom: none; }
-      .cta-form { flex-direction: column; }
-      footer { height: auto; padding: 20px clamp(20px,5vw,64px); flex-direction: column; align-items: flex-start; }
-      .nav-links { gap: 18px; }
-      .nav-links li:not(:last-child) { display: none; }
-      .nav-dots { display: none; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .hero-eyebrow, .hero-title, .hero-sub,
-      .hero-ctas, .hero-canvas-wrap { opacity: 1; animation: none !important; }
-      .section-header, .svc, .stat,
-      .cta-title, .cta-sub, .cta-form {
-        opacity: 1; transform: none; transition: none !important;
-      }
-      .step-slide { transition: none !important; }
-      .marquee-track { animation: none; }
-      .scan-line { display: none; }
-    }
-  </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="nav">
-  <a href="#" class="logo" onclick="goTo(0);return false;">Local<span>Eyes</span></a>
+  <a href="index.html" class="logo">Local<span>Eyes</span></a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu"><span></span></button>
   <ul class="nav-links">
-    <li><a href="#" onclick="goTo(1);return false;">Services</a></li>
-    <li><a href="#" onclick="goTo(2);return false;">How It Works</a></li>
-    <li><a href="#" onclick="goTo(4);return false;">Contact</a></li>
-    <li><a href="#" class="btn btn-primary" style="padding:9px 20px;font-size:13px;" onclick="goTo(4);return false;">Get Started</a></li>
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="ugc-ai-video.html">UGC &amp; AI Video</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="about.html">About</a></li>
+    <li class="nav-cta-item"><a href="contact.html" class="btn btn-primary" style="padding:9px 20px;font-size:13px;">Book a Call</a></li>
   </ul>
 </nav>
 
-<!-- Side nav dots -->
-<div class="nav-dots">
-  <button class="nav-dot active" aria-label="Hero"></button>
-  <button class="nav-dot" aria-label="Services"></button>
-  <button class="nav-dot" aria-label="How It Works"></button>
-  <button class="nav-dot" aria-label="Stats"></button>
-  <button class="nav-dot" aria-label="Contact"></button>
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-eyebrow">Est. 2025 &middot; Full-Service Ad Agency</div>
+  <h1 class="hero-title">Paid ads, content, and strategy <span class="accent">under one roof.</span></h1>
+  <p class="hero-sub">Meta, Google, TikTok &amp; YouTube campaigns. Real UGC creators. AI-generated video at scale. One team, one dashboard, built to convert.</p>
+  <div class="hero-ctas">
+    <a href="contact.html" class="btn btn-primary">Book a Call</a>
+    <a href="services/" class="btn btn-ghost">See Our Services</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num"><span>200+</span></div>
+      <div class="hero-stat-label">Businesses served</div>
+    </div>
+    <div>
+      <div class="hero-stat-num"><span>3.2x</span></div>
+      <div class="hero-stat-label">Average return on ad spend</div>
+    </div>
+    <div>
+      <div class="hero-stat-num"><span>48hr</span></div>
+      <div class="hero-stat-label">Brief to live campaign</div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<div id="clients">
+  <span class="clients-label">Trusted by growing brands</span>
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+      <span>LegalEdge</span><span>FreshBite</span><span>GlowLab</span><span>PulseFit</span>
+      <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
+      <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
+      <span>LegalEdge</span><span>FreshBite</span><span>GlowLab</span><span>PulseFit</span>
+    </div>
+  </div>
 </div>
 
-<!-- Scan line -->
-<div class="scan-line" id="scan-line"></div>
+<!-- SHOWCASE / 3D EYE -->
+<div id="showcase">
+  <canvas id="hero-canvas"></canvas>
+  <div class="showcase-caption">Built different. <span>Built to perform.</span></div>
+</div>
 
-<!-- ═══ SCROLL ROOT ═══ -->
-<div class="scroll-root" id="scroll-root">
-
-  <!-- PAGE 0: HERO -->
-  <div class="snap-page" id="hero-snap">
-    <div class="hero-main">
-      <div class="hero-bg"></div>
-      <div class="hero-text">
-        <div class="hero-eyebrow">Local Lead Generation Agency</div>
-        <h1 class="hero-title">
-          More leads.<br>
-          More calls.<br>
-          <span class="accent">More growth.</span>
-        </h1>
-        <p class="hero-sub">We help local businesses attract more customers through AI-powered ads, voiceover, and visual content built to convert.</p>
-        <div class="hero-ctas">
-          <a href="#" class="btn btn-primary" onclick="goTo(4);return false;">Start Your Campaign</a>
-          <a href="#" class="btn btn-ghost" onclick="goTo(2);return false;">See How It Works</a>
-        </div>
-      </div>
-      <div class="hero-canvas-wrap">
-        <canvas id="hero-canvas"></canvas>
-      </div>
+<!-- PROBLEM / SOLUTION -->
+<section id="problem-solution">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">The Problem</div>
+    <h2 class="section-title">Most agencies make you pick a lane</h2>
+    <p class="section-sub">An ads shop that can't produce content. A content shop that can't run ads. You end up managing three vendors who don't talk to each other.</p>
+  </div>
+  <div class="ps-grid">
+    <div class="ps-card reveal">
+      <div class="ps-label">Without LocalEyes</div>
+      <p><strong>Fragmented vendors.</strong> Your ad manager, your content creator, and your copywriter have never spoken to each other.</p>
+      <p><strong>Slow, generic content.</strong> Templated creative that takes weeks and looks like everyone else's.</p>
+      <p><strong>Reporting you have to chase.</strong> Spend and results scattered across platforms with no single source of truth.</p>
     </div>
-    <div id="clients">
-      <span class="clients-label">Trusted by local brands</span>
-      <div class="marquee-wrap">
-        <div class="marquee-track">
-          <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
-          <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
-          <span>LegalEdge</span><span>FreshBite</span>
-          <span>RoofPro</span><span>CityClean</span><span>MedFirst</span>
-          <span>TruckFleet+</span><span>Drivewell</span><span>PetCare+</span>
-          <span>LegalEdge</span><span>FreshBite</span>
-        </div>
-      </div>
+    <div class="ps-card solution reveal">
+      <div class="ps-label">With LocalEyes</div>
+      <p><strong>One team, one roof.</strong> Strategy, content production, and ad management working from the same brief.</p>
+      <p><strong>Real creators + AI video.</strong> Authentic UGC and fast AI-generated variations, blended for volume and trust.</p>
+      <p><strong>A dashboard you actually check.</strong> Live ROAS, spend, and conversions — no chasing, no spreadsheets.</p>
     </div>
   </div>
+</section>
 
-  <!-- PAGE 1: SERVICES -->
-  <div class="snap-page">
-    <section id="services">
-      <div class="section-header">
-        <h2 class="section-title">Everything you need to get more leads</h2>
-        <p class="section-sub">Every campaign is AI-generated, human-reviewed, and built specifically for your local market.</p>
-      </div>
-      <div class="services-grid">
-
-        <div class="svc tall">
-          <img class="svc-bg-img" src="https://picsum.photos/seed/studio-mic-dark/600/500" alt="" />
-          <div class="svc-icon violet">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
-          </div>
-          <h3 class="svc-name">AI Voiceover</h3>
-          <p class="svc-desc">Studio-quality AI voices in any tone or accent. Compelling scripts written for your audience, delivered in seconds.</p>
-          <svg class="svc-wave" viewBox="0 0 400 52"><path d="M0 26Q20 8 40 26Q60 44 80 26Q100 8 120 26Q140 44 160 26Q180 8 200 26Q220 44 240 26Q260 8 280 26Q300 44 320 26Q340 8 360 26Q380 44 400 26" stroke="#8B5CF6" stroke-width="2" fill="none"/></svg>
-        </div>
-
-        <div class="svc">
-          <img class="svc-bg-img" src="https://picsum.photos/seed/neon-creative-digital/500/280" alt="" />
-          <div class="svc-icon violet">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-          </div>
-          <h3 class="svc-name">AI-Generated Visuals</h3>
-          <p class="svc-desc">Scroll-stopping images and video assets created for your brand and campaign goals.</p>
-        </div>
-
-        <div class="svc">
-          <div class="svc-icon orange">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          </div>
-          <h3 class="svc-name">Ad Campaign Management</h3>
-          <p class="svc-desc">We launch, monitor, and optimize across Meta, TikTok, and Google — tracking every lead and dollar.</p>
-        </div>
-
-        <div class="svc wide orange-tint">
-          <div style="flex:1">
-            <div class="svc-icon orange">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <h3 class="svc-name">Social Media Growth</h3>
-            <p class="svc-desc" style="max-width:380px">Consistent posting, AI content, and engagement management so your local following grows while you focus on your business.</p>
-          </div>
-          <div class="platforms">
-            <div class="plat">
-              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#FF6B00" stroke="none"/></svg></div>
-              Instagram
-            </div>
-            <div class="plat">
-              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></div>
-              TikTok
-            </div>
-            <div class="plat">
-              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div>
-              Facebook
-            </div>
-            <div class="plat">
-              <div class="plat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="1.8"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF6B00" stroke="none"/></svg></div>
-              YouTube
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
+<!-- SERVICES TEASER -->
+<section id="services-teaser" style="background:var(--bg-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">What We Do</div>
+    <h2 class="section-title">Six services. One accountable team.</h2>
+    <p class="section-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
   </div>
+  <div class="services-grid">
 
-  <!-- PAGE 2: HOW IT WORKS -->
-  <div class="snap-page">
-    <section id="how">
-      <div class="section-header">
-        <h2 class="section-title">From brief to live in 48 hours</h2>
-        <p class="section-sub">No long agency timelines. We move fast so you start getting leads faster.</p>
+    <a href="services/paid-ads.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
       </div>
-      <div class="steps-slideshow" id="steps-slideshow">
-        <div class="step-slide active" data-step="0">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <h3 class="step-title">Share Your Brief</h3>
-            <p class="step-desc">Tell us about your business, your target customers, and your goals. Takes about 10 minutes.</p>
-          </div>
-        </div>
-        <div class="step-slide" data-step="1">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <h3 class="step-title">AI Builds Your Ads</h3>
-            <p class="step-desc">We generate voiceovers, visuals, and ad copy tailored to your local market. You approve before anything goes live.</p>
-          </div>
-        </div>
-        <div class="step-slide" data-step="2">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <h3 class="step-title">Launch and Grow</h3>
-            <p class="step-desc">Your campaigns go live across the right platforms. We track every lead, optimize spend, and scale what works.</p>
-          </div>
-        </div>
+      <h3 class="service-name">Paid Ads Management</h3>
+      <p class="service-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="services/ugc-content.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
       </div>
-      <div class="steps-progress">
-        <button class="step-pip" data-pip="0" aria-label="Step 1"><div class="step-pip-fill"></div></button>
-        <button class="step-pip" data-pip="1" aria-label="Step 2"><div class="step-pip-fill"></div></button>
-        <button class="step-pip" data-pip="2" aria-label="Step 3"><div class="step-pip-fill"></div></button>
+      <h3 class="service-name">UGC Content Production</h3>
+      <p class="service-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="services/ai-video.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
       </div>
-    </section>
+      <h3 class="service-name">AI Video Generation</h3>
+      <p class="service-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="services/creative-strategy.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10M18 20V4M6 20v-4"/><circle cx="12" cy="6" r="2"/></svg>
+      </div>
+      <h3 class="service-name">Creative Strategy</h3>
+      <p class="service-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="services/content-packages.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <h3 class="service-name">Content Packages</h3>
+      <p class="service-desc">Bundled UGC + AI video + ad copy delivered monthly. Recurring and predictable for clients.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="services/analytics-reporting.html" class="service-card reveal">
+      <div class="service-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+      </div>
+      <h3 class="service-name">Analytics &amp; Reporting</h3>
+      <p class="service-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</p>
+      <span class="service-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
   </div>
+</section>
 
-  <!-- PAGE 3: STATS -->
-  <div class="snap-page">
-    <section id="stats">
-      <div class="stat">
-        <div class="stat-glow" style="background:#8B5CF6"></div>
-        <div class="stat-num violet" data-count="3.2" data-suffix="x">3.2x</div>
-        <div class="stat-label">Average return on ad spend</div>
-      </div>
-      <div class="stat">
-        <div class="stat-glow" style="background:#FF6B00"></div>
-        <div class="stat-num orange">48hr</div>
-        <div class="stat-label">From brief to first live ad</div>
-      </div>
-      <div class="stat">
-        <div class="stat-glow" style="background:#8B5CF6"></div>
-        <div class="stat-num violet" data-count="200" data-suffix="+">200+</div>
-        <div class="stat-label">Local businesses served</div>
-      </div>
-    </section>
+<!-- RESULTS REEL -->
+<section id="results">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">Results</div>
+    <h2 class="section-title">A short reel of what we've shipped</h2>
+    <p class="section-sub">Real accounts, real numbers. <a href="case-studies.html" style="color:var(--sky); text-decoration:none; font-weight:600;">See full case studies &rarr;</a></p>
   </div>
-
-  <!-- PAGE 4: CTA + FOOTER -->
-  <div class="snap-page">
-    <section id="cta">
-      <div class="cta-glow"></div>
-      <h2 class="cta-title">Ready to be seen<br>by your whole market?</h2>
-      <p class="cta-sub">Drop your email and we'll send you a custom campaign plan within 24 hours.</p>
-      <form class="cta-form" onsubmit="handleSubmit(event)">
-        <input class="cta-input" type="email" placeholder="your@email.com" required />
-        <button type="submit" class="btn btn-primary">Get My Plan</button>
-      </form>
-    </section>
-    <footer>
-      <a href="#" class="logo" style="font-size:18px;" onclick="goTo(0);return false;">Local<span>Eyes</span></a>
-      <ul class="footer-links">
-        <li><a href="#" onclick="goTo(1);return false;">Services</a></li>
-        <li><a href="#" onclick="goTo(2);return false;">How It Works</a></li>
-        <li><a href="#" onclick="goTo(4);return false;">Contact</a></li>
-      </ul>
-      <p class="footer-copy">2025 LOCALeyes. All rights reserved.</p>
-    </footer>
+  <div class="metrics-grid">
+    <div class="metric reveal"><div class="metric-num" data-count="200" data-suffix="+">200+</div><div class="metric-label">Businesses served</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="3.2" data-suffix="x">3.2x</div><div class="metric-label">Average return on ad spend</div></div>
+    <div class="metric reveal"><div class="metric-num">48hr</div><div class="metric-label">Brief to first live ad</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="4.8" data-suffix="M+">$4.8M+</div><div class="metric-label">Tracked client revenue</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="96" data-suffix="%">96%</div><div class="metric-label">Client retention rate</div></div>
+    <div class="metric reveal"><div class="metric-num" data-count="12" data-suffix="">12</div><div class="metric-label">Industries served</div></div>
   </div>
+</section>
 
-</div><!-- /scroll-root -->
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title reveal">Ready to be seen by your whole market?</h2>
+  <p class="cta-sub reveal">Book a free strategy call and we'll map out a growth plan for your business.</p>
+  <div class="cta-ctas reveal">
+    <a href="contact.html" class="btn btn-primary">Book a Call</a>
+    <a href="pricing.html" class="btn btn-ghost">View Pricing</a>
+  </div>
+</section>
 
-<script>
-/* ══ SCROLL + NAV ══ */
-const root  = document.getElementById('scroll-root');
-const nav   = document.getElementById('nav');
-const dots  = Array.from(document.querySelectorAll('.nav-dot'));
-const pages = Array.from(document.querySelectorAll('.snap-page'));
-const scan  = document.getElementById('scan-line');
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">2026 LOCALeyes. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="#">Terms &amp; Conditions</a></li>
+  </ul>
+</footer>
 
-root.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', root.scrollTop > 40);
-}, { passive: true });
-
-function goTo(i) { pages[i]?.scrollIntoView({ behavior: 'smooth' }); }
-dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
-
-/* ══ SNAP PAGE OBSERVER (dots + scan) ══ */
-let activeSnap = 0, scanReady = false;
-setTimeout(() => { scanReady = true; }, 800);
-
-const snapObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    const idx = pages.indexOf(e.target);
-    if (idx === activeSnap) return;
-    activeSnap = idx;
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    if (scanReady) {
-      scan.classList.remove('sweep');
-      void scan.offsetWidth;
-      scan.classList.add('sweep');
-      setTimeout(() => scan.classList.remove('sweep'), 700);
-    }
-  });
-}, { root, threshold: 0.55 });
-
-pages.forEach(p => snapObs.observe(p));
-
-/* ══ SECTION REVEALS ══ */
-const revealObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    revealSection(e.target);
-    revealObs.unobserve(e.target);
-  });
-}, { root, threshold: 0.35 });
-
-['services', 'how', 'stats', 'cta'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) revealObs.observe(el);
-});
-
-function revealSection(section) {
-  section.querySelector('.section-header')?.classList.add('in');
-  const id = section.id;
-
-  if (id === 'services') {
-    section.querySelectorAll('.svc').forEach((c, i) => {
-      setTimeout(() => {
-        c.style.transitionDelay = '0s';
-        c.classList.add('in');
-        setTimeout(() => { c.style.transitionDelay = ''; }, 700);
-      }, 60 + i * 100);
-    });
-  }
-  if (id === 'how')   startSlideshow();
-  if (id === 'stats') {
-    section.querySelectorAll('.stat').forEach((s, i) => {
-      setTimeout(() => {
-        s.style.transitionDelay = '0s';
-        s.classList.add('in');
-        setTimeout(() => { s.style.transitionDelay = ''; }, 800);
-      }, 60 + i * 140);
-    });
-    startCounters();
-  }
-  if (id === 'cta') {
-    section.querySelector('.cta-title')?.classList.add('in');
-    section.querySelector('.cta-sub')?.classList.add('in');
-    section.querySelector('.cta-form')?.classList.add('in');
-  }
-}
-
-/* ══ HOW IT WORKS SLIDESHOW ══ */
-const slides = Array.from(document.querySelectorAll('.step-slide'));
-const pips   = Array.from(document.querySelectorAll('.step-pip'));
-let curStep = 0, slideshowInterval = null, slideshowStarted = false;
-
-function goToStep(next) {
-  const prev = curStep;
-  if (prev === next) return;
-  slides[prev].classList.add('exit');
-  slides[prev].classList.remove('active');
-  setTimeout(() => slides[prev].classList.remove('exit'), 600);
-  slides[next].classList.add('active');
-  pips[prev].classList.remove('playing');
-  pips[prev].querySelector('.step-pip-fill').style.animation = 'none';
-  armPip(next);
-  curStep = next;
-}
-
-function armPip(i) {
-  const fill = pips[i].querySelector('.step-pip-fill');
-  pips[i].classList.add('playing');
-  fill.style.animation = 'none';
-  void fill.offsetWidth;
-  fill.style.animation = 'pipFill 3.2s linear forwards';
-}
-
-function startSlideshow() {
-  if (slideshowStarted) return;
-  slideshowStarted = true;
-  armPip(0);
-  slideshowInterval = setInterval(() => {
-    goToStep((curStep + 1) % slides.length);
-  }, 3400);
-}
-
-pips.forEach((pip, i) => {
-  pip.addEventListener('click', () => {
-    clearInterval(slideshowInterval);
-    goToStep(i);
-    slideshowInterval = setInterval(() => {
-      goToStep((curStep + 1) % slides.length);
-    }, 3400);
-  });
-});
-
-/* ══ STAT COUNTERS ══ */
-let countersRun = false;
-function startCounters() {
-  if (countersRun) return;
-  countersRun = true;
-  document.querySelectorAll('[data-count]').forEach(el => {
-    const target = parseFloat(el.dataset.count);
-    const suffix = el.dataset.suffix || '';
-    const isFloat = String(target).includes('.');
-    const dur = 1500, t0 = performance.now();
-    (function tick(now) {
-      const p = Math.min((now - t0) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 4);
-      el.textContent = (isFloat ? (target * e).toFixed(1) : Math.round(target * e)) + suffix;
-      if (p < 1) requestAnimationFrame(tick);
-    })(t0);
-  });
-}
-
-/* ══ FORM ══ */
-function handleSubmit(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button');
-  btn.textContent = 'Sent!';
-  btn.style.background = '#22C55E';
-  setTimeout(() => { btn.textContent = 'Get My Plan'; btn.style.background = ''; }, 3000);
-}
-
-/* ══ HERO ENTRANCE ══ */
-window.addEventListener('load', () => document.body.classList.add('loaded'));
-
-/* ══ THREE.JS — VIOLET EYE ══ */
-(function () {
-  const canvas = document.getElementById('hero-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-
-  const scene  = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(62, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-  camera.position.z = 5.8;
-
-  /* Fibonacci particle sphere — violet + orange */
-  const COUNT = 2600;
-  const pos = new Float32Array(COUNT * 3);
-  const col = new Float32Array(COUNT * 3);
-  for (let i = 0; i < COUNT; i++) {
-    const phi   = Math.acos(-1 + (2 * i) / COUNT);
-    const theta = Math.sqrt(COUNT * Math.PI) * phi;
-    const r = 2.3;
-    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-    pos[i*3+2] = r * Math.cos(phi);
-    /* #8B5CF6 = (0.545, 0.361, 0.965)  |  #FF6B00 = (1.0, 0.420, 0.0) */
-    const warm = Math.random() > 0.84;
-    col[i*3]   = warm ? 1.000 : 0.545;
-    col[i*3+1] = warm ? 0.420 : 0.361;
-    col[i*3+2] = warm ? 0.000 : 0.965;
-  }
-  const sGeo = new THREE.BufferGeometry();
-  sGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  sGeo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
-  const sphere = new THREE.Points(sGeo,
-    new THREE.PointsMaterial({ size: 0.026, vertexColors: true, transparent: true, opacity: 0.9 }));
-  scene.add(sphere);
-
-  /* Iris ring — violet */
-  const iris = new THREE.Mesh(
-    new THREE.TorusGeometry(2.6, 0.014, 12, 130),
-    new THREE.MeshBasicMaterial({ color: 0x8B5CF6, transparent: true, opacity: 0.55 })
-  );
-  iris.rotation.x = Math.PI / 2;
-  scene.add(iris);
-
-  /* Pupil ring — orange */
-  const pupil = new THREE.Mesh(
-    new THREE.TorusGeometry(0.85, 0.011, 12, 80),
-    new THREE.MeshBasicMaterial({ color: 0xFF6B00, transparent: true, opacity: 0.7 })
-  );
-  scene.add(pupil);
-
-  /* Background stars */
-  const bgPos = new Float32Array(700 * 3);
-  for (let i = 0; i < 700; i++) {
-    bgPos[i*3]   = (Math.random() - 0.5) * 16;
-    bgPos[i*3+1] = (Math.random() - 0.5) * 16;
-    bgPos[i*3+2] = (Math.random() - 0.5) * 8 - 3;
-  }
-  const bgGeo = new THREE.BufferGeometry();
-  bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
-  scene.add(new THREE.Points(bgGeo,
-    new THREE.PointsMaterial({ size: 0.01, color: 0x4B2DAA, transparent: true, opacity: 0.4 })));
-
-  let mx = 0, my = 0, tx = 0, ty = 0;
-  document.addEventListener('mousemove', e => {
-    mx = (e.clientX / innerWidth  - 0.5) * 2;
-    my = (e.clientY / innerHeight - 0.5) * 2;
-  }, { passive: true });
-
-  let frame = 0;
-  (function animate() {
-    requestAnimationFrame(animate);
-    frame++;
-    tx += (mx - tx) * 0.038;
-    ty += (my - ty) * 0.038;
-    sphere.rotation.y = frame * 0.0028 + tx * 0.32;
-    sphere.rotation.x = frame * 0.001  + ty * 0.18;
-    iris.rotation.z   = frame * 0.004;
-    pupil.rotation.y  = frame * 0.007;
-    pupil.rotation.x  = Math.sin(frame * 0.005) * 0.28;
-    renderer.render(scene, camera);
-  })();
-
-  window.addEventListener('resize', () => {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }, { passive: true });
-})();
-</script>
+<script src="assets/main.js"></script>
+<script src="assets/eye.js"></script>
 </body>
 </html>

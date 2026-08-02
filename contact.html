@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — LocalEyes</title>
+  <meta name="description" content="Book a free strategy call with LocalEyes and get a custom growth plan for your business." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="index.html" class="logo">Local<span>Eyes</span></a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu"><span></span></button>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="ugc-ai-video.html">UGC &amp; AI Video</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="about.html">About</a></li>
+    <li class="nav-cta-item"><a href="contact.html" class="btn btn-primary" style="padding:9px 20px;font-size:13px;">Book a Call</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero" style="padding-bottom:0; border-bottom:none;">
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-eyebrow">Contact</div>
+  <h1 class="page-hero-title">Let's build your <span class="accent">next campaign.</span></h1>
+  <p class="page-hero-sub">Tell us about your business and goals. We'll follow up within one business day with next steps.</p>
+</section>
+
+<!-- CONTACT GRID -->
+<section>
+  <div class="contact-grid">
+
+    <form class="reveal" id="lead-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <input class="form-input" id="name" type="text" placeholder="Jane Smith" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" id="email" type="email" placeholder="jane@business.com" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="business">Business Name</label>
+          <input class="form-input" id="business" type="text" placeholder="Your Business" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone (optional)</label>
+          <input class="form-input" id="phone" type="tel" placeholder="(555) 555-5555" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="service">Service Interested In</label>
+          <select class="form-select" id="service">
+            <option>Not sure yet</option>
+            <option>Paid Ads Management</option>
+            <option>UGC Content Production</option>
+            <option>AI Video Generation</option>
+            <option>Creative Strategy</option>
+            <option>Content Packages</option>
+            <option>Analytics &amp; Reporting</option>
+            <option>Full Package</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="budget">Monthly Budget Range</label>
+          <select class="form-select" id="budget">
+            <option>Under $1,000</option>
+            <option>$1,000 &ndash; $2,500</option>
+            <option>$2,500 &ndash; $5,000</option>
+            <option>$5,000+</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="message">Tell us about your business and goals</label>
+        <textarea class="form-textarea" id="message" placeholder="What are you currently running (if anything)? What does success look like?"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="padding:14px 28px; font-size:15px;">Request My Strategy Call</button>
+      <p class="form-status" id="lead-form-status"></p>
+    </form>
+
+    <div class="contact-info reveal">
+      <div class="contact-info-title">Get in touch</div>
+      <div class="contact-info-item"><div><b>Email</b>hello@localeyes.agency</div></div>
+      <div class="contact-info-item"><div><b>Response Time</b>Within 1 business day</div></div>
+      <div class="contact-info-item"><div><b>Based In</b>Remote &mdash; serving clients nationwide</div></div>
+      <ul class="contact-steps">
+        <li>You submit the form or book a call.</li>
+        <li>We review your business and current marketing.</li>
+        <li>We hop on a 20-minute call and map out a plan.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">2026 LOCALeyes. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="services/">Services</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="#">Terms &amp; Conditions</a></li>
+  </ul>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/lead-form.js"></script>
+<script src="assets/main.js"></script>
+</body>
+</html>
