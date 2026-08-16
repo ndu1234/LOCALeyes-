@@ -6,6 +6,8 @@
   const btn = form.querySelector('button[type="submit"]');
   const btnDefaultText = btn.textContent;
   const statusEl = document.getElementById('lead-form-status');
+  const honeypot = form.querySelector('#hp-website');
+  const loadedAt = Date.now();
 
   function setStatus(text, kind) {
     if (!statusEl) return;
@@ -13,8 +15,28 @@
     statusEl.className = 'form-status' + (kind ? ' form-status-' + kind : '');
   }
 
+  function fakeSuccess() {
+    btn.textContent = 'Request Sent!';
+    btn.style.background = '#22C55E';
+    setStatus("Thanks — we'll be in touch within 1 business day.", 'success');
+    form.reset();
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = btnDefaultText;
+      btn.style.background = '';
+    }, 4000);
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Honeypot filled, or submitted implausibly fast (< 2s) — silently
+    // pretend success so bots don't learn to adapt.
+    if ((honeypot && honeypot.value.trim() !== '') || Date.now() - loadedAt < 2000) {
+      fakeSuccess();
+      return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Sending...';
     setStatus('', '');
