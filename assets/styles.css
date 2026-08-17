@@ -148,7 +148,7 @@ body.loaded .hero-stats   { animation: slideUp 0.60s var(--expo) 0.64s forwards;
   background: var(--sky-dim);
   border: 1px solid var(--border-2);
   padding: 5px 14px; border-radius: var(--r-pill);
-  margin-bottom: 28px; position: relative; z-index: 2;
+  margin-bottom: 40px; position: relative; z-index: 2;
 }
 
 .hero-title {
