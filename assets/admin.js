@@ -23,6 +23,7 @@
   const addAdminForm = document.getElementById('add-admin-form');
   const addAdminEmail = document.getElementById('add-admin-email');
   const addAdminStatus = document.getElementById('add-admin-status');
+  const statsEl = document.getElementById('admin-stats');
 
   let allLeads = [];
   let signupMode = false;
@@ -135,7 +136,28 @@
     }
 
     allLeads = data || [];
+    renderStats();
     renderLeads();
+  }
+
+  function renderStats() {
+    const counts = { new: 0, contacted: 0, converted: 0, closed: 0 };
+    allLeads.forEach((l) => { if (counts[l.status] !== undefined) counts[l.status]++; });
+
+    const cards = [
+      { label: 'Total', num: allLeads.length },
+      { label: 'New', num: counts.new },
+      { label: 'Contacted', num: counts.contacted },
+      { label: 'Converted', num: counts.converted },
+      { label: 'Closed', num: counts.closed },
+    ];
+
+    statsEl.innerHTML = cards.map((c) => `
+      <div class="admin-stat-card">
+        <div class="admin-stat-num">${c.num}</div>
+        <div class="admin-stat-label">${c.label}</div>
+      </div>
+    `).join('');
   }
 
   function renderLeads() {
@@ -165,7 +187,7 @@
         <td class="lead-message">${escapeHtml(l.message || '—')}</td>
         <td>${new Date(l.created_at).toLocaleDateString()}</td>
         <td>
-          <select class="status-select" data-id="${l.id}">
+          <select class="status-select ${l.status}" data-id="${l.id}">
             ${['new', 'contacted', 'converted', 'closed'].map((s) => `<option value="${s}" ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </td>
@@ -183,6 +205,8 @@
         }
         const lead = allLeads.find((l) => l.id === id);
         if (lead) lead.status = status;
+        e.target.className = 'status-select ' + status;
+        renderStats();
       });
     });
   }
