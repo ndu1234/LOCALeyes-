@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — LocalEyes</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" />
+</head>
+<body>
+
+<!-- LOGIN / SIGNUP -->
+<div id="admin-login">
+  <div class="admin-login-card">
+    <div class="admin-login-title">LocalEyes <span style="color:var(--sky);">Admin</span></div>
+    <p class="admin-login-sub" id="auth-sub">Sign in to view and manage leads.</p>
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" id="login-email" type="email" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input class="form-input" id="login-password" type="password" required autocomplete="current-password" minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="auth-submit-btn">Sign In</button>
+      <p class="admin-error" id="login-error"></p>
+      <p style="margin-top:16px; font-size:13px; color:var(--text-2); text-align:center;">
+        <a href="#" id="toggle-mode" style="color:var(--sky); text-decoration:none; font-weight:600;">Need an account? Sign up</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- PENDING APPROVAL -->
+<div id="admin-pending" style="display:none; min-height:100vh; display:flex; align-items:center; justify-content:center; padding: clamp(20px,5vw,64px);">
+  <div class="admin-login-card" style="text-align:center;">
+    <div class="admin-login-title">Almost there</div>
+    <p class="admin-login-sub">Your account was created, but it hasn't been approved for admin access yet. Ask an existing admin to approve <strong id="pending-email" style="color:var(--text);"></strong>.</p>
+    <button class="btn btn-ghost btn-block" id="pending-logout-btn" style="padding:13px 24px;">Sign Out</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="admin-dashboard">
+  <div class="admin-header">
+    <div class="admin-title">Leads</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <form id="add-admin-form" style="display:flex; gap:8px;">
+        <input class="form-input" id="add-admin-email" type="email" placeholder="Approve new admin by email" style="max-width:220px;" required />
+        <button type="submit" class="btn btn-ghost" style="padding:9px 16px; font-size:13px;">Approve</button>
+      </form>
+      <button class="btn btn-ghost" id="logout-btn" style="padding:9px 18px; font-size:13px;">Sign Out</button>
+    </div>
+  </div>
+  <p class="admin-error" id="add-admin-status" style="margin:-14px 0 20px;"></p>
+
+  <div class="admin-controls">
+    <input class="form-input" id="search-input" type="text" placeholder="Search name, email, business..." />
+    <select class="form-select" id="status-filter">
+      <option value="all">All statuses</option>
+      <option value="new">New</option>
+      <option value="contacted">Contacted</option>
+      <option value="converted">Converted</option>
+      <option value="closed">Closed</option>
+    </select>
+  </div>
+
+  <div class="leads-table-wrap">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Name / Email</th>
+          <th>Business</th>
+          <th>Service</th>
+          <th>Budget</th>
+          <th>Message</th>
+          <th>Received</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="leads-tbody"></tbody>
+    </table>
+    <div class="admin-empty" id="admin-empty" style="display:none;"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

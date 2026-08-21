@@ -643,6 +643,45 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .form-status-success { color: var(--sky); }
 .form-status-error { color: #F87171; }
 
+/* ── ADMIN ── */
+#admin-login {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: clamp(20px,5vw,64px);
+}
+.admin-login-card {
+  width: 100%; max-width: 380px;
+  border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--bg-2); padding: 36px 32px;
+}
+.admin-login-title { font-family: 'Inter Tight', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.admin-login-sub { font-size: 13.5px; color: var(--text-2); margin-bottom: 26px; }
+
+#admin-dashboard { display: none; padding: 100px clamp(20px,5vw,48px) 64px; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
+.admin-title { font-family: 'Inter Tight', sans-serif; font-size: clamp(24px,3vw,32px); font-weight: 800; }
+.admin-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.admin-controls .form-input, .admin-controls .form-select { max-width: 240px; }
+
+.leads-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.leads-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+.leads-table th {
+  text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-2); padding: 14px 16px; background: var(--bg-2); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.leads-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.leads-table tr:last-child td { border-bottom: none; }
+.leads-table tr:hover td { background: rgba(56,189,248,0.03); }
+.lead-email { color: var(--text-2); font-size: 12.5px; margin-top: 2px; }
+.lead-message { max-width: 260px; color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
+.status-select {
+  background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r-pill);
+  color: var(--text); font-size: 12px; font-weight: 600; padding: 5px 10px; cursor: pointer;
+  text-transform: capitalize;
+}
+.admin-empty { padding: 60px 20px; text-align: center; color: var(--text-2); }
+.admin-error { color: #F87171; font-size: 13px; margin-top: 10px; }
+
 /* ── CTA ── */
 #cta, .cta-section {
   background: var(--bg);
