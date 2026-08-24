@@ -685,6 +685,21 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .admin-login-title { font-family: 'Inter Tight', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 6px; }
 .admin-login-sub { font-size: 13.5px; color: var(--text-2); margin-bottom: 26px; line-height: 1.6; }
 
+.password-field { position: relative; }
+.password-field .form-input { padding-right: 44px; }
+.password-toggle {
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 8px; cursor: pointer;
+  color: var(--text-2); transition: color 0.2s, background 0.2s;
+}
+.password-toggle:hover { color: var(--text); background: var(--bg-3); }
+
+.admin-login-links { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; font-size: 12.5px; }
+.admin-login-links a { color: var(--sky); text-decoration: none; font-weight: 600; }
+.admin-login-links a:hover { text-decoration: underline; }
+.admin-login-links-sep { color: var(--text-2); }
+
 #admin-dashboard { display: none; }
 .admin-topbar {
   position: sticky; top: 0; z-index: 100;

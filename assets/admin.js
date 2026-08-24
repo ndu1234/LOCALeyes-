@@ -3,6 +3,7 @@
 
   const loginScreen = document.getElementById('admin-login');
   const pendingScreen = document.getElementById('admin-pending');
+  const resetScreen = document.getElementById('admin-reset');
   const dashboard = document.getElementById('admin-dashboard');
 
   const loginForm = document.getElementById('login-form');
@@ -10,6 +11,17 @@
   const authSub = document.getElementById('auth-sub');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const toggleModeLink = document.getElementById('toggle-mode');
+  const loginEmailInput = document.getElementById('login-email');
+  const loginPasswordInput = document.getElementById('login-password');
+  const passwordGroup = document.getElementById('password-group');
+  const passwordToggle = document.getElementById('password-toggle');
+  const passwordToggleIcon = document.getElementById('password-toggle-icon');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  const magicLinkToggle = document.getElementById('magic-link-toggle');
+  const adminLoginLinks = document.getElementById('admin-login-links');
+
+  const resetForm = document.getElementById('reset-form');
+  const resetError = document.getElementById('reset-error');
 
   const pendingEmailEl = document.getElementById('pending-email');
   const pendingLogoutBtn = document.getElementById('pending-logout-btn');
@@ -40,11 +52,13 @@
   });
 
   let allLeads = [];
-  let signupMode = false;
+  let mode = 'signin'; // 'signin' | 'signup' | 'magiclink'
+  let recoveryMode = false; // true while the user arrived via a password-recovery email link
 
   function showScreen(screen) {
     loginScreen.style.display = screen === 'login' ? 'flex' : 'none';
     pendingScreen.style.display = screen === 'pending' ? 'flex' : 'none';
+    resetScreen.style.display = screen === 'reset' ? 'flex' : 'none';
     dashboard.style.display = screen === 'dashboard' ? 'flex' : 'none';
   }
 
@@ -54,13 +68,76 @@
     return div.innerHTML;
   }
 
+  function setLoginMessage(text, isSuccess) {
+    loginError.textContent = text;
+    loginError.style.color = isSuccess ? 'var(--sky)' : '';
+  }
+
+  function updateAuthUI() {
+    passwordGroup.style.display = mode === 'magiclink' ? 'none' : 'block';
+    adminLoginLinks.style.display = mode === 'signup' ? 'none' : 'flex';
+    forgotPasswordLink.style.display = mode === 'magiclink' ? 'none' : 'inline';
+    adminLoginLinks.querySelector('.admin-login-links-sep').style.display = mode === 'magiclink' ? 'none' : 'inline';
+    loginPasswordInput.required = mode !== 'magiclink';
+
+    if (mode === 'signup') {
+      authSub.textContent = 'Create an account, then ask an existing admin to approve it.';
+      authSubmitBtn.textContent = 'Create Account';
+      toggleModeLink.textContent = 'Already have an account? Sign in';
+    } else if (mode === 'magiclink') {
+      authSub.textContent = "We'll email you a link to sign in — no password needed.";
+      authSubmitBtn.textContent = 'Send Magic Link';
+      toggleModeLink.textContent = 'Need an account? Sign up';
+      magicLinkToggle.textContent = 'Use password instead';
+    } else {
+      authSub.textContent = 'Sign in to view and manage leads.';
+      authSubmitBtn.textContent = 'Sign In';
+      toggleModeLink.textContent = 'Need an account? Sign up';
+      magicLinkToggle.textContent = 'Sign in with email link';
+    }
+  }
+
   toggleModeLink.addEventListener('click', (e) => {
     e.preventDefault();
-    signupMode = !signupMode;
-    authSub.textContent = signupMode ? 'Create an account, then ask an existing admin to approve it.' : 'Sign in to view and manage leads.';
-    authSubmitBtn.textContent = signupMode ? 'Create Account' : 'Sign In';
-    toggleModeLink.textContent = signupMode ? 'Already have an account? Sign in' : 'Need an account? Sign up';
-    loginError.textContent = '';
+    mode = mode === 'signup' ? 'signin' : 'signup';
+    setLoginMessage('', false);
+    updateAuthUI();
+  });
+
+  magicLinkToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    mode = mode === 'magiclink' ? 'signin' : 'magiclink';
+    setLoginMessage('', false);
+    updateAuthUI();
+  });
+
+  passwordToggle.addEventListener('click', () => {
+    const showing = loginPasswordInput.type === 'text';
+    loginPasswordInput.type = showing ? 'password' : 'text';
+    passwordToggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    passwordToggleIcon.innerHTML = showing
+      ? '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>'
+      : '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.6 20.6 0 0 1 5.06-6.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a20.6 20.6 0 0 1-2.39 3.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  });
+
+  forgotPasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = loginEmailInput.value.trim();
+    if (!email) {
+      setLoginMessage('Enter your email above first, then click "Forgot password?"', false);
+      return;
+    }
+    setLoginMessage('Sending…', true);
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) {
+      setLoginMessage(error.message, false);
+      return;
+    }
+    // Deliberately worded not to confirm whether the email has an account -- avoids
+    // leaking account existence to whoever is at this form.
+    setLoginMessage('If an account exists for that email, a reset link is on its way.', true);
   });
 
   async function isApprovedAdmin(email) {
@@ -69,6 +146,7 @@
   }
 
   async function afterAuth(session) {
+    if (recoveryMode) return; // the password-reset screen owns the UI until the password is updated
     if (!session) {
       showScreen('login');
       return;
@@ -87,18 +165,36 @@
 
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    loginError.textContent = '';
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
+    setLoginMessage('', false);
+    const email = loginEmailInput.value.trim();
+    const password = loginPasswordInput.value;
 
-    if (signupMode) {
+    if (mode === 'magiclink') {
+      // shouldCreateUser defaults to true, same as this site's existing open "Sign up" flow
+      // (client.auth.signUp already lets anyone create a pending account for any email today).
+      // Deliberately NOT set to false: that would make Supabase return a different error for
+      // "no account" vs "sent", leaking which emails are registered admins via the API response
+      // -- the same enumeration risk resetPasswordForEmail below is written to avoid.
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname },
+      });
+      if (error) {
+        setLoginMessage(error.message, false);
+        return;
+      }
+      setLoginMessage('Check your email for a sign-in link.', true);
+      return;
+    }
+
+    if (mode === 'signup') {
       const { data, error } = await client.auth.signUp({ email, password });
       if (error) {
-        loginError.textContent = error.message;
+        setLoginMessage(error.message, false);
         return;
       }
       if (!data.session) {
-        loginError.textContent = 'Check your email to confirm your account, then sign in.';
+        setLoginMessage('Check your email to confirm your account, then sign in.', true);
         return;
       }
       afterAuth(data.session);
@@ -107,10 +203,31 @@
 
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
-      loginError.textContent = 'Invalid email or password.';
+      setLoginMessage('Invalid email or password.', false);
       return;
     }
     afterAuth(data.session);
+  });
+
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    resetError.textContent = '';
+    const password = document.getElementById('reset-password').value;
+    const { error } = await client.auth.updateUser({ password });
+    if (error) {
+      resetError.textContent = error.message;
+      return;
+    }
+    recoveryMode = false;
+    const { data: { session } } = await client.auth.getSession();
+    afterAuth(session);
+  });
+
+  client.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      recoveryMode = true;
+      showScreen('reset');
+    }
   });
 
   logoutBtn.addEventListener('click', async () => {
@@ -362,6 +479,8 @@
     );
     renderAreaChart(trafficTrendEl, pageviews7dDaily);
   }
+
+  updateAuthUI();
 
   (async function checkSession() {
     const { data: { session } } = await client.auth.getSession();
