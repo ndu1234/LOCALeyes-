@@ -743,8 +743,28 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .admin-empty { padding: 60px 20px; text-align: center; color: var(--text-2); }
 .admin-error { color: #F87171; font-size: 13px; margin-top: 10px; min-height: 0; }
 
+.admin-stats-3 { grid-template-columns: repeat(3, 1fr); }
+
+.traffic-panels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.traffic-panel { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg-2); padding: 18px 20px; }
+.traffic-panel-title {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; color: var(--text-2);
+  text-transform: uppercase; margin-bottom: 14px;
+}
+.traffic-list { display: flex; flex-direction: column; gap: 2px; }
+.traffic-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px;
+}
+.traffic-row:last-child { border-bottom: none; }
+.traffic-row-label { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.traffic-count { font-family: 'Inter Tight', sans-serif; font-weight: 800; color: var(--sky); margin-left: 12px; }
+.traffic-list .admin-empty { padding: 20px 0; }
+
 @media (max-width: 860px) {
   .admin-stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-stats-3 { grid-template-columns: repeat(1, 1fr); }
+  .traffic-panels { grid-template-columns: 1fr; }
 }
 
 /* ── CTA ── */

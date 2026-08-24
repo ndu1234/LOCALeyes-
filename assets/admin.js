@@ -25,6 +25,10 @@
   const addAdminStatus = document.getElementById('add-admin-status');
   const statsEl = document.getElementById('admin-stats');
 
+  const trafficStatsEl = document.getElementById('traffic-stats');
+  const trafficTopPagesEl = document.getElementById('traffic-top-pages');
+  const trafficTopServicesEl = document.getElementById('traffic-top-services');
+
   let allLeads = [];
   let signupMode = false;
 
@@ -64,6 +68,7 @@
       pendingEmailEl.textContent = '';
       showScreen('dashboard');
       loadLeads();
+      loadTraffic();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -213,6 +218,71 @@
 
   searchInput.addEventListener('input', renderLeads);
   statusFilter.addEventListener('change', renderLeads);
+
+  function countBy(items, key) {
+    const counts = {};
+    items.forEach((item) => {
+      const k = item[key];
+      if (!k) return;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  }
+
+  function renderTrafficList(el, entries, emptyText) {
+    if (!entries.length) {
+      el.innerHTML = `<div class="admin-empty">${emptyText}</div>`;
+      return;
+    }
+    el.innerHTML = entries.map(([label, count]) => `
+      <div class="traffic-row">
+        <span class="traffic-row-label">${escapeHtml(label)}</span>
+        <span class="traffic-count">${count}</span>
+      </div>
+    `).join('');
+  }
+
+  async function loadTraffic() {
+    const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await client
+      .from('analytics_events')
+      .select('event_type, path, service_name, visitor_id, created_at')
+      .gte('created_at', since30)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      trafficStatsEl.innerHTML = '';
+      trafficTopPagesEl.innerHTML = `<div class="admin-empty">Could not load traffic: ${escapeHtml(error.message)}</div>`;
+      trafficTopServicesEl.innerHTML = '';
+      return;
+    }
+
+    const events = data || [];
+    const since7 = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const events7d = events.filter((e) => new Date(e.created_at).getTime() >= since7);
+    const pageviews7d = events7d.filter((e) => e.event_type === 'pageview');
+    const pageviews30d = events.filter((e) => e.event_type === 'pageview');
+    const uniqueVisitors7d = new Set(events7d.map((e) => e.visitor_id)).size;
+
+    const cards = [
+      { label: 'Pageviews (7d)', num: pageviews7d.length },
+      { label: 'Unique Visitors (7d)', num: uniqueVisitors7d },
+      { label: 'Pageviews (30d)', num: pageviews30d.length },
+    ];
+    trafficStatsEl.innerHTML = cards.map((c) => `
+      <div class="admin-stat-card">
+        <div class="admin-stat-num">${c.num}</div>
+        <div class="admin-stat-label">${c.label}</div>
+      </div>
+    `).join('');
+
+    renderTrafficList(trafficTopPagesEl, countBy(pageviews7d, 'path'), 'No pageviews yet.');
+    renderTrafficList(
+      trafficTopServicesEl,
+      countBy(events7d.filter((e) => e.event_type === 'service_click'), 'service_name'),
+      'No service clicks yet.'
+    );
+  }
 
   (async function checkSession() {
     const { data: { session } } = await client.auth.getSession();
