@@ -28,6 +28,16 @@
   const trafficStatsEl = document.getElementById('traffic-stats');
   const trafficTopPagesEl = document.getElementById('traffic-top-pages');
   const trafficTopServicesEl = document.getElementById('traffic-top-services');
+  const trafficTrendEl = document.getElementById('traffic-trend');
+
+  const adminTabs = document.querySelectorAll('.admin-tab');
+  const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
+  adminTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      adminTabs.forEach((t) => t.classList.toggle('active', t === tab));
+      adminTabPanels.forEach((p) => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
+    });
+  });
 
   let allLeads = [];
   let signupMode = false;
@@ -229,15 +239,29 @@
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
   }
 
-  function renderTrafficList(el, entries, emptyText) {
+  function renderBarChart(el, entries, emptyText) {
     if (!entries.length) {
       el.innerHTML = `<div class="admin-empty">${emptyText}</div>`;
       return;
     }
+    const max = Math.max(...entries.map(([, count]) => count));
     el.innerHTML = entries.map(([label, count]) => `
-      <div class="traffic-row">
-        <span class="traffic-row-label">${escapeHtml(label)}</span>
-        <span class="traffic-count">${count}</span>
+      <div class="bar-row">
+        <span class="bar-row-label">${escapeHtml(label)}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${max ? (count / max) * 100 : 0}%"></span></span>
+        <span class="bar-row-count">${count}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderTrendChart(el, days) {
+    const max = Math.max(1, ...days.map((d) => d.count));
+    el.innerHTML = days.map((d) => `
+      <div class="trend-bar-wrap">
+        <div class="trend-bar" style="height:${(d.count / max) * 100}%">
+          <span class="trend-bar-value">${d.count}</span>
+        </div>
+        <div class="trend-bar-label">${d.label}</div>
       </div>
     `).join('');
   }
@@ -276,12 +300,27 @@
       </div>
     `).join('');
 
-    renderTrafficList(trafficTopPagesEl, countBy(pageviews7d, 'path'), 'No pageviews yet.');
-    renderTrafficList(
+    renderBarChart(trafficTopPagesEl, countBy(pageviews7d, 'path'), 'No pageviews yet.');
+    renderBarChart(
       trafficTopServicesEl,
       countBy(events7d.filter((e) => e.event_type === 'service_click'), 'service_name'),
       'No service clicks yet.'
     );
+    renderTrendChart(trafficTrendEl, buildTrendDays(pageviews7d));
+  }
+
+  function buildTrendDays(pageviews) {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      const key = d.toDateString();
+      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const count = pageviews.filter((e) => new Date(e.created_at).toDateString() === key).length;
+      days.push({ label, count });
+    }
+    return days;
   }
 
   (async function checkSession() {
