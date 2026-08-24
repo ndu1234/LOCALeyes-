@@ -30,12 +30,12 @@
   const trafficTopServicesEl = document.getElementById('traffic-top-services');
   const trafficTrendEl = document.getElementById('traffic-trend');
 
-  const adminTabs = document.querySelectorAll('.admin-tab');
+  const adminNavItems = document.querySelectorAll('.admin-nav-item');
   const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
-  adminTabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      adminTabs.forEach((t) => t.classList.toggle('active', t === tab));
-      adminTabPanels.forEach((p) => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
+  adminNavItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      adminNavItems.forEach((t) => t.classList.toggle('active', t === item));
+      adminTabPanels.forEach((p) => p.classList.toggle('active', p.dataset.panel === item.dataset.tab));
     });
   });
 
@@ -45,7 +45,7 @@
   function showScreen(screen) {
     loginScreen.style.display = screen === 'login' ? 'flex' : 'none';
     pendingScreen.style.display = screen === 'pending' ? 'flex' : 'none';
-    dashboard.style.display = screen === 'dashboard' ? 'block' : 'none';
+    dashboard.style.display = screen === 'dashboard' ? 'flex' : 'none';
   }
 
   function escapeHtml(str) {
@@ -254,16 +254,65 @@
     `).join('');
   }
 
-  function renderTrendChart(el, days) {
+  function svgPoints(days, viewH) {
     const max = Math.max(1, ...days.map((d) => d.count));
-    el.innerHTML = days.map((d) => `
-      <div class="trend-bar-wrap">
-        <div class="trend-bar" style="height:${(d.count / max) * 100}%">
-          <span class="trend-bar-value">${d.count}</span>
-        </div>
-        <div class="trend-bar-label">${d.label}</div>
+    const n = days.length;
+    return days.map((d, i) => ({
+      x: n === 1 ? 0 : (i / (n - 1)) * 100,
+      y: viewH - (d.count / max) * (viewH - 4) - 2,
+    }));
+  }
+
+  function areaSvgMarkup(points, viewH) {
+    // No per-point <circle> dots here on purpose: preserveAspectRatio="none" scales x/y
+    // independently on a wide-short chart, which turns circles into ellipses. A crisp
+    // endpoint marker is drawn separately in HTML instead (see renderAreaChart).
+    const gradId = 'areaFill-' + Math.random().toString(36).slice(2);
+    const line = points.map((p) => `${p.x},${p.y.toFixed(2)}`).join(' ');
+    const area = `0,${viewH} ${line} 100,${viewH}`;
+    return `
+      <svg viewBox="0 0 100 ${viewH}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.32" />
+            <stop offset="100%" stop-color="var(--sky)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon points="${area}" fill="url(#${gradId})" />
+        <polyline points="${line}" fill="none" stroke="var(--sky)" stroke-width="1" vector-effect="non-scaling-stroke" />
+      </svg>
+    `;
+  }
+
+  function renderAreaChart(el, days) {
+    const viewH = 40;
+    const points = svgPoints(days, viewH);
+    const last = points[points.length - 1];
+    el.innerHTML = `
+      <div class="area-chart-svg">
+        ${areaSvgMarkup(points, viewH)}
+        <div class="area-chart-endpoint" style="left:${last.x}%; top:${(last.y / viewH) * 100}%"></div>
       </div>
-    `).join('');
+      <div class="area-chart-labels">${days.map((d) => `<span>${escapeHtml(d.label)}</span>`).join('')}</div>
+    `;
+  }
+
+  function sparklineSvg(days) {
+    return areaSvgMarkup(svgPoints(days, 28), 28);
+  }
+
+  function bucketDaily(events, numDays, valueFn) {
+    const days = [];
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      const key = d.toDateString();
+      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayEvents = events.filter((e) => new Date(e.created_at).toDateString() === key);
+      days.push({ label, count: valueFn(dayEvents) });
+    }
+    return days;
   }
 
   async function loadTraffic() {
@@ -288,15 +337,20 @@
     const pageviews30d = events.filter((e) => e.event_type === 'pageview');
     const uniqueVisitors7d = new Set(events7d.map((e) => e.visitor_id)).size;
 
+    const pageviews7dDaily = bucketDaily(events7d, 7, (d) => d.filter((e) => e.event_type === 'pageview').length);
+    const uniqueVisitors7dDaily = bucketDaily(events7d, 7, (d) => new Set(d.map((e) => e.visitor_id)).size);
+    const pageviews30dDaily = bucketDaily(events, 30, (d) => d.filter((e) => e.event_type === 'pageview').length);
+
     const cards = [
-      { label: 'Pageviews (7d)', num: pageviews7d.length },
-      { label: 'Unique Visitors (7d)', num: uniqueVisitors7d },
-      { label: 'Pageviews (30d)', num: pageviews30d.length },
+      { label: 'Pageviews (7d)', num: pageviews7d.length, spark: pageviews7dDaily },
+      { label: 'Unique Visitors (7d)', num: uniqueVisitors7d, spark: uniqueVisitors7dDaily },
+      { label: 'Pageviews (30d)', num: pageviews30d.length, spark: pageviews30dDaily },
     ];
     trafficStatsEl.innerHTML = cards.map((c) => `
-      <div class="admin-stat-card">
+      <div class="admin-stat-card admin-stat-card-spark">
         <div class="admin-stat-num">${c.num}</div>
         <div class="admin-stat-label">${c.label}</div>
+        <div class="stat-sparkline">${sparklineSvg(c.spark)}</div>
       </div>
     `).join('');
 
@@ -306,21 +360,7 @@
       countBy(events7d.filter((e) => e.event_type === 'service_click'), 'service_name'),
       'No service clicks yet.'
     );
-    renderTrendChart(trafficTrendEl, buildTrendDays(pageviews7d));
-  }
-
-  function buildTrendDays(pageviews) {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() - i);
-      const key = d.toDateString();
-      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const count = pageviews.filter((e) => new Date(e.created_at).toDateString() === key).length;
-      days.push({ label, count });
-    }
-    return days;
+    renderAreaChart(trafficTrendEl, pageviews7dDaily);
   }
 
   (async function checkSession() {
