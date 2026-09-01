@@ -46,6 +46,7 @@
   const clientsEmpty = document.getElementById('clients-empty');
   const addClientForm = document.getElementById('add-client-form');
   const addClientName = document.getElementById('add-client-name');
+  const addClientEmail = document.getElementById('add-client-email');
   const addClientStatus = document.getElementById('add-client-status');
 
   const clientsListView = document.getElementById('clients-list-view');
@@ -55,6 +56,9 @@
 
   const portalAccessStatusEl = document.getElementById('portal-access-status');
   const portalApproveBtn = document.getElementById('portal-approve-btn');
+  const authorizedEmailForm = document.getElementById('authorized-email-form');
+  const authorizedEmailInput = document.getElementById('authorized-email-input');
+  const authorizedEmailStatus = document.getElementById('authorized-email-status');
 
   const addCampaignForm = document.getElementById('add-campaign-form');
   const addCampaignName = document.getElementById('add-campaign-name');
@@ -637,9 +641,12 @@
     e.preventDefault();
     addClientStatus.textContent = '';
     const companyName = addClientName.value.trim();
-    const { error } = await client.from('clients').insert([{ company_name: companyName }]);
+    const authorizedEmail = addClientEmail.value.trim().toLowerCase() || null;
+    const { error } = await client.from('clients').insert([{ company_name: companyName, authorized_email: authorizedEmail }]);
     if (error) {
-      addClientStatus.textContent = 'Failed to add client: ' + error.message;
+      addClientStatus.textContent = error.message.includes('duplicate')
+        ? 'That email is already authorized for another client.'
+        : 'Failed to add client: ' + error.message;
       return;
     }
     addClientStatus.textContent = `${companyName} added.`;
@@ -769,27 +776,51 @@
   });
 
   async function loadPortalAccessStatus() {
+    authorizedEmailStatus.textContent = '';
     const { data, error } = await client
       .from('clients')
-      .select('user_id, portal_approved, users(email)')
+      .select('user_id, portal_approved, authorized_email, users(email)')
       .eq('id', currentClientId)
       .maybeSingle();
     if (error || !data) {
       portalAccessStatusEl.textContent = '';
       portalApproveBtn.style.display = 'none';
+      authorizedEmailForm.style.display = 'none';
       return;
     }
     if (!data.user_id) {
-      portalAccessStatusEl.textContent = 'Portal access: no signup yet.';
+      portalAccessStatusEl.textContent = data.authorized_email
+        ? `Portal access: no signup yet. Instant access authorized for ${data.authorized_email}.`
+        : 'Portal access: no signup yet.';
       portalApproveBtn.style.display = 'none';
+      authorizedEmailForm.style.display = 'flex';
+      authorizedEmailInput.value = data.authorized_email || '';
     } else if (!data.portal_approved) {
       portalAccessStatusEl.textContent = `Portal access: pending approval (signed up as ${data.users ? data.users.email : 'unknown'})`;
       portalApproveBtn.style.display = 'inline-flex';
+      authorizedEmailForm.style.display = 'none';
     } else {
       portalAccessStatusEl.textContent = `Portal access: approved (${data.users ? data.users.email : 'unknown'})`;
       portalApproveBtn.style.display = 'none';
+      authorizedEmailForm.style.display = 'none';
     }
   }
+
+  authorizedEmailForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    authorizedEmailStatus.textContent = '';
+    const email = authorizedEmailInput.value.trim().toLowerCase() || null;
+    const { error } = await client.from('clients').update({ authorized_email: email }).eq('id', currentClientId);
+    if (error) {
+      authorizedEmailStatus.textContent = error.message.includes('duplicate')
+        ? 'That email is already authorized for another client.'
+        : 'Failed to save: ' + error.message;
+      return;
+    }
+    authorizedEmailStatus.textContent = email ? 'Saved.' : 'Cleared.';
+    authorizedEmailStatus.style.color = 'var(--sky)';
+    loadPortalAccessStatus();
+  });
 
   portalApproveBtn.addEventListener('click', async () => {
     const { error } = await client.from('clients').update({ portal_approved: true }).eq('id', currentClientId);

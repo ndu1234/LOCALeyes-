@@ -110,7 +110,7 @@
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.textContent = '';
-    const email = loginEmailInput.value.trim();
+    const email = loginEmailInput.value.trim().toLowerCase();
     const password = loginPasswordInput.value;
 
     if (mode === 'signup') {
@@ -138,12 +138,26 @@
         loginError.textContent = 'Could not create account: ' + userErr.message;
         return;
       }
-      const { error: clientErr } = await client
+
+      // If an admin already pre-authorized this exact email on an existing
+      // client record, claim it (instant approval) instead of creating a
+      // second, disconnected client row for the same company.
+      const { data: claimedClient } = await client
         .from('clients')
-        .insert([{ company_name: companyName, user_id: userRow.id }]);
-      if (clientErr) {
-        loginError.textContent = 'Could not create account: ' + clientErr.message;
-        return;
+        .update({ user_id: userRow.id, portal_approved: true })
+        .eq('authorized_email', email)
+        .is('user_id', null)
+        .select('id')
+        .maybeSingle();
+
+      if (!claimedClient) {
+        const { error: clientErr } = await client
+          .from('clients')
+          .insert([{ company_name: companyName, user_id: userRow.id }]);
+        if (clientErr) {
+          loginError.textContent = 'Could not create account: ' + clientErr.message;
+          return;
+        }
       }
       afterAuth(data.session);
       return;
