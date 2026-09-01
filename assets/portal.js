@@ -159,7 +159,12 @@
 
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
-      loginError.textContent = 'Invalid email or password.';
+      // Supabase returns the same error whether the password is wrong or no
+      // account exists at all -- an admin authorizing an email doesn't
+      // create a login, it only pre-approves one, so "no account yet" is a
+      // common first attempt here. Point at signup rather than leaving them
+      // stuck re-trying a password for an account that was never created.
+      loginError.textContent = "Invalid email or password. If you don't have an account yet, use \"Request access\" below.";
       return;
     }
     afterAuth(data.session);
