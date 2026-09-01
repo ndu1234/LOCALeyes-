@@ -64,6 +64,15 @@
   const campaignsTbody = document.getElementById('campaigns-tbody');
   const campaignsEmpty = document.getElementById('campaigns-empty');
 
+  const invoicesSummary = document.getElementById('invoices-summary');
+  const invoicesTbody = document.getElementById('invoices-tbody');
+  const invoicesEmpty = document.getElementById('invoices-empty');
+  const addInvoiceForm = document.getElementById('add-invoice-form');
+  const addInvoiceAmount = document.getElementById('add-invoice-amount');
+  const addInvoiceDue = document.getElementById('add-invoice-due');
+  const addInvoiceStatusSelect = document.getElementById('add-invoice-status');
+  const addInvoiceStatusMsg = document.getElementById('add-invoice-status-msg');
+
   const metricsSection = document.getElementById('metrics-section');
   const metricsCampaignName = document.getElementById('metrics-campaign-name');
   const metricsSummary = document.getElementById('metrics-summary');
@@ -609,6 +618,7 @@
     clientsListView.style.display = 'none';
     clientDetailView.style.display = 'block';
     loadCampaigns();
+    loadInvoices();
     if (!opts.skipPush) {
       history.pushState({ tab: 'clients', view: 'client-detail', clientId }, '');
     }
@@ -725,6 +735,105 @@
     addCampaignStatus.style.color = 'var(--sky)';
     addCampaignForm.reset();
     loadCampaigns();
+  });
+
+  let allInvoices = [];
+  const INVOICE_STATUSES = ['draft', 'sent', 'paid', 'overdue'];
+
+  async function loadInvoices() {
+    const { data, error } = await client
+      .from('invoices')
+      .select('id, amount, status, due_date')
+      .eq('client_id', currentClientId)
+      .order('due_date', { ascending: true, nullsFirst: false });
+
+    if (error) {
+      invoicesTbody.innerHTML = '';
+      invoicesEmpty.style.display = 'block';
+      invoicesEmpty.textContent = 'Could not load invoices: ' + error.message;
+      invoicesSummary.innerHTML = '';
+      return;
+    }
+
+    allInvoices = data || [];
+    renderInvoices();
+  }
+
+  function renderInvoices() {
+    const totals = allInvoices.reduce((acc, inv) => {
+      const amt = Number(inv.amount) || 0;
+      acc.total += amt;
+      if (inv.status === 'paid') acc.paid += amt;
+      if (inv.status === 'sent' || inv.status === 'overdue') acc.outstanding += amt;
+      return acc;
+    }, { total: 0, paid: 0, outstanding: 0 });
+
+    invoicesSummary.innerHTML = [
+      { label: 'Total Invoiced', num: formatMoney(totals.total) },
+      { label: 'Total Paid', num: formatMoney(totals.paid) },
+      { label: 'Outstanding', num: formatMoney(totals.outstanding) },
+    ].map((c) => `
+      <div class="admin-stat-card">
+        <div class="admin-stat-num">${c.num}</div>
+        <div class="admin-stat-label">${c.label}</div>
+      </div>
+    `).join('');
+
+    if (!allInvoices.length) {
+      invoicesTbody.innerHTML = '';
+      invoicesEmpty.style.display = 'block';
+      invoicesEmpty.textContent = 'No invoices yet — add one above.';
+      return;
+    }
+
+    invoicesEmpty.style.display = 'none';
+    invoicesTbody.innerHTML = allInvoices.map((inv) => `
+        <tr>
+          <td>${formatMoney(inv.amount)}</td>
+          <td>${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—'}</td>
+          <td>
+            <select class="status-select ${inv.status}" data-invoice-id="${inv.id}">
+              ${INVOICE_STATUSES.map((s) => `<option value="${s}" ${s === inv.status ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `).join('');
+
+    invoicesTbody.querySelectorAll('.status-select').forEach((sel) => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.invoiceId;
+        const status = e.target.value;
+        const { error } = await client.from('invoices').update({ status }).eq('id', id);
+        if (error) {
+          alert('Failed to update status: ' + error.message);
+          return;
+        }
+        const inv = allInvoices.find((x) => x.id === id);
+        if (inv) inv.status = status;
+        e.target.className = 'status-select ' + status;
+        renderInvoices();
+      });
+    });
+  }
+
+  addInvoiceForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addInvoiceStatusMsg.textContent = '';
+    const row = {
+      client_id: currentClientId,
+      amount: Number(addInvoiceAmount.value),
+      due_date: addInvoiceDue.value || null,
+      status: addInvoiceStatusSelect.value,
+    };
+    const { error } = await client.from('invoices').insert([row]);
+    if (error) {
+      addInvoiceStatusMsg.textContent = 'Failed to add invoice: ' + error.message;
+      return;
+    }
+    addInvoiceStatusMsg.textContent = `Invoice for ${formatMoney(row.amount)} added.`;
+    addInvoiceStatusMsg.style.color = 'var(--sky)';
+    addInvoiceForm.reset();
+    loadInvoices();
   });
 
   let allMetrics = [];

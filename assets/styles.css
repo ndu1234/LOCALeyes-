@@ -810,6 +810,9 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .status-select.draft     { background: rgba(140,138,130,0.14); color: var(--text-2); border-color: var(--border); }
 .status-select.live      { background: rgba(34,197,94,0.12);   color: #4ADE80;      border-color: rgba(34,197,94,0.35); }
 .status-select.ended     { background: rgba(140,138,130,0.14); color: var(--text-2); border-color: var(--border); }
+.status-select.sent      { background: rgba(56,189,248,0.12);  color: var(--sky);   border-color: rgba(56,189,248,0.35); }
+.status-select.paid      { background: rgba(34,197,94,0.12);   color: #4ADE80;      border-color: rgba(34,197,94,0.35); }
+.status-select.overdue   { background: rgba(248,113,113,0.12); color: #F87171;      border-color: rgba(248,113,113,0.35); }
 .status-select option { background: var(--bg-2); color: var(--text); }
 
 .clients-manage-btn { padding: 6px 12px; font-size: 12px; }
