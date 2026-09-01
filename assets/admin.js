@@ -80,11 +80,34 @@
 
   const adminNavItems = document.querySelectorAll('.admin-nav-item');
   const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
+
+  function applyTab(tabName) {
+    adminNavItems.forEach((t) => t.classList.toggle('active', t.dataset.tab === tabName));
+    adminTabPanels.forEach((p) => p.classList.toggle('active', p.dataset.panel === tabName));
+  }
+
   adminNavItems.forEach((item) => {
     item.addEventListener('click', () => {
-      adminNavItems.forEach((t) => t.classList.toggle('active', t === item));
-      adminTabPanels.forEach((p) => p.classList.toggle('active', p.dataset.panel === item.dataset.tab));
+      applyTab(item.dataset.tab);
+      closeClientDetailView();
+      history.pushState({ tab: item.dataset.tab }, '');
     });
+  });
+
+  // Opening a client's detail view (or switching tabs) never used to touch
+  // browser history -- so hitting the back button from inside the admin
+  // dashboard skipped straight past admin.html to whatever page was open
+  // before it, instead of stepping back to the previous in-app view. Each
+  // tab switch/detail-open now pushes a history entry, and this listener
+  // replays that state on back/forward instead of re-pushing it.
+  window.addEventListener('popstate', (e) => {
+    const state = e.state || { tab: 'traffic' };
+    applyTab(state.tab || 'traffic');
+    if (state.view === 'client-detail' && state.clientId) {
+      openClientDetail(state.clientId, { skipPush: true });
+    } else {
+      closeClientDetailView();
+    }
   });
 
   let allLeads = [];
@@ -191,6 +214,7 @@
     if (approved) {
       pendingEmailEl.textContent = '';
       showScreen('dashboard');
+      if (!history.state) history.replaceState({ tab: 'traffic' }, '');
       loadLeads();
       loadTraffic();
       loadClients();
@@ -575,7 +599,7 @@
     loadClients();
   });
 
-  function openClientDetail(clientId) {
+  function openClientDetail(clientId, opts = {}) {
     const clientRow = allClients.find((c) => c.id === clientId);
     if (!clientRow) return;
     currentClientId = clientId;
@@ -585,13 +609,20 @@
     clientsListView.style.display = 'none';
     clientDetailView.style.display = 'block';
     loadCampaigns();
+    if (!opts.skipPush) {
+      history.pushState({ tab: 'clients', view: 'client-detail', clientId }, '');
+    }
   }
 
-  backToClientsBtn.addEventListener('click', () => {
+  function closeClientDetailView() {
     currentClientId = null;
     currentCampaignId = null;
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
+  }
+
+  backToClientsBtn.addEventListener('click', () => {
+    history.back();
   });
 
   let allCampaigns = [];
