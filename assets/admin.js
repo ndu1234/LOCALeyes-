@@ -790,17 +790,17 @@
     }
     if (!data.user_id) {
       portalAccessStatusEl.textContent = data.authorized_email
-        ? `Portal access: no signup yet. Instant access authorized for ${data.authorized_email}.`
-        : 'Portal access: no signup yet.';
+        ? 'No signup yet — they get instant access once they sign up with the email below.'
+        : 'No signup yet. Optionally authorize an email below for instant access.';
       portalApproveBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'flex';
       authorizedEmailInput.value = data.authorized_email || '';
     } else if (!data.portal_approved) {
-      portalAccessStatusEl.textContent = `Portal access: pending approval (signed up as ${data.users ? data.users.email : 'unknown'})`;
+      portalAccessStatusEl.textContent = `Pending approval — signed up as ${data.users ? data.users.email : 'unknown'}.`;
       portalApproveBtn.style.display = 'inline-flex';
       authorizedEmailForm.style.display = 'none';
     } else {
-      portalAccessStatusEl.textContent = `Portal access: approved (${data.users ? data.users.email : 'unknown'})`;
+      portalAccessStatusEl.textContent = `Approved — ${data.users ? data.users.email : 'unknown'} can sign in.`;
       portalApproveBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
     }

@@ -222,14 +222,20 @@
             <p class="admin-page-sub">Campaigns and performance for this client.</p>
           </div>
 
-          <div class="admin-toolbar" style="margin-bottom:8px;">
-            <p class="admin-page-sub" id="portal-access-status" style="margin:0;"></p>
-            <button type="button" class="btn btn-primary" id="portal-approve-btn" style="display:none; padding:10px 18px; font-size:13px;">Approve Portal Access</button>
+          <div style="margin-bottom:32px;">
+            <div class="admin-page-header" style="margin-bottom:14px;">
+              <h1 class="admin-title" style="font-size:20px;">Portal Access</h1>
+              <p class="admin-page-sub" id="portal-access-status"></p>
+            </div>
+            <button type="button" class="btn btn-primary" id="portal-approve-btn" style="display:none; padding:10px 18px; font-size:13px; margin-bottom:8px;">Approve Portal Access</button>
+            <form id="authorized-email-form" style="display:none; align-items:flex-end; gap:8px;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" for="authorized-email-input">Authorized email</label>
+                <input class="form-input" id="authorized-email-input" type="email" placeholder="client@company.com" style="max-width:260px;" />
+              </div>
+              <button type="submit" class="btn btn-ghost" style="padding:10px 18px; font-size:13px;">Save</button>
+            </form>
           </div>
-          <form id="authorized-email-form" style="display:none; align-items:center; gap:8px; margin-bottom:28px;">
-            <input class="form-input" id="authorized-email-input" type="email" placeholder="Authorize an email for instant access" style="max-width:260px;" />
-            <button type="submit" class="btn btn-ghost" style="padding:10px 18px; font-size:13px;">Save</button>
-          </form>
           <p class="admin-error" id="authorized-email-status" style="margin:-20px 0 20px;"></p>
 
           <div class="admin-toolbar">
