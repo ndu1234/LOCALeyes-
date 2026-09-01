@@ -12,25 +12,49 @@
 </head>
 <body>
 
-<!-- LOGIN (magic link only -- clients never set a password) -->
+<!-- LOGIN / SIGNUP -->
 <div id="portal-login">
   <div class="hero-bg"></div>
   <div class="admin-login-card">
     <a href="index.html" class="logo" style="margin-bottom:22px;"><img src="assets/logo-icon.png" alt="" class="logo-icon" /><span class="logo-text">Local<span>Eyes</span></span></a>
     <div class="admin-login-title">Client Portal</div>
-    <p class="admin-login-sub">Enter your email and we'll send you a sign-in link.</p>
+    <p class="admin-login-sub" id="portal-auth-sub">Sign in to your account.</p>
     <form id="portal-login-form">
+      <div class="form-group" id="portal-signup-company-group" style="display:none;">
+        <label class="form-label" for="portal-signup-company">Company name</label>
+        <input class="form-input" id="portal-signup-company" type="text" autocomplete="organization" />
+      </div>
+      <div class="form-group" id="portal-signup-name-group" style="display:none;">
+        <label class="form-label" for="portal-signup-name">Your name</label>
+        <input class="form-input" id="portal-signup-name" type="text" autocomplete="name" />
+      </div>
       <div class="form-group">
         <label class="form-label" for="portal-login-email">Email</label>
         <input class="form-input" id="portal-login-email" type="email" required autocomplete="username" autofocus />
       </div>
-      <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="portal-login-submit">Send Sign-In Link</button>
+      <div class="form-group">
+        <label class="form-label" for="portal-login-password">Password</label>
+        <input class="form-input" id="portal-login-password" type="password" required minlength="6" autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="portal-login-submit">Sign In</button>
       <p class="admin-error" id="portal-login-error"></p>
+      <p style="margin-top:14px; font-size:13px; color:var(--text-2); text-align:center;">
+        <a href="#" id="portal-toggle-mode" style="color:var(--sky); text-decoration:none; font-weight:600;">Need an account? Request access</a>
+      </p>
     </form>
   </div>
 </div>
 
-<!-- NOT A CLIENT (authenticated, but no clients row links to this email) -->
+<!-- PENDING APPROVAL (signed up, waiting on an admin to approve) -->
+<div id="portal-pending" class="admin-standalone-screen">
+  <div class="admin-login-card" style="text-align:center;">
+    <div class="admin-login-title">Request received</div>
+    <p class="admin-login-sub">Your account was created, but a LocalEyes admin still needs to approve portal access for <strong id="portal-pending-company" style="color:var(--text);"></strong>. We'll be in touch.</p>
+    <button class="btn btn-ghost btn-block" id="pending-logout-btn" style="padding:13px 24px;">Sign Out</button>
+  </div>
+</div>
+
+<!-- NOT A CLIENT (authenticated, but no clients row links to this email at all) -->
 <div id="portal-no-access" class="admin-standalone-screen">
   <div class="admin-login-card" style="text-align:center;">
     <div class="admin-login-title">No portal access yet</div>

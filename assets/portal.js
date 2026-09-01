@@ -2,16 +2,53 @@
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   const loginScreen = document.getElementById('portal-login');
+  const pendingScreen = document.getElementById('portal-pending');
   const noAccessScreen = document.getElementById('portal-no-access');
   const dashboard = document.getElementById('portal-dashboard');
 
   const loginForm = document.getElementById('portal-login-form');
+  const authSub = document.getElementById('portal-auth-sub');
+  const authSubmitBtn = document.getElementById('portal-login-submit');
+  const toggleModeLink = document.getElementById('portal-toggle-mode');
+  const signupCompanyGroup = document.getElementById('portal-signup-company-group');
+  const signupCompanyInput = document.getElementById('portal-signup-company');
+  const signupNameGroup = document.getElementById('portal-signup-name-group');
+  const signupNameInput = document.getElementById('portal-signup-name');
   const loginEmailInput = document.getElementById('portal-login-email');
+  const loginPasswordInput = document.getElementById('portal-login-password');
   const loginError = document.getElementById('portal-login-error');
 
+  const pendingCompanyEl = document.getElementById('portal-pending-company');
+  const pendingLogoutBtn = document.getElementById('pending-logout-btn');
   const noAccessLogoutBtn = document.getElementById('no-access-logout-btn');
   const logoutBtn = document.getElementById('portal-logout-btn');
   const companyNameEl = document.getElementById('portal-company-name');
+
+  let mode = 'signin'; // 'signin' | 'signup'
+
+  function updateAuthUI() {
+    signupCompanyGroup.style.display = mode === 'signup' ? 'block' : 'none';
+    signupNameGroup.style.display = mode === 'signup' ? 'block' : 'none';
+    signupCompanyInput.required = mode === 'signup';
+    signupNameInput.required = mode === 'signup';
+    loginPasswordInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+    if (mode === 'signup') {
+      authSub.textContent = 'Tell us about your company to request portal access.';
+      authSubmitBtn.textContent = 'Request Access';
+      toggleModeLink.textContent = 'Already have an account? Sign in';
+    } else {
+      authSub.textContent = 'Sign in to your account.';
+      authSubmitBtn.textContent = 'Sign In';
+      toggleModeLink.textContent = 'Need an account? Request access';
+    }
+  }
+
+  toggleModeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    mode = mode === 'signup' ? 'signin' : 'signup';
+    loginError.textContent = '';
+    updateAuthUI();
+  });
 
   const campaignsTbody = document.getElementById('portal-campaigns-tbody');
   const campaignsEmpty = document.getElementById('portal-campaigns-empty');
@@ -41,6 +78,7 @@
 
   function showScreen(screen) {
     loginScreen.style.display = screen === 'login' ? 'flex' : 'none';
+    pendingScreen.style.display = screen === 'pending' ? 'flex' : 'none';
     noAccessScreen.style.display = screen === 'no-access' ? 'flex' : 'none';
     dashboard.style.display = screen === 'dashboard' ? 'flex' : 'none';
   }
@@ -73,22 +111,57 @@
     e.preventDefault();
     loginError.textContent = '';
     const email = loginEmailInput.value.trim();
-    const { error } = await client.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + window.location.pathname },
-    });
-    if (error) {
-      loginError.textContent = error.message;
+    const password = loginPasswordInput.value;
+
+    if (mode === 'signup') {
+      const companyName = signupCompanyInput.value.trim();
+      const contactName = signupNameInput.value.trim();
+      const { data, error } = await client.auth.signUp({ email, password });
+      if (error) {
+        loginError.textContent = error.message;
+        return;
+      }
+      if (!data.session) {
+        // Project has email confirmation required -- rare for this app, but handle it.
+        loginError.textContent = 'Check your email to confirm your account, then sign in.';
+        loginError.style.color = 'var(--sky)';
+        mode = 'signin';
+        updateAuthUI();
+        return;
+      }
+      const { data: userRow, error: userErr } = await client
+        .from('users')
+        .insert([{ email, name: contactName, role: 'client' }])
+        .select('id')
+        .single();
+      if (userErr) {
+        loginError.textContent = 'Could not create account: ' + userErr.message;
+        return;
+      }
+      const { error: clientErr } = await client
+        .from('clients')
+        .insert([{ company_name: companyName, user_id: userRow.id }]);
+      if (clientErr) {
+        loginError.textContent = 'Could not create account: ' + clientErr.message;
+        return;
+      }
+      afterAuth(data.session);
       return;
     }
-    loginError.textContent = 'Check your email for a sign-in link.';
-    loginError.style.color = 'var(--sky)';
+
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      loginError.textContent = 'Invalid email or password.';
+      return;
+    }
+    afterAuth(data.session);
   });
 
   async function signOut() {
     await client.auth.signOut();
     showScreen('login');
   }
+  pendingLogoutBtn.addEventListener('click', signOut);
   noAccessLogoutBtn.addEventListener('click', signOut);
   logoutBtn.addEventListener('click', signOut);
 
@@ -97,9 +170,14 @@
       showScreen('login');
       return;
     }
-    const { data, error } = await client.from('clients').select('id, company_name').maybeSingle();
+    const { data, error } = await client.from('clients').select('id, company_name, portal_approved').maybeSingle();
     if (error || !data) {
       showScreen('no-access');
+      return;
+    }
+    if (!data.portal_approved) {
+      pendingCompanyEl.textContent = data.company_name;
+      showScreen('pending');
       return;
     }
     currentClientId = data.id;
@@ -382,6 +460,8 @@
       });
     });
   }
+
+  updateAuthUI();
 
   (async function checkSession() {
     const { data: { session } } = await client.auth.getSession();

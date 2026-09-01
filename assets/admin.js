@@ -53,11 +53,8 @@
   const clientDetailName = document.getElementById('client-detail-name');
   const backToClientsBtn = document.getElementById('back-to-clients');
 
-  const portalInviteStatusEl = document.getElementById('portal-invite-status');
-  const inviteClientForm = document.getElementById('invite-client-form');
-  const inviteClientName = document.getElementById('invite-client-name');
-  const inviteClientEmail = document.getElementById('invite-client-email');
-  const inviteClientStatusMsg = document.getElementById('invite-client-status-msg');
+  const portalAccessStatusEl = document.getElementById('portal-access-status');
+  const portalApproveBtn = document.getElementById('portal-approve-btn');
 
   const addCampaignForm = document.getElementById('add-campaign-form');
   const addCampaignName = document.getElementById('add-campaign-name');
@@ -595,7 +592,7 @@
   async function loadClients() {
     const { data: clientRows, error: clientErr } = await client
       .from('clients')
-      .select('id, company_name, status')
+      .select('id, company_name, status, user_id, portal_approved')
       .order('company_name', { ascending: true });
 
     if (clientErr) {
@@ -618,13 +615,18 @@
     }
 
     clientsEmpty.style.display = 'none';
-    clientsTbody.innerHTML = clients.map((c) => `
+    clientsTbody.innerHTML = clients.map((c) => {
+      const portalCls = !c.user_id ? 'no-signup' : (c.portal_approved ? 'approved' : 'pending');
+      const portalLabel = !c.user_id ? 'Not signed up' : (c.portal_approved ? 'Approved' : 'Pending');
+      return `
         <tr>
           <td>${escapeHtml(c.company_name)}</td>
           <td><span class="status-select ${c.status}">${escapeHtml(c.status)}</span></td>
+          <td><span class="status-select ${portalCls}">${portalLabel}</span></td>
           <td><button type="button" class="btn btn-ghost clients-manage-btn" data-client-id="${c.id}">Manage</button></td>
         </tr>
-      `).join('');
+      `;
+    }).join('');
 
     clientsTbody.querySelectorAll('.clients-manage-btn').forEach((btn) => {
       btn.addEventListener('click', () => openClientDetail(btn.dataset.clientId));
@@ -748,7 +750,7 @@
     loadCampaigns();
     loadInvoices();
     loadContentBriefs();
-    loadPortalInviteStatus();
+    loadPortalAccessStatus();
     if (!opts.skipPush) {
       history.pushState({ tab: 'clients', view: 'client-detail', clientId }, '');
     }
@@ -766,55 +768,37 @@
     history.back();
   });
 
-  async function loadPortalInviteStatus() {
+  async function loadPortalAccessStatus() {
     const { data, error } = await client
       .from('clients')
-      .select('user_id, users(email)')
+      .select('user_id, portal_approved, users(email)')
       .eq('id', currentClientId)
       .maybeSingle();
     if (error || !data) {
-      portalInviteStatusEl.textContent = '';
+      portalAccessStatusEl.textContent = '';
+      portalApproveBtn.style.display = 'none';
       return;
     }
-    portalInviteStatusEl.textContent = data.users
-      ? `Portal access: invited as ${data.users.email}`
-      : 'Portal access: not invited yet.';
+    if (!data.user_id) {
+      portalAccessStatusEl.textContent = 'Portal access: no signup yet.';
+      portalApproveBtn.style.display = 'none';
+    } else if (!data.portal_approved) {
+      portalAccessStatusEl.textContent = `Portal access: pending approval (signed up as ${data.users ? data.users.email : 'unknown'})`;
+      portalApproveBtn.style.display = 'inline-flex';
+    } else {
+      portalAccessStatusEl.textContent = `Portal access: approved (${data.users ? data.users.email : 'unknown'})`;
+      portalApproveBtn.style.display = 'none';
+    }
   }
 
-  inviteClientForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    inviteClientStatusMsg.textContent = '';
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) return;
-
-    const functionUrl = `${window.SUPABASE_URL}/functions/v1/invite-client`;
-    try {
-      const resp = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: currentClientId,
-          email: inviteClientEmail.value.trim(),
-          name: inviteClientName.value.trim() || null,
-        }),
-      });
-      const body = await resp.json();
-      if (!resp.ok) {
-        inviteClientStatusMsg.textContent = 'Failed to send invite: ' + (body.error || resp.statusText);
-        return;
-      }
-      inviteClientStatusMsg.textContent = body.already_registered
-        ? 'That email already has portal access — client linked.'
-        : 'Invite sent.';
-      inviteClientStatusMsg.style.color = 'var(--sky)';
-      inviteClientForm.reset();
-      loadPortalInviteStatus();
-    } catch (err) {
-      inviteClientStatusMsg.textContent = 'Failed to send invite: ' + err.message;
+  portalApproveBtn.addEventListener('click', async () => {
+    const { error } = await client.from('clients').update({ portal_approved: true }).eq('id', currentClientId);
+    if (error) {
+      alert('Failed to approve portal access: ' + error.message);
+      return;
     }
+    loadPortalAccessStatus();
+    loadClients();
   });
 
   let allCampaigns = [];
