@@ -195,7 +195,13 @@
       return;
     }
     const email = session.user.email;
-    let { data } = await client.from('clients').select('id, company_name, portal_approved').maybeSingle();
+    // Excludes rows only visible because they're an unclaimed
+    // pre-authorization (see the "pre-authorized client row" SELECT
+    // policy) -- this must only match a row actually linked to this
+    // account, or an unclaimed row would short-circuit past the claim
+    // attempt below and get stuck showing as if it were already "theirs"
+    // without ever actually being claimed.
+    let { data } = await client.from('clients').select('id, company_name, portal_approved').not('user_id', 'is', null).maybeSingle();
 
     if (!data) {
       // No client linked to this account yet -- an admin may have
