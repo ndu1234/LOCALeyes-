@@ -668,7 +668,7 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .legal-content a:hover { text-decoration: underline; }
 
 /* ── ADMIN ── */
-#admin-login {
+#admin-login, #portal-login {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
   padding: clamp(20px,5vw,64px); position: relative; overflow: hidden;
 }
@@ -700,7 +700,7 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .admin-login-links a:hover { text-decoration: underline; }
 .admin-login-links-sep { color: var(--text-2); }
 
-#admin-dashboard { display: none; }
+#admin-dashboard, #portal-dashboard { display: none; }
 .admin-topbar {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
