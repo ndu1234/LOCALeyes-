@@ -53,6 +53,12 @@
   const clientDetailName = document.getElementById('client-detail-name');
   const backToClientsBtn = document.getElementById('back-to-clients');
 
+  const portalInviteStatusEl = document.getElementById('portal-invite-status');
+  const inviteClientForm = document.getElementById('invite-client-form');
+  const inviteClientName = document.getElementById('invite-client-name');
+  const inviteClientEmail = document.getElementById('invite-client-email');
+  const inviteClientStatusMsg = document.getElementById('invite-client-status-msg');
+
   const addCampaignForm = document.getElementById('add-campaign-form');
   const addCampaignName = document.getElementById('add-campaign-name');
   const addCampaignPlatform = document.getElementById('add-campaign-platform');
@@ -742,6 +748,7 @@
     loadCampaigns();
     loadInvoices();
     loadContentBriefs();
+    loadPortalInviteStatus();
     if (!opts.skipPush) {
       history.pushState({ tab: 'clients', view: 'client-detail', clientId }, '');
     }
@@ -757,6 +764,57 @@
 
   backToClientsBtn.addEventListener('click', () => {
     history.back();
+  });
+
+  async function loadPortalInviteStatus() {
+    const { data, error } = await client
+      .from('clients')
+      .select('user_id, users(email)')
+      .eq('id', currentClientId)
+      .maybeSingle();
+    if (error || !data) {
+      portalInviteStatusEl.textContent = '';
+      return;
+    }
+    portalInviteStatusEl.textContent = data.users
+      ? `Portal access: invited as ${data.users.email}`
+      : 'Portal access: not invited yet.';
+  }
+
+  inviteClientForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    inviteClientStatusMsg.textContent = '';
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) return;
+
+    const functionUrl = `${window.SUPABASE_URL}/functions/v1/invite-client`;
+    try {
+      const resp = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: currentClientId,
+          email: inviteClientEmail.value.trim(),
+          name: inviteClientName.value.trim() || null,
+        }),
+      });
+      const body = await resp.json();
+      if (!resp.ok) {
+        inviteClientStatusMsg.textContent = 'Failed to send invite: ' + (body.error || resp.statusText);
+        return;
+      }
+      inviteClientStatusMsg.textContent = body.already_registered
+        ? 'That email already has portal access — client linked.'
+        : 'Invite sent.';
+      inviteClientStatusMsg.style.color = 'var(--sky)';
+      inviteClientForm.reset();
+      loadPortalInviteStatus();
+    } catch (err) {
+      inviteClientStatusMsg.textContent = 'Failed to send invite: ' + err.message;
+    }
   });
 
   let allCampaigns = [];

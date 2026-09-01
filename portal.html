@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal — LocalEyes</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" />
+</head>
+<body>
+
+<!-- LOGIN (magic link only -- clients never set a password) -->
+<div id="portal-login">
+  <div class="hero-bg"></div>
+  <div class="admin-login-card">
+    <a href="index.html" class="logo" style="margin-bottom:22px;"><img src="assets/logo-icon.png" alt="" class="logo-icon" /><span class="logo-text">Local<span>Eyes</span></span></a>
+    <div class="admin-login-title">Client Portal</div>
+    <p class="admin-login-sub">Enter your email and we'll send you a sign-in link.</p>
+    <form id="portal-login-form">
+      <div class="form-group">
+        <label class="form-label" for="portal-login-email">Email</label>
+        <input class="form-input" id="portal-login-email" type="email" required autocomplete="username" autofocus />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="portal-login-submit">Send Sign-In Link</button>
+      <p class="admin-error" id="portal-login-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- NOT A CLIENT (authenticated, but no clients row links to this email) -->
+<div id="portal-no-access" class="admin-standalone-screen">
+  <div class="admin-login-card" style="text-align:center;">
+    <div class="admin-login-title">No portal access yet</div>
+    <p class="admin-login-sub">This email isn't linked to a LocalEyes client account. Contact your LocalEyes rep to get set up.</p>
+    <button class="btn btn-ghost btn-block" id="no-access-logout-btn" style="padding:13px 24px;">Sign Out</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="portal-dashboard" class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-top">
+      <div class="logo"><img src="assets/logo-icon.png" alt="" class="logo-icon" /><span class="logo-text">Local<span>Eyes</span></span></div>
+      <span class="admin-topbar-tag">Client</span>
+    </div>
+    <div style="padding:16px 4px; color:var(--text-2); font-size:13px;">
+      Signed in as<br /><strong id="portal-company-name" style="color:var(--text); font-size:15px;"></strong>
+    </div>
+    <button class="btn btn-ghost btn-block admin-sidebar-signout" id="portal-logout-btn">Sign Out</button>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-body">
+      <div class="admin-page-header">
+        <h1 class="admin-title">Campaigns</h1>
+        <p class="admin-page-sub">What LocalEyes is running for you.</p>
+      </div>
+
+      <div class="leads-table-wrap" style="margin-bottom:32px;">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Campaign</th>
+              <th>Platform</th>
+              <th>Objective</th>
+              <th>Budget</th>
+              <th>Dates</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="portal-campaigns-tbody"></tbody>
+        </table>
+        <div class="admin-empty" id="portal-campaigns-empty" style="display:none;"></div>
+      </div>
+
+      <div id="portal-metrics-section" style="display:none; margin-bottom:32px;">
+        <div class="admin-page-header">
+          <h1 class="admin-title" id="portal-metrics-campaign-name" style="font-size:20px;"></h1>
+          <p class="admin-page-sub">Daily performance.</p>
+        </div>
+        <div class="admin-stats admin-stats-3" id="portal-metrics-summary"></div>
+        <div class="leads-table-wrap" style="margin-top:20px;">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>Conversions</th>
+                <th>Spend</th>
+                <th>ROAS</th>
+              </tr>
+            </thead>
+            <tbody id="portal-metrics-tbody"></tbody>
+          </table>
+          <div class="admin-empty" id="portal-metrics-empty" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="admin-page-header">
+        <h1 class="admin-title">Invoices</h1>
+        <p class="admin-page-sub">Billing history.</p>
+      </div>
+
+      <div class="admin-stats admin-stats-3" id="portal-invoices-summary" style="margin-bottom:20px;"></div>
+
+      <div class="leads-table-wrap" style="margin-bottom:32px;">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Amount</th>
+              <th>Due Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="portal-invoices-tbody"></tbody>
+        </table>
+        <div class="admin-empty" id="portal-invoices-empty" style="display:none;"></div>
+      </div>
+
+      <div class="admin-page-header">
+        <h1 class="admin-title">Content Briefs</h1>
+        <p class="admin-page-sub">UGC requests. Click a brief to review submissions.</p>
+      </div>
+
+      <div class="leads-table-wrap">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Brief</th>
+              <th>Talking Points</th>
+              <th>Deadline</th>
+            </tr>
+          </thead>
+          <tbody id="portal-briefs-tbody"></tbody>
+        </table>
+        <div class="admin-empty" id="portal-briefs-empty" style="display:none;"></div>
+      </div>
+
+      <div id="portal-submissions-section" style="display:none; margin-top:32px;">
+        <div class="admin-page-header">
+          <h1 class="admin-title" id="portal-submissions-brief-title" style="font-size:18px;"></h1>
+          <p class="admin-page-sub" id="portal-submissions-brief-description"></p>
+        </div>
+        <div class="leads-table-wrap">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>File</th>
+                <th>Status</th>
+                <th>Feedback</th>
+              </tr>
+            </thead>
+            <tbody id="portal-submissions-tbody"></tbody>
+          </table>
+          <div class="admin-empty" id="portal-submissions-empty" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/portal.js"></script>
+</body>
+</html>
