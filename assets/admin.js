@@ -87,6 +87,36 @@
   const addMetricRoas = document.getElementById('add-metric-roas');
   const addMetricStatus = document.getElementById('add-metric-status');
 
+  const creatorsTbody = document.getElementById('creators-tbody');
+  const creatorsEmpty = document.getElementById('creators-empty');
+  const addCreatorForm = document.getElementById('add-creator-form');
+  const addCreatorName = document.getElementById('add-creator-name');
+  const addCreatorEmail = document.getElementById('add-creator-email');
+  const addCreatorNiche = document.getElementById('add-creator-niche');
+  const addCreatorRate = document.getElementById('add-creator-rate');
+  const addCreatorPortfolio = document.getElementById('add-creator-portfolio');
+  const addCreatorStatus = document.getElementById('add-creator-status');
+
+  const briefsTbody = document.getElementById('briefs-tbody');
+  const briefsEmpty = document.getElementById('briefs-empty');
+  const addBriefForm = document.getElementById('add-brief-form');
+  const addBriefTitle = document.getElementById('add-brief-title');
+  const addBriefTalkingPoints = document.getElementById('add-brief-talking-points');
+  const addBriefDeadline = document.getElementById('add-brief-deadline');
+  const addBriefDescription = document.getElementById('add-brief-description');
+  const addBriefStatus = document.getElementById('add-brief-status');
+
+  const submissionsSection = document.getElementById('submissions-section');
+  const submissionsBriefTitle = document.getElementById('submissions-brief-title');
+  const submissionsBriefDescription = document.getElementById('submissions-brief-description');
+  const submissionsTbody = document.getElementById('submissions-tbody');
+  const submissionsEmpty = document.getElementById('submissions-empty');
+  const addSubmissionForm = document.getElementById('add-submission-form');
+  const addSubmissionCreator = document.getElementById('add-submission-creator');
+  const addSubmissionType = document.getElementById('add-submission-type');
+  const addSubmissionUrl = document.getElementById('add-submission-url');
+  const addSubmissionStatus = document.getElementById('add-submission-status');
+
   const adminNavItems = document.querySelectorAll('.admin-nav-item');
   const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
 
@@ -227,6 +257,7 @@
       loadLeads();
       loadTraffic();
       loadClients();
+      loadCreators();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -553,6 +584,7 @@
   let allClients = [];
   let currentClientId = null;
   let currentCampaignId = null;
+  let currentBriefId = null;
 
   async function loadClients() {
     const { data: clientRows, error: clientErr } = await client
@@ -608,17 +640,108 @@
     loadClients();
   });
 
+  let allCreators = [];
+
+  async function loadCreators() {
+    const { data, error } = await client
+      .from('ugc_creators')
+      .select('id, niche, rate_per_video, portfolio_url, availability, users(name, email)')
+      .order('id', { ascending: true });
+
+    if (error) {
+      creatorsTbody.innerHTML = '';
+      creatorsEmpty.style.display = 'block';
+      creatorsEmpty.textContent = 'Could not load creators: ' + error.message;
+      return;
+    }
+
+    allCreators = data || [];
+    renderCreators();
+    renderSubmissionCreatorOptions();
+  }
+
+  function renderCreators() {
+    if (!allCreators.length) {
+      creatorsTbody.innerHTML = '';
+      creatorsEmpty.style.display = 'block';
+      creatorsEmpty.textContent = 'No creators yet — add one above.';
+      return;
+    }
+
+    creatorsEmpty.style.display = 'none';
+    creatorsTbody.innerHTML = allCreators.map((c) => `
+        <tr>
+          <td>${escapeHtml(c.users ? c.users.name || c.users.email : '—')}</td>
+          <td>${escapeHtml((c.niche || []).join(', ') || '—')}</td>
+          <td>${formatMoney(c.rate_per_video)}</td>
+          <td>${c.portfolio_url ? `<a href="${escapeHtml(c.portfolio_url)}" target="_blank" rel="noopener" style="color:var(--sky);">Link</a>` : '—'}</td>
+          <td><button type="button" class="status-select ${c.availability ? 'available' : 'unavailable'}" data-creator-id="${c.id}">${c.availability ? 'Available' : 'Unavailable'}</button></td>
+        </tr>
+      `).join('');
+
+    creatorsTbody.querySelectorAll('button.status-select').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.creatorId;
+        const creator = allCreators.find((c) => c.id === id);
+        if (!creator) return;
+        const newAvailability = !creator.availability;
+        const { error } = await client.from('ugc_creators').update({ availability: newAvailability }).eq('id', id);
+        if (error) {
+          alert('Failed to update availability: ' + error.message);
+          return;
+        }
+        creator.availability = newAvailability;
+        renderCreators();
+      });
+    });
+  }
+
+  addCreatorForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addCreatorStatus.textContent = '';
+    const name = addCreatorName.value.trim();
+    const email = addCreatorEmail.value.trim();
+    const { data: userRow, error: userErr } = await client
+      .from('users')
+      .insert([{ name, email, role: 'creator' }])
+      .select('id')
+      .single();
+    if (userErr) {
+      addCreatorStatus.textContent = userErr.message.includes('duplicate') ? 'That email is already in use.' : 'Failed to add creator: ' + userErr.message;
+      return;
+    }
+    const niche = addCreatorNiche.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const { error: creatorErr } = await client.from('ugc_creators').insert([{
+      user_id: userRow.id,
+      niche: niche.length ? niche : null,
+      rate_per_video: addCreatorRate.value ? Number(addCreatorRate.value) : null,
+      portfolio_url: addCreatorPortfolio.value.trim() || null,
+      availability: true,
+    }]);
+    if (creatorErr) {
+      addCreatorStatus.textContent = 'Failed to add creator: ' + creatorErr.message;
+      return;
+    }
+    addCreatorStatus.textContent = `${name} added.`;
+    addCreatorStatus.style.color = 'var(--sky)';
+    addCreatorForm.reset();
+    loadCreators();
+  });
+
   function openClientDetail(clientId, opts = {}) {
     const clientRow = allClients.find((c) => c.id === clientId);
     if (!clientRow) return;
     currentClientId = clientId;
     currentCampaignId = null;
+    currentBriefId = null;
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
+    submissionsSection.style.display = 'none';
     clientsListView.style.display = 'none';
     clientDetailView.style.display = 'block';
     loadCampaigns();
     loadInvoices();
+    loadContentBriefs();
     if (!opts.skipPush) {
       history.pushState({ tab: 'clients', view: 'client-detail', clientId }, '');
     }
@@ -627,6 +750,7 @@
   function closeClientDetailView() {
     currentClientId = null;
     currentCampaignId = null;
+    currentBriefId = null;
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
   }
@@ -843,6 +967,173 @@
     addInvoiceStatusMsg.style.color = 'var(--sky)';
     addInvoiceForm.reset();
     loadInvoices();
+  });
+
+  let allBriefs = [];
+
+  async function loadContentBriefs() {
+    const { data, error } = await client
+      .from('content_briefs')
+      .select('id, title, description, talking_points, deadline')
+      .eq('client_id', currentClientId)
+      .order('deadline', { ascending: true, nullsFirst: false });
+
+    if (error) {
+      briefsTbody.innerHTML = '';
+      briefsEmpty.style.display = 'block';
+      briefsEmpty.textContent = 'Could not load content briefs: ' + error.message;
+      return;
+    }
+
+    allBriefs = data || [];
+    renderContentBriefs();
+  }
+
+  function renderContentBriefs() {
+    if (!allBriefs.length) {
+      briefsTbody.innerHTML = '';
+      briefsEmpty.style.display = 'block';
+      briefsEmpty.textContent = 'No content briefs yet — add one above.';
+      return;
+    }
+
+    briefsEmpty.style.display = 'none';
+    briefsTbody.innerHTML = allBriefs.map((b) => `
+        <tr class="brief-row ${b.id === currentBriefId ? 'active-row' : ''}" data-brief-id="${b.id}">
+          <td>${escapeHtml(b.title)}</td>
+          <td>${escapeHtml((b.talking_points || []).join(', ') || '—')}</td>
+          <td>${formatDateOnly(b.deadline)}</td>
+        </tr>
+      `).join('');
+
+    briefsTbody.querySelectorAll('.brief-row').forEach((row) => {
+      row.addEventListener('click', () => openSubmissions(row.dataset.briefId));
+    });
+  }
+
+  addBriefForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addBriefStatus.textContent = '';
+    const talkingPoints = addBriefTalkingPoints.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const row = {
+      client_id: currentClientId,
+      title: addBriefTitle.value.trim(),
+      description: addBriefDescription.value.trim() || null,
+      talking_points: talkingPoints.length ? talkingPoints : null,
+      deadline: addBriefDeadline.value || null,
+    };
+    const { error } = await client.from('content_briefs').insert([row]);
+    if (error) {
+      addBriefStatus.textContent = 'Failed to add brief: ' + error.message;
+      return;
+    }
+    addBriefStatus.textContent = `${row.title} added.`;
+    addBriefStatus.style.color = 'var(--sky)';
+    addBriefForm.reset();
+    loadContentBriefs();
+  });
+
+  let allSubmissions = [];
+  const UGC_STATUSES = ['submitted', 'approved', 'rejected', 'revision'];
+
+  function renderSubmissionCreatorOptions() {
+    addSubmissionCreator.innerHTML = '<option value="">Creator</option>' + allCreators.map((c) =>
+      `<option value="${c.id}">${escapeHtml(c.users ? c.users.name || c.users.email : 'Unnamed')}</option>`
+    ).join('');
+  }
+
+  function openSubmissions(briefId) {
+    currentBriefId = briefId;
+    const b = allBriefs.find((x) => x.id === briefId);
+    submissionsBriefTitle.textContent = b ? b.title : '';
+    submissionsBriefDescription.textContent = b && b.description ? b.description : '';
+    submissionsSection.style.display = 'block';
+    renderContentBriefs();
+    loadSubmissions();
+  }
+
+  async function loadSubmissions() {
+    const { data, error } = await client
+      .from('ugc_content')
+      .select('id, type, file_url, status, creator_id, ugc_creators(users(name, email))')
+      .eq('brief_id', currentBriefId)
+      .order('id', { ascending: true });
+
+    if (error) {
+      submissionsTbody.innerHTML = '';
+      submissionsEmpty.style.display = 'block';
+      submissionsEmpty.textContent = 'Could not load submissions: ' + error.message;
+      return;
+    }
+
+    allSubmissions = data || [];
+    renderSubmissions();
+  }
+
+  function renderSubmissions() {
+    if (!allSubmissions.length) {
+      submissionsTbody.innerHTML = '';
+      submissionsEmpty.style.display = 'block';
+      submissionsEmpty.textContent = 'No submissions yet — add one above.';
+      return;
+    }
+
+    submissionsEmpty.style.display = 'none';
+    submissionsTbody.innerHTML = allSubmissions.map((s) => {
+      const creatorName = s.ugc_creators && s.ugc_creators.users ? (s.ugc_creators.users.name || s.ugc_creators.users.email) : '—';
+      return `
+        <tr>
+          <td>${escapeHtml(creatorName)}</td>
+          <td>${escapeHtml(s.type)}</td>
+          <td>${s.file_url ? `<a href="${escapeHtml(s.file_url)}" target="_blank" rel="noopener" style="color:var(--sky);">File</a>` : '—'}</td>
+          <td>
+            <select class="status-select ${s.status}" data-submission-id="${s.id}">
+              ${UGC_STATUSES.map((st) => `<option value="${st}" ${st === s.status ? 'selected' : ''}>${st}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    submissionsTbody.querySelectorAll('.status-select').forEach((sel) => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.submissionId;
+        const status = e.target.value;
+        const { error } = await client.from('ugc_content').update({ status }).eq('id', id);
+        if (error) {
+          alert('Failed to update status: ' + error.message);
+          return;
+        }
+        const s = allSubmissions.find((x) => x.id === id);
+        if (s) s.status = status;
+        e.target.className = 'status-select ' + status;
+      });
+    });
+  }
+
+  addSubmissionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addSubmissionStatus.textContent = '';
+    if (!addSubmissionCreator.value) {
+      addSubmissionStatus.textContent = 'Pick a creator first.';
+      return;
+    }
+    const row = {
+      client_id: currentClientId,
+      brief_id: currentBriefId,
+      creator_id: addSubmissionCreator.value,
+      type: addSubmissionType.value,
+      file_url: addSubmissionUrl.value.trim() || null,
+    };
+    const { error } = await client.from('ugc_content').insert([row]);
+    if (error) {
+      addSubmissionStatus.textContent = 'Failed to add submission: ' + error.message;
+      return;
+    }
+    addSubmissionStatus.textContent = 'Submission added.';
+    addSubmissionStatus.style.color = 'var(--sky)';
+    addSubmissionForm.reset();
+    loadSubmissions();
   });
 
   let allMetrics = [];
