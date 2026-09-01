@@ -660,10 +660,19 @@
     return n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 
+  // Postgres `date` columns come back as plain "YYYY-MM-DD" strings with no
+  // time or zone info. `new Date("YYYY-MM-DD")` parses that as UTC midnight,
+  // so toLocaleDateString() in a timezone behind UTC renders the day before
+  // -- construct the Date from the local Y/M/D components instead.
+  function formatDateOnly(dateStr) {
+    if (!dateStr) return '—';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString();
+  }
+
   function formatDateRange(start, end) {
     if (!start && !end) return '—';
-    const fmt = (d) => new Date(d).toLocaleDateString();
-    return `${start ? fmt(start) : '…'} – ${end ? fmt(end) : '…'}`;
+    return `${start ? formatDateOnly(start) : '…'} – ${end ? formatDateOnly(end) : '…'}`;
   }
 
   function renderCampaigns() {
@@ -790,7 +799,7 @@
     invoicesTbody.innerHTML = allInvoices.map((inv) => `
         <tr>
           <td>${formatMoney(inv.amount)}</td>
-          <td>${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—'}</td>
+          <td>${formatDateOnly(inv.due_date)}</td>
           <td>
             <select class="status-select ${inv.status}" data-invoice-id="${inv.id}">
               ${INVOICE_STATUSES.map((s) => `<option value="${s}" ${s === inv.status ? 'selected' : ''}>${s}</option>`).join('')}
@@ -897,7 +906,7 @@
     metricsEmpty.style.display = 'none';
     metricsTbody.innerHTML = allMetrics.map((m) => `
         <tr>
-          <td>${new Date(m.date).toLocaleDateString()}</td>
+          <td>${formatDateOnly(m.date)}</td>
           <td>${m.impressions == null ? '—' : m.impressions.toLocaleString()}</td>
           <td>${m.clicks == null ? '—' : m.clicks.toLocaleString()}</td>
           <td>${m.conversions == null ? '—' : m.conversions.toLocaleString()}</td>
