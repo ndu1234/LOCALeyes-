@@ -142,13 +142,7 @@
       // If an admin already pre-authorized this exact email on an existing
       // client record, claim it (instant approval) instead of creating a
       // second, disconnected client row for the same company.
-      const { data: claimedClient } = await client
-        .from('clients')
-        .update({ user_id: userRow.id, portal_approved: true })
-        .eq('authorized_email', email)
-        .is('user_id', null)
-        .select('id')
-        .maybeSingle();
+      const claimedClient = await claimAuthorizedClient(email, userRow.id);
 
       if (!claimedClient) {
         const { error: clientErr } = await client
@@ -179,13 +173,43 @@
   noAccessLogoutBtn.addEventListener('click', signOut);
   logoutBtn.addEventListener('click', signOut);
 
+  // Claims a client row an admin pre-authorized for this exact email
+  // (authorized_email match, not yet linked to any user) -- instant,
+  // pre-approved access. Returns the claimed row, or null if there's
+  // nothing to claim. RLS scopes this so it can only ever touch a row
+  // already authorized for the caller's own JWT email.
+  async function claimAuthorizedClient(email, userId) {
+    const { data } = await client
+      .from('clients')
+      .update({ user_id: userId, portal_approved: true })
+      .eq('authorized_email', email)
+      .is('user_id', null)
+      .select('id, company_name, portal_approved')
+      .maybeSingle();
+    return data || null;
+  }
+
   async function afterAuth(session) {
     if (!session) {
       showScreen('login');
       return;
     }
-    const { data, error } = await client.from('clients').select('id, company_name, portal_approved').maybeSingle();
-    if (error || !data) {
+    const email = session.user.email;
+    let { data } = await client.from('clients').select('id, company_name, portal_approved').maybeSingle();
+
+    if (!data) {
+      // No client linked to this account yet -- an admin may have
+      // authorized this email for instant access after the account was
+      // created (e.g. they signed up before being authorized, or this is
+      // an ordinary sign-in and access was only just granted). Check every
+      // time, not just at signup, so authorization always takes effect.
+      const { data: userRow } = await client.from('users').select('id').eq('email', email).maybeSingle();
+      if (userRow) {
+        data = await claimAuthorizedClient(email, userRow.id);
+      }
+    }
+
+    if (!data) {
       showScreen('no-access');
       return;
     }

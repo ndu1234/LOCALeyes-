@@ -817,7 +817,9 @@
         : 'Failed to save: ' + error.message;
       return;
     }
-    authorizedEmailStatus.textContent = email ? 'Saved.' : 'Cleared.';
+    authorizedEmailStatus.textContent = email
+      ? `Saved — ${email} has been granted client portal access. They'll get in as soon as they sign up (or sign in, if they already have an account) with that email.`
+      : 'Cleared — that email no longer has pre-authorized access.';
     authorizedEmailStatus.style.color = 'var(--sky)';
     loadPortalAccessStatus();
   });
