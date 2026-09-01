@@ -48,6 +48,36 @@
   const addClientName = document.getElementById('add-client-name');
   const addClientStatus = document.getElementById('add-client-status');
 
+  const clientsListView = document.getElementById('clients-list-view');
+  const clientDetailView = document.getElementById('client-detail-view');
+  const clientDetailName = document.getElementById('client-detail-name');
+  const backToClientsBtn = document.getElementById('back-to-clients');
+
+  const addCampaignForm = document.getElementById('add-campaign-form');
+  const addCampaignName = document.getElementById('add-campaign-name');
+  const addCampaignPlatform = document.getElementById('add-campaign-platform');
+  const addCampaignObjective = document.getElementById('add-campaign-objective');
+  const addCampaignBudget = document.getElementById('add-campaign-budget');
+  const addCampaignStart = document.getElementById('add-campaign-start');
+  const addCampaignEnd = document.getElementById('add-campaign-end');
+  const addCampaignStatus = document.getElementById('add-campaign-status');
+  const campaignsTbody = document.getElementById('campaigns-tbody');
+  const campaignsEmpty = document.getElementById('campaigns-empty');
+
+  const metricsSection = document.getElementById('metrics-section');
+  const metricsCampaignName = document.getElementById('metrics-campaign-name');
+  const metricsSummary = document.getElementById('metrics-summary');
+  const metricsTbody = document.getElementById('metrics-tbody');
+  const metricsEmpty = document.getElementById('metrics-empty');
+  const addMetricForm = document.getElementById('add-metric-form');
+  const addMetricDate = document.getElementById('add-metric-date');
+  const addMetricImpressions = document.getElementById('add-metric-impressions');
+  const addMetricClicks = document.getElementById('add-metric-clicks');
+  const addMetricConversions = document.getElementById('add-metric-conversions');
+  const addMetricSpend = document.getElementById('add-metric-spend');
+  const addMetricRoas = document.getElementById('add-metric-roas');
+  const addMetricStatus = document.getElementById('add-metric-status');
+
   const adminNavItems = document.querySelectorAll('.admin-nav-item');
   const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
   adminNavItems.forEach((item) => {
@@ -487,6 +517,10 @@
     renderAreaChart(trafficTrendEl, pageviews7dDaily);
   }
 
+  let allClients = [];
+  let currentClientId = null;
+  let currentCampaignId = null;
+
   async function loadClients() {
     const { data: clientRows, error: clientErr } = await client
       .from('clients')
@@ -500,7 +534,8 @@
       return;
     }
 
-    renderClients(clientRows || []);
+    allClients = clientRows || [];
+    renderClients(allClients);
   }
 
   function renderClients(clients) {
@@ -516,8 +551,13 @@
         <tr>
           <td>${escapeHtml(c.company_name)}</td>
           <td><span class="status-select ${c.status}">${escapeHtml(c.status)}</span></td>
+          <td><button type="button" class="btn btn-ghost clients-manage-btn" data-client-id="${c.id}">Manage</button></td>
         </tr>
       `).join('');
+
+    clientsTbody.querySelectorAll('.clients-manage-btn').forEach((btn) => {
+      btn.addEventListener('click', () => openClientDetail(btn.dataset.clientId));
+    });
   }
 
   addClientForm.addEventListener('submit', async (e) => {
@@ -533,6 +573,221 @@
     addClientStatus.style.color = 'var(--sky)';
     addClientForm.reset();
     loadClients();
+  });
+
+  function openClientDetail(clientId) {
+    const clientRow = allClients.find((c) => c.id === clientId);
+    if (!clientRow) return;
+    currentClientId = clientId;
+    currentCampaignId = null;
+    clientDetailName.textContent = clientRow.company_name;
+    metricsSection.style.display = 'none';
+    clientsListView.style.display = 'none';
+    clientDetailView.style.display = 'block';
+    loadCampaigns();
+  }
+
+  backToClientsBtn.addEventListener('click', () => {
+    currentClientId = null;
+    currentCampaignId = null;
+    clientDetailView.style.display = 'none';
+    clientsListView.style.display = 'block';
+  });
+
+  let allCampaigns = [];
+  const CAMPAIGN_STATUSES = ['draft', 'live', 'paused', 'ended'];
+
+  async function loadCampaigns() {
+    const { data, error } = await client
+      .from('campaigns')
+      .select('id, name, platform, objective, budget, status, start_date, end_date')
+      .eq('client_id', currentClientId)
+      .order('start_date', { ascending: false, nullsFirst: false });
+
+    if (error) {
+      campaignsTbody.innerHTML = '';
+      campaignsEmpty.style.display = 'block';
+      campaignsEmpty.textContent = 'Could not load campaigns: ' + error.message;
+      return;
+    }
+
+    allCampaigns = data || [];
+    renderCampaigns();
+  }
+
+  function formatMoney(n) {
+    return n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function formatDateRange(start, end) {
+    if (!start && !end) return '—';
+    const fmt = (d) => new Date(d).toLocaleDateString();
+    return `${start ? fmt(start) : '…'} – ${end ? fmt(end) : '…'}`;
+  }
+
+  function renderCampaigns() {
+    if (!allCampaigns.length) {
+      campaignsTbody.innerHTML = '';
+      campaignsEmpty.style.display = 'block';
+      campaignsEmpty.textContent = 'No campaigns yet — add one above.';
+      return;
+    }
+
+    campaignsEmpty.style.display = 'none';
+    campaignsTbody.innerHTML = allCampaigns.map((c) => `
+        <tr class="campaign-row ${c.id === currentCampaignId ? 'active-row' : ''}" data-campaign-id="${c.id}">
+          <td>${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.platform || '—')}</td>
+          <td>${escapeHtml(c.objective || '—')}</td>
+          <td>${formatMoney(c.budget)}</td>
+          <td>${formatDateRange(c.start_date, c.end_date)}</td>
+          <td>
+            <select class="status-select ${c.status}" data-campaign-id="${c.id}">
+              ${CAMPAIGN_STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `).join('');
+
+    campaignsTbody.querySelectorAll('.campaign-row').forEach((row) => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.status-select')) return;
+        openMetrics(row.dataset.campaignId);
+      });
+    });
+
+    campaignsTbody.querySelectorAll('.status-select').forEach((sel) => {
+      sel.addEventListener('click', (e) => e.stopPropagation());
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.campaignId;
+        const status = e.target.value;
+        const { error } = await client.from('campaigns').update({ status }).eq('id', id);
+        if (error) {
+          alert('Failed to update status: ' + error.message);
+          return;
+        }
+        const c = allCampaigns.find((x) => x.id === id);
+        if (c) c.status = status;
+        e.target.className = 'status-select ' + status;
+      });
+    });
+  }
+
+  addCampaignForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addCampaignStatus.textContent = '';
+    const row = {
+      client_id: currentClientId,
+      name: addCampaignName.value.trim(),
+      platform: addCampaignPlatform.value || null,
+      objective: addCampaignObjective.value.trim() || null,
+      budget: addCampaignBudget.value ? Number(addCampaignBudget.value) : null,
+      start_date: addCampaignStart.value || null,
+      end_date: addCampaignEnd.value || null,
+    };
+    const { error } = await client.from('campaigns').insert([row]);
+    if (error) {
+      addCampaignStatus.textContent = 'Failed to add campaign: ' + error.message;
+      return;
+    }
+    addCampaignStatus.textContent = `${row.name} added.`;
+    addCampaignStatus.style.color = 'var(--sky)';
+    addCampaignForm.reset();
+    loadCampaigns();
+  });
+
+  let allMetrics = [];
+
+  function openMetrics(campaignId) {
+    currentCampaignId = campaignId;
+    const c = allCampaigns.find((x) => x.id === campaignId);
+    metricsCampaignName.textContent = c ? c.name : '';
+    metricsSection.style.display = 'block';
+    renderCampaigns();
+    loadMetrics();
+  }
+
+  async function loadMetrics() {
+    const { data, error } = await client
+      .from('campaign_metrics')
+      .select('id, date, impressions, clicks, conversions, spend, roas')
+      .eq('campaign_id', currentCampaignId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      metricsTbody.innerHTML = '';
+      metricsEmpty.style.display = 'block';
+      metricsEmpty.textContent = 'Could not load metrics: ' + error.message;
+      metricsSummary.innerHTML = '';
+      return;
+    }
+
+    allMetrics = data || [];
+    renderMetrics();
+  }
+
+  function renderMetrics() {
+    const totals = allMetrics.reduce((acc, m) => {
+      acc.spend += Number(m.spend) || 0;
+      acc.conversions += Number(m.conversions) || 0;
+      acc.clicks += Number(m.clicks) || 0;
+      return acc;
+    }, { spend: 0, conversions: 0, clicks: 0 });
+    const roasValues = allMetrics.map((m) => Number(m.roas)).filter((n) => !isNaN(n));
+    const avgRoas = roasValues.length ? (roasValues.reduce((a, b) => a + b, 0) / roasValues.length) : null;
+
+    metricsSummary.innerHTML = [
+      { label: 'Total Spend', num: formatMoney(totals.spend) },
+      { label: 'Total Conversions', num: totals.conversions },
+      { label: 'Avg ROAS', num: avgRoas == null ? '—' : avgRoas.toFixed(2) + 'x' },
+    ].map((c) => `
+      <div class="admin-stat-card">
+        <div class="admin-stat-num">${c.num}</div>
+        <div class="admin-stat-label">${c.label}</div>
+      </div>
+    `).join('');
+
+    if (!allMetrics.length) {
+      metricsTbody.innerHTML = '';
+      metricsEmpty.style.display = 'block';
+      metricsEmpty.textContent = 'No metrics yet — add a row above.';
+      return;
+    }
+
+    metricsEmpty.style.display = 'none';
+    metricsTbody.innerHTML = allMetrics.map((m) => `
+        <tr>
+          <td>${new Date(m.date).toLocaleDateString()}</td>
+          <td>${m.impressions == null ? '—' : m.impressions.toLocaleString()}</td>
+          <td>${m.clicks == null ? '—' : m.clicks.toLocaleString()}</td>
+          <td>${m.conversions == null ? '—' : m.conversions.toLocaleString()}</td>
+          <td>${formatMoney(m.spend)}</td>
+          <td>${m.roas == null ? '—' : Number(m.roas).toFixed(2) + 'x'}</td>
+        </tr>
+      `).join('');
+  }
+
+  addMetricForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addMetricStatus.textContent = '';
+    const row = {
+      campaign_id: currentCampaignId,
+      date: addMetricDate.value,
+      impressions: addMetricImpressions.value ? Number(addMetricImpressions.value) : 0,
+      clicks: addMetricClicks.value ? Number(addMetricClicks.value) : 0,
+      conversions: addMetricConversions.value ? Number(addMetricConversions.value) : 0,
+      spend: addMetricSpend.value ? Number(addMetricSpend.value) : 0,
+      roas: addMetricRoas.value ? Number(addMetricRoas.value) : null,
+    };
+    const { error } = await client.from('campaign_metrics').upsert([row], { onConflict: 'campaign_id,date' });
+    if (error) {
+      addMetricStatus.textContent = 'Failed to add metric row: ' + error.message;
+      return;
+    }
+    addMetricStatus.textContent = `Metrics for ${row.date} saved.`;
+    addMetricStatus.style.color = 'var(--sky)';
+    addMetricForm.reset();
+    loadMetrics();
   });
 
   updateAuthUI();

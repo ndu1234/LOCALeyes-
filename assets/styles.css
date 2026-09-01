@@ -780,7 +780,7 @@ section { padding: 120px clamp(20px,5vw,64px); }
 }
 .admin-approve summary::-webkit-details-marker { display: none; }
 .admin-approve[open] summary { border-bottom: 1px solid var(--border); }
-.admin-approve form { display: flex; gap: 8px; padding: 14px 0; }
+.admin-approve form { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0; }
 .admin-approve .admin-error { margin: 0 0 12px; }
 
 .leads-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 20px 48px rgba(0,0,0,0.3); }
@@ -807,7 +807,14 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .status-select.active    { background: rgba(34,197,94,0.12);   color: #4ADE80;      border-color: rgba(34,197,94,0.35); }
 .status-select.paused    { background: rgba(250,204,21,0.12);  color: #FACC15;      border-color: rgba(250,204,21,0.35); }
 .status-select.churned   { background: rgba(140,138,130,0.14); color: var(--text-2); border-color: var(--border); }
+.status-select.draft     { background: rgba(140,138,130,0.14); color: var(--text-2); border-color: var(--border); }
+.status-select.live      { background: rgba(34,197,94,0.12);   color: #4ADE80;      border-color: rgba(34,197,94,0.35); }
+.status-select.ended     { background: rgba(140,138,130,0.14); color: var(--text-2); border-color: var(--border); }
 .status-select option { background: var(--bg-2); color: var(--text); }
+
+.clients-manage-btn { padding: 6px 12px; font-size: 12px; }
+.campaign-row { cursor: pointer; }
+.campaign-row.active-row td { background: rgba(56,189,248,0.05); }
 
 .admin-empty { padding: 60px 20px; text-align: center; color: var(--text-2); }
 .admin-error { color: #F87171; font-size: 13px; margin-top: 10px; min-height: 0; }
