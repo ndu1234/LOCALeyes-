@@ -47,7 +47,6 @@
   const addClientForm = document.getElementById('add-client-form');
   const addClientName = document.getElementById('add-client-name');
   const addClientStatus = document.getElementById('add-client-status');
-  const instagramConnectStatusEl = document.getElementById('instagram-connect-status');
 
   const adminNavItems = document.querySelectorAll('.admin-nav-item');
   const adminTabPanels = document.querySelectorAll('.admin-tab-panel');
@@ -165,7 +164,6 @@
       loadLeads();
       loadTraffic();
       loadClients();
-      showInstagramConnectResult();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -502,16 +500,10 @@
       return;
     }
 
-    const { data: socialRows } = await client
-      .from('client_social_accounts')
-      .select('client_id, platform, username')
-      .eq('platform', 'instagram');
-
-    const instagramByClient = new Map((socialRows || []).map((r) => [r.client_id, r]));
-    renderClients(clientRows || [], instagramByClient);
+    renderClients(clientRows || []);
   }
 
-  function renderClients(clients, instagramByClient) {
+  function renderClients(clients) {
     if (!clients.length) {
       clientsTbody.innerHTML = '';
       clientsEmpty.style.display = 'block';
@@ -520,25 +512,12 @@
     }
 
     clientsEmpty.style.display = 'none';
-    clientsTbody.innerHTML = clients.map((c) => {
-      const ig = instagramByClient.get(c.id);
-      return `
+    clientsTbody.innerHTML = clients.map((c) => `
         <tr>
           <td>${escapeHtml(c.company_name)}</td>
           <td><span class="status-select ${c.status}">${escapeHtml(c.status)}</span></td>
-          <td>${ig ? `Connected as @${escapeHtml(ig.username || '—')}` : '<span class="lead-email">Not connected</span>'}</td>
-          <td>
-            <button type="button" class="btn btn-ghost connect-instagram-btn" data-client-id="${c.id}" style="padding:7px 14px; font-size:12.5px;">
-              ${ig ? 'Reconnect' : 'Connect'} Instagram
-            </button>
-          </td>
         </tr>
-      `;
-    }).join('');
-
-    clientsTbody.querySelectorAll('.connect-instagram-btn').forEach((btn) => {
-      btn.addEventListener('click', () => connectInstagram(btn.dataset.clientId));
-    });
+      `).join('');
   }
 
   addClientForm.addEventListener('submit', async (e) => {
@@ -555,64 +534,6 @@
     addClientForm.reset();
     loadClients();
   });
-
-  async function connectInstagram(clientId) {
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) return;
-
-    instagramConnectStatusEl.textContent = 'Preparing Instagram connection…';
-    instagramConnectStatusEl.style.color = '';
-
-    const functionUrl = `${window.SUPABASE_URL}/functions/v1/instagram-connect-url?client_id=${encodeURIComponent(clientId)}`;
-    try {
-      const resp = await fetch(functionUrl, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const body = await resp.json();
-      if (!resp.ok) {
-        instagramConnectStatusEl.textContent = 'Could not start Instagram connection: ' + (body.error || resp.statusText);
-        return;
-      }
-      window.location.href = body.url;
-    } catch (err) {
-      instagramConnectStatusEl.textContent = 'Could not start Instagram connection: ' + err.message;
-    }
-  }
-
-  // After the instagram-oauth-callback Edge Function redirects back here
-  // (?instagram_connected=1|0&username=...&reason=...), show what happened
-  // and strip the params from the URL so a page refresh doesn't re-show it.
-  function showInstagramConnectResult() {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has('instagram_connected')) return;
-
-    const clientsNavItem = [...adminNavItems].find((el) => el.dataset.tab === 'clients');
-    if (clientsNavItem) clientsNavItem.click();
-
-    const ok = params.get('instagram_connected') === '1';
-    const username = params.get('username');
-    const reason = params.get('reason');
-    const REASON_MESSAGES = {
-      declined: 'The Instagram connection was cancelled.',
-      missing_params: 'The Instagram connection did not complete (missing parameters).',
-      invalid_state: 'The Instagram connection link had expired or was already used — try again.',
-      expired: 'The Instagram connection link expired — try again.',
-      no_instagram_business_account: 'That Facebook account has no Instagram Business or Creator account connected to a Page yet.',
-      exchange_failed: 'Instagram did not confirm the connection — try again.',
-    };
-
-    instagramConnectStatusEl.textContent = ok
-      ? `Instagram connected${username ? ` as @${username}` : ''}.`
-      : (REASON_MESSAGES[reason] || 'Instagram connection failed.');
-    instagramConnectStatusEl.style.color = ok ? 'var(--sky)' : '';
-
-    params.delete('instagram_connected');
-    params.delete('username');
-    params.delete('reason');
-    const newSearch = params.toString();
-    const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
-    window.history.replaceState({}, '', newUrl);
-  }
 
   updateAuthUI();
 
