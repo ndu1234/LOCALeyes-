@@ -128,6 +128,10 @@
   const addCreatorRate = document.getElementById('add-creator-rate');
   const addCreatorPortfolio = document.getElementById('add-creator-portfolio');
   const addCreatorStatus = document.getElementById('add-creator-status');
+  const addCreatorDetails = document.getElementById('add-creator-details');
+  const addCreatorSummary = document.getElementById('add-creator-summary');
+  const addCreatorSubmitBtn = document.getElementById('add-creator-submit');
+  const cancelCreatorEditBtn = document.getElementById('cancel-creator-edit');
 
   const briefsTbody = document.getElementById('briefs-tbody');
   const briefsEmpty = document.getElementById('briefs-empty');
@@ -165,6 +169,7 @@
     item.addEventListener('click', () => {
       applyTab(item.dataset.tab);
       closeClientDetailView();
+      stopEditCreator();
       history.pushState({ tab: item.dataset.tab }, '');
     });
   });
@@ -717,11 +722,12 @@
   });
 
   let allCreators = [];
+  let editingCreatorId = null;
 
   async function loadCreators() {
     const { data, error } = await client
       .from('ugc_creators')
-      .select('id, niche, rate_per_video, portfolio_url, availability, users(name, email)')
+      .select('id, user_id, niche, rate_per_video, portfolio_url, availability, users(name, email)')
       .order('id', { ascending: true });
 
     if (error) {
@@ -752,6 +758,7 @@
           <td>${formatMoney(c.rate_per_video)}</td>
           <td>${c.portfolio_url ? `<a href="${escapeHtml(c.portfolio_url)}" target="_blank" rel="noopener" style="color:var(--sky);">Link</a>` : '—'}</td>
           <td><button type="button" class="status-select ${c.availability ? 'available' : 'unavailable'}" data-creator-id="${c.id}">${c.availability ? 'Available' : 'Unavailable'}</button></td>
+          <td><button type="button" class="btn btn-ghost creator-edit-btn" data-creator-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
         </tr>
       `).join('');
 
@@ -770,13 +777,75 @@
         renderCreators();
       });
     });
+
+    creatorsTbody.querySelectorAll('.creator-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => startEditCreator(btn.dataset.creatorId));
+    });
   }
+
+  function startEditCreator(creatorId) {
+    const c = allCreators.find((x) => x.id === creatorId);
+    if (!c) return;
+    editingCreatorId = creatorId;
+    addCreatorName.value = c.users ? c.users.name || '' : '';
+    addCreatorEmail.value = c.users ? c.users.email || '' : '';
+    addCreatorNiche.value = (c.niche || []).join(', ');
+    addCreatorRate.value = c.rate_per_video != null ? c.rate_per_video : '';
+    addCreatorPortfolio.value = c.portfolio_url || '';
+    addCreatorSummary.textContent = 'Edit Creator';
+    addCreatorSubmitBtn.textContent = 'Save Changes';
+    cancelCreatorEditBtn.style.display = 'inline-flex';
+    addCreatorStatus.textContent = '';
+    addCreatorDetails.open = true;
+    addCreatorName.focus();
+  }
+
+  function stopEditCreator() {
+    editingCreatorId = null;
+    addCreatorSummary.textContent = '+ Add Creator';
+    addCreatorSubmitBtn.textContent = 'Add';
+    cancelCreatorEditBtn.style.display = 'none';
+    addCreatorForm.reset();
+  }
+
+  cancelCreatorEditBtn.addEventListener('click', () => {
+    stopEditCreator();
+    addCreatorDetails.open = false;
+  });
 
   addCreatorForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     addCreatorStatus.textContent = '';
     const name = addCreatorName.value.trim();
     const email = addCreatorEmail.value.trim();
+    const niche = addCreatorNiche.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const rate = addCreatorRate.value ? Number(addCreatorRate.value) : null;
+    const portfolio = addCreatorPortfolio.value.trim() || null;
+
+    if (editingCreatorId) {
+      const creator = allCreators.find((x) => x.id === editingCreatorId);
+      if (!creator) return;
+      const { error: userErr } = await client.from('users').update({ name, email }).eq('id', creator.user_id);
+      if (userErr) {
+        addCreatorStatus.textContent = userErr.message.includes('duplicate') ? 'That email is already in use.' : 'Failed to save changes: ' + userErr.message;
+        return;
+      }
+      const { error: creatorErr } = await client.from('ugc_creators').update({
+        niche: niche.length ? niche : null,
+        rate_per_video: rate,
+        portfolio_url: portfolio,
+      }).eq('id', editingCreatorId);
+      if (creatorErr) {
+        addCreatorStatus.textContent = 'Failed to save changes: ' + creatorErr.message;
+        return;
+      }
+      addCreatorStatus.textContent = `${name} updated.`;
+      addCreatorStatus.style.color = 'var(--sky)';
+      stopEditCreator();
+      loadCreators();
+      return;
+    }
+
     const { data: userRow, error: userErr } = await client
       .from('users')
       .insert([{ name, email, role: 'creator' }])
@@ -786,12 +855,11 @@
       addCreatorStatus.textContent = userErr.message.includes('duplicate') ? 'That email is already in use.' : 'Failed to add creator: ' + userErr.message;
       return;
     }
-    const niche = addCreatorNiche.value.split(',').map((s) => s.trim()).filter(Boolean);
     const { error: creatorErr } = await client.from('ugc_creators').insert([{
       user_id: userRow.id,
       niche: niche.length ? niche : null,
-      rate_per_video: addCreatorRate.value ? Number(addCreatorRate.value) : null,
-      portfolio_url: addCreatorPortfolio.value.trim() || null,
+      rate_per_video: rate,
+      portfolio_url: portfolio,
       availability: true,
     }]);
     if (creatorErr) {
