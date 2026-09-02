@@ -239,12 +239,11 @@
               <h1 class="admin-title" style="font-size:20px;">Portal Access</h1>
               <p class="admin-page-sub" id="portal-access-status"></p>
             </div>
-            <button type="button" class="btn btn-primary" id="portal-approve-btn" style="display:none; padding:10px 18px; font-size:13px; margin-bottom:8px;">Approve Portal Access</button>
-            <button type="button" class="btn btn-ghost" id="portal-revoke-btn" style="display:none; padding:10px 18px; font-size:13px; margin-bottom:8px;">Revoke Portal Access</button>
-            <button type="button" class="btn btn-ghost" id="revoke-authorization-btn" style="display:none; padding:10px 18px; font-size:13px; margin-bottom:8px;">Revoke Authorization</button>
-            <form id="authorized-email-form" style="display:none; align-items:flex-end; gap:8px;">
+            <div id="portal-access-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
+            <div class="admin-empty" id="portal-access-empty" style="display:none;"></div>
+            <form id="authorized-email-form" style="display:flex; align-items:flex-end; gap:8px;">
               <div class="form-group" style="margin:0;">
-                <label class="form-label" for="authorized-email-input">Authorized email</label>
+                <label class="form-label" for="authorized-email-input">Authorize another email</label>
                 <input class="form-input" id="authorized-email-input" type="email" placeholder="client@company.com" style="max-width:260px;" />
               </div>
               <button type="submit" class="btn btn-ghost" style="padding:10px 18px; font-size:13px;">Authorize</button>

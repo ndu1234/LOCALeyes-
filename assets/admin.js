@@ -57,9 +57,8 @@
   const backToClientsBtn = document.getElementById('back-to-clients');
 
   const portalAccessStatusEl = document.getElementById('portal-access-status');
-  const portalApproveBtn = document.getElementById('portal-approve-btn');
-  const portalRevokeBtn = document.getElementById('portal-revoke-btn');
-  const revokeAuthorizationBtn = document.getElementById('revoke-authorization-btn');
+  const portalAccessListEl = document.getElementById('portal-access-list');
+  const portalAccessEmptyEl = document.getElementById('portal-access-empty');
   const authorizedEmailForm = document.getElementById('authorized-email-form');
   const authorizedEmailInput = document.getElementById('authorized-email-input');
   const authorizedEmailStatus = document.getElementById('authorized-email-status');
@@ -658,7 +657,7 @@
   async function loadClients() {
     const { data: clientRows, error: clientErr } = await client
       .from('clients')
-      .select('id, company_name, status, user_id, portal_approved')
+      .select('id, company_name, status, client_users(portal_approved)')
       .order('company_name', { ascending: true });
 
     if (clientErr) {
@@ -673,6 +672,19 @@
   }
 
   const CLIENT_STATUSES = ['active', 'paused', 'churned'];
+
+  // Summarizes a client's N portal users into one compact status pill:
+  // no one has ever signed up or requested access, everyone who has is
+  // still pending, everyone who has is approved, or a mix of both.
+  function summarizePortalAccess(c) {
+    const users = c.client_users || [];
+    const approved = users.filter((u) => u.portal_approved).length;
+    const pending = users.length - approved;
+    if (!users.length) return { cls: 'no-signup', label: 'Not signed up' };
+    if (approved && pending) return { cls: 'pending', label: `${approved} approved, ${pending} pending` };
+    if (approved) return { cls: 'approved', label: approved === 1 ? 'Approved' : `${approved} approved` };
+    return { cls: 'pending', label: pending === 1 ? 'Pending' : `${pending} pending` };
+  }
 
   function renderClients() {
     const q = clientsSearchInput.value.trim().toLowerCase();
@@ -692,8 +704,9 @@
 
     clientsEmpty.style.display = 'none';
     clientsTbody.innerHTML = clients.map((c) => {
-      const portalCls = !c.user_id ? 'no-signup' : (c.portal_approved ? 'approved' : 'pending');
-      const portalLabel = !c.user_id ? 'Not signed up' : (c.portal_approved ? 'Approved' : 'Pending');
+      const portal = summarizePortalAccess(c);
+      const portalCls = portal.cls;
+      const portalLabel = portal.label;
       return `
         <tr>
           <td>${escapeHtml(c.company_name)}</td>
@@ -759,12 +772,27 @@
     addClientStatus.textContent = '';
     const companyName = addClientName.value.trim();
     const authorizedEmail = addClientEmail.value.trim().toLowerCase() || null;
-    const { error } = await client.from('clients').insert([{ company_name: companyName, authorized_email: authorizedEmail }]);
+    const { data: newClient, error } = await client
+      .from('clients')
+      .insert([{ company_name: companyName }])
+      .select('id')
+      .single();
     if (error) {
-      addClientStatus.textContent = error.message.includes('duplicate')
-        ? 'That email is already authorized for another client.'
-        : 'Failed to add client: ' + error.message;
+      addClientStatus.textContent = 'Failed to add client: ' + error.message;
       return;
+    }
+    if (authorizedEmail) {
+      const { error: authErr } = await client
+        .from('client_authorized_emails')
+        .insert([{ client_id: newClient.id, email: authorizedEmail }]);
+      if (authErr) {
+        addClientStatus.textContent = authErr.message.includes('duplicate')
+          ? `${companyName} added, but that email is already authorized for another client.`
+          : `${companyName} added, but failed to authorize the email: ` + authErr.message;
+        addClientForm.reset();
+        loadClients();
+        return;
+      }
     }
     addClientStatus.textContent = `${companyName} added.`;
     addClientStatus.style.color = 'var(--sky)';
@@ -1150,98 +1178,130 @@
     history.back();
   });
 
+  // Renders every client_users row for this client (email, approved/
+  // pending, individual Approve/Revoke) plus every still-unclaimed
+  // client_authorized_emails row (individual Revoke Authorization) as a
+  // list -- a client can now have any number of each, each independently
+  // approved. The "authorize another email" form is always available
+  // below the list, not just when nothing exists yet.
   async function loadPortalAccessStatus() {
     authorizedEmailStatus.textContent = '';
-    const { data, error } = await client
-      .from('clients')
-      .select('user_id, portal_approved, authorized_email, users(email)')
-      .eq('id', currentClientId)
-      .maybeSingle();
-    if (error || !data) {
-      portalAccessStatusEl.textContent = '';
-      portalApproveBtn.style.display = 'none';
-      portalRevokeBtn.style.display = 'none';
-      revokeAuthorizationBtn.style.display = 'none';
-      authorizedEmailForm.style.display = 'none';
+    const [{ data: userRows, error: userErr }, { data: authRows, error: authErr }] = await Promise.all([
+      client
+        .from('client_users')
+        .select('id, portal_approved, users(email)')
+        .eq('client_id', currentClientId)
+        .order('created_at', { ascending: true }),
+      client
+        .from('client_authorized_emails')
+        .select('id, email')
+        .eq('client_id', currentClientId)
+        .order('created_at', { ascending: true }),
+    ]);
+
+    if (userErr || authErr) {
+      portalAccessStatusEl.textContent = 'Could not load portal access: ' + (userErr || authErr).message;
+      portalAccessListEl.innerHTML = '';
+      portalAccessEmptyEl.style.display = 'none';
       return;
     }
-    if (!data.user_id) {
-      portalApproveBtn.style.display = 'none';
-      portalRevokeBtn.style.display = 'none';
-      if (data.authorized_email) {
-        portalAccessStatusEl.textContent = `No signup yet — instant access authorized for ${data.authorized_email}.`;
-        authorizedEmailForm.style.display = 'none';
-        revokeAuthorizationBtn.style.display = 'inline-flex';
-      } else {
-        portalAccessStatusEl.textContent = 'No signup yet. Optionally authorize an email below for instant access.';
-        authorizedEmailForm.style.display = 'flex';
-        authorizedEmailInput.value = '';
-        revokeAuthorizationBtn.style.display = 'none';
-      }
-    } else if (!data.portal_approved) {
-      portalAccessStatusEl.textContent = `Pending approval — signed up as ${data.users ? data.users.email : 'unknown'}.`;
-      portalApproveBtn.style.display = 'inline-flex';
-      portalRevokeBtn.style.display = 'none';
-      revokeAuthorizationBtn.style.display = 'none';
-      authorizedEmailForm.style.display = 'none';
+
+    const users = userRows || [];
+    const authorized = authRows || [];
+    const approvedCount = users.filter((u) => u.portal_approved).length;
+    const pendingCount = users.length - approvedCount;
+    const summaryParts = [];
+    if (approvedCount) summaryParts.push(`${approvedCount} approved`);
+    if (pendingCount) summaryParts.push(`${pendingCount} pending`);
+    if (authorized.length) summaryParts.push(`${authorized.length} authorized, not signed up`);
+    portalAccessStatusEl.textContent = summaryParts.length ? summaryParts.join(' · ') : '';
+
+    const rows = [];
+    users.forEach((u) => {
+      const email = u.users ? u.users.email : 'unknown';
+      const approved = u.portal_approved;
+      rows.push(`
+        <div class="portal-access-row" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid var(--border); border-radius:8px;">
+          <span style="flex:1;">${escapeHtml(email)}</span>
+          <span class="status-select ${approved ? 'approved' : 'pending'}">${approved ? 'Approved' : 'Pending'}</span>
+          ${approved
+            ? `<button type="button" class="btn btn-ghost portal-user-revoke-btn" data-id="${u.id}" style="padding:8px 14px; font-size:12.5px;">Revoke</button>`
+            : `<button type="button" class="btn btn-primary portal-user-approve-btn" data-id="${u.id}" style="padding:8px 14px; font-size:12.5px;">Approve</button>`}
+        </div>
+      `);
+    });
+    authorized.forEach((a) => {
+      rows.push(`
+        <div class="portal-access-row" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid var(--border); border-radius:8px;">
+          <span style="flex:1;">${escapeHtml(a.email)}</span>
+          <span class="status-select no-signup">Not signed up — authorized</span>
+          <button type="button" class="btn btn-ghost portal-authorized-revoke-btn" data-id="${a.id}" style="padding:8px 14px; font-size:12.5px;">Revoke Authorization</button>
+        </div>
+      `);
+    });
+
+    if (!rows.length) {
+      portalAccessListEl.innerHTML = '';
+      portalAccessEmptyEl.style.display = 'block';
+      portalAccessEmptyEl.textContent = 'No one has requested or been authorized portal access yet.';
     } else {
-      portalAccessStatusEl.textContent = `Approved — ${data.users ? data.users.email : 'unknown'} can sign in.`;
-      portalApproveBtn.style.display = 'none';
-      portalRevokeBtn.style.display = 'inline-flex';
-      revokeAuthorizationBtn.style.display = 'none';
-      authorizedEmailForm.style.display = 'none';
+      portalAccessEmptyEl.style.display = 'none';
+      portalAccessListEl.innerHTML = rows.join('');
     }
+
+    portalAccessListEl.querySelectorAll('.portal-user-approve-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const { error } = await client.from('client_users').update({ portal_approved: true }).eq('id', btn.dataset.id);
+        if (error) {
+          alert('Failed to approve portal access: ' + error.message);
+          return;
+        }
+        loadPortalAccessStatus();
+        loadClients();
+      });
+    });
+
+    portalAccessListEl.querySelectorAll('.portal-user-revoke-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Revoke portal access for this user? They will be signed out of the dashboard until re-approved.')) return;
+        const { error } = await client.from('client_users').update({ portal_approved: false }).eq('id', btn.dataset.id);
+        if (error) {
+          alert('Failed to revoke portal access: ' + error.message);
+          return;
+        }
+        loadPortalAccessStatus();
+        loadClients();
+      });
+    });
+
+    portalAccessListEl.querySelectorAll('.portal-authorized-revoke-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const { error } = await client.from('client_authorized_emails').delete().eq('id', btn.dataset.id);
+        if (error) {
+          alert('Failed to revoke authorization: ' + error.message);
+          return;
+        }
+        loadPortalAccessStatus();
+      });
+    });
   }
 
   authorizedEmailForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     authorizedEmailStatus.textContent = '';
-    const email = authorizedEmailInput.value.trim().toLowerCase() || null;
-    const { error } = await client.from('clients').update({ authorized_email: email }).eq('id', currentClientId);
+    const email = authorizedEmailInput.value.trim().toLowerCase();
+    if (!email) return;
+    const { error } = await client.from('client_authorized_emails').insert([{ client_id: currentClientId, email }]);
     if (error) {
       authorizedEmailStatus.textContent = error.message.includes('duplicate')
         ? 'That email is already authorized for another client.'
         : 'Failed to save: ' + error.message;
       return;
     }
-    authorizedEmailStatus.textContent = email
-      ? `Saved — ${email} has been granted client portal access. They'll get in as soon as they sign up (or sign in, if they already have an account) with that email.`
-      : 'Cleared — that email no longer has pre-authorized access.';
+    authorizedEmailStatus.textContent = `Saved — ${email} has been granted client portal access. They'll get in as soon as they sign up (or sign in, if they already have an account) with that email.`;
     authorizedEmailStatus.style.color = 'var(--sky)';
+    authorizedEmailForm.reset();
     loadPortalAccessStatus();
-  });
-
-  revokeAuthorizationBtn.addEventListener('click', async () => {
-    authorizedEmailStatus.textContent = '';
-    const { error } = await client.from('clients').update({ authorized_email: null }).eq('id', currentClientId);
-    if (error) {
-      authorizedEmailStatus.textContent = 'Failed to revoke: ' + error.message;
-      return;
-    }
-    authorizedEmailStatus.textContent = 'Authorization revoked.';
-    authorizedEmailStatus.style.color = 'var(--sky)';
-    loadPortalAccessStatus();
-  });
-
-  portalApproveBtn.addEventListener('click', async () => {
-    const { error } = await client.from('clients').update({ portal_approved: true }).eq('id', currentClientId);
-    if (error) {
-      alert('Failed to approve portal access: ' + error.message);
-      return;
-    }
-    loadPortalAccessStatus();
-    loadClients();
-  });
-
-  portalRevokeBtn.addEventListener('click', async () => {
-    if (!confirm('Revoke portal access for this client? They will be signed out of the dashboard until re-approved.')) return;
-    const { error } = await client.from('clients').update({ portal_approved: false }).eq('id', currentClientId);
-    if (error) {
-      alert('Failed to revoke portal access: ' + error.message);
-      return;
-    }
-    loadPortalAccessStatus();
-    loadClients();
   });
 
   let allCampaigns = [];

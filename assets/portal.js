@@ -223,19 +223,27 @@
   noAccessLogoutBtn.addEventListener('click', signOut);
   logoutBtn.addEventListener('click', signOut);
 
-  // Claims a client row an admin pre-authorized for this exact email
-  // (authorized_email match, not yet linked to any user) -- instant,
-  // pre-approved access. Returns the claimed row, or null if there's
-  // nothing to claim. RLS scopes this so it can only ever touch a row
-  // already authorized for the caller's own JWT email.
+  // Claims instant access to a client an admin pre-authorized this exact
+  // email for (a client_authorized_emails row matching the caller's own
+  // email) by inserting an approved client_users row. Returns
+  // { client_id, portal_approved, clients: { company_name } } for the new
+  // membership, or null if there's no authorization to claim. RLS scopes
+  // the insert so it can only ever succeed for a client_id that actually
+  // has a matching authorization for the caller's own JWT email -- see
+  // "Users can request or claim client portal access" in the migration.
   async function claimAuthorizedClient(email, userId) {
-    const { data } = await client
-      .from('clients')
-      .update({ user_id: userId, portal_approved: true })
-      .eq('authorized_email', email)
-      .is('user_id', null)
-      .select('id, company_name, portal_approved')
+    const { data: authRow } = await client
+      .from('client_authorized_emails')
+      .select('client_id')
+      .eq('email', email)
       .maybeSingle();
+    if (!authRow) return null;
+    const { data, error } = await client
+      .from('client_users')
+      .insert([{ client_id: authRow.client_id, user_id: userId, portal_approved: true }])
+      .select('client_id, portal_approved, clients(company_name)')
+      .maybeSingle();
+    if (error) return null;
     return data || null;
   }
 
@@ -246,24 +254,28 @@
       return;
     }
     const email = session.user.email;
-    // Excludes rows only visible because they're an unclaimed
-    // pre-authorization (see the "pre-authorized client row" SELECT
-    // policy) -- this must only match a row actually linked to this
-    // account, or an unclaimed row would short-circuit past the claim
-    // attempt below and get stuck showing as if it were already "theirs"
-    // without ever actually being claimed.
-    let { data } = await client.from('clients').select('id, company_name, portal_approved').not('user_id', 'is', null).maybeSingle();
+    // My own client_users row, joined to the client it belongs to. A
+    // *client* can have many users now, but a user still only ever
+    // belongs to one client, so .maybeSingle() here is correct. RLS scopes
+    // this to rows where user_id matches our own users row -- no explicit
+    // filter needed, and no other client's membership can ever show up
+    // here.
+    let { data: membership } = await client
+      .from('client_users')
+      .select('client_id, portal_approved, clients(company_name)')
+      .maybeSingle();
 
-    if (!data) {
-      // No client linked to this account yet. Two cases land here: (a) an
-      // admin authorized this email for instant access after the account
-      // was created, or this is just an ordinary sign-in and access was
-      // only just granted -- check every time, not just at signup, so
-      // authorization always takes effect; (b) this is a signup's *first*
-      // return with a confirmed session -- our own users/clients rows were
-      // never created yet (no session existed at signup time to write them
-      // under), so finish provisioning now using the company/contact name
-      // stashed in auth user metadata at signup.
+    if (!membership) {
+      // No membership linked to this account yet. Two cases land here:
+      // (a) an admin authorized this email for instant access after the
+      // account was created, or this is just an ordinary sign-in and
+      // authorization was only just granted -- check every time, not just
+      // at signup, so authorization always takes effect; (b) this is a
+      // signup's *first* return with a confirmed session -- our own
+      // users/clients/client_users rows were never created yet (no
+      // session existed at signup time to write them under), so finish
+      // provisioning now using the company/contact name stashed in auth
+      // user metadata at signup.
       let { data: userRow } = await client.from('users').select('id').eq('email', email).maybeSingle();
       const metadata = session.user.user_metadata || {};
 
@@ -277,29 +289,41 @@
       }
 
       if (userRow) {
-        data = await claimAuthorizedClient(email, userRow.id);
-        if (!data && metadata.company_name) {
-          const { data: newClient } = await client
+        membership = await claimAuthorizedClient(email, userRow.id);
+        if (!membership && metadata.company_name) {
+          // Ordinary self-signup: create a brand new pending company. The
+          // id is generated client-side rather than left to the database
+          // default so the follow-up client_users insert doesn't need to
+          // read this clients row back first -- RLS only grants SELECT on
+          // a clients row once a client_users membership row exists for
+          // it, which isn't true until the very next insert.
+          const newClientId = crypto.randomUUID();
+          const { error: clientErr } = await client
             .from('clients')
-            .insert([{ company_name: metadata.company_name, user_id: userRow.id }])
-            .select('id, company_name, portal_approved')
-            .maybeSingle();
-          data = newClient || null;
+            .insert([{ id: newClientId, company_name: metadata.company_name }]);
+          if (!clientErr) {
+            const { data: newMembership } = await client
+              .from('client_users')
+              .insert([{ client_id: newClientId, user_id: userRow.id, portal_approved: false }])
+              .select('client_id, portal_approved, clients(company_name)')
+              .maybeSingle();
+            membership = newMembership || null;
+          }
         }
       }
     }
 
-    if (!data) {
+    if (!membership) {
       showScreen('no-access');
       return;
     }
-    if (!data.portal_approved) {
-      pendingCompanyEl.textContent = data.company_name;
+    if (!membership.portal_approved) {
+      pendingCompanyEl.textContent = membership.clients.company_name;
       showScreen('pending');
       return;
     }
-    currentClientId = data.id;
-    companyNameEl.textContent = data.company_name;
+    currentClientId = membership.client_id;
+    companyNameEl.textContent = membership.clients.company_name;
     showScreen('dashboard');
     loadCampaigns();
     loadInvoices();
