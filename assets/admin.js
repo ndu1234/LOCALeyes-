@@ -70,6 +70,10 @@
   const addCampaignStart = document.getElementById('add-campaign-start');
   const addCampaignEnd = document.getElementById('add-campaign-end');
   const addCampaignStatus = document.getElementById('add-campaign-status');
+  const addCampaignDetails = document.getElementById('add-campaign-details');
+  const addCampaignSummary = document.getElementById('add-campaign-summary');
+  const addCampaignSubmitBtn = document.getElementById('add-campaign-submit');
+  const cancelCampaignEditBtn = document.getElementById('cancel-campaign-edit');
   const campaignsTbody = document.getElementById('campaigns-tbody');
   const campaignsEmpty = document.getElementById('campaigns-empty');
 
@@ -785,6 +789,7 @@
     currentClientId = clientId;
     currentCampaignId = null;
     currentBriefId = null;
+    stopEditCampaign();
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
     adCreativesSection.style.display = 'none';
@@ -804,6 +809,7 @@
     currentClientId = null;
     currentCampaignId = null;
     currentBriefId = null;
+    stopEditCampaign();
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
   }
@@ -907,6 +913,7 @@
   });
 
   let allCampaigns = [];
+  let editingCampaignId = null;
   const CAMPAIGN_STATUSES = ['draft', 'live', 'paused', 'ended'];
 
   async function loadCampaigns() {
@@ -967,13 +974,21 @@
               ${CAMPAIGN_STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
+          <td><button type="button" class="btn btn-ghost campaign-edit-btn" data-campaign-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
         </tr>
       `).join('');
 
     campaignsTbody.querySelectorAll('.campaign-row').forEach((row) => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.status-select')) return;
+        if (e.target.closest('.status-select') || e.target.closest('.campaign-edit-btn')) return;
         openMetrics(row.dataset.campaignId);
+      });
+    });
+
+    campaignsTbody.querySelectorAll('.campaign-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startEditCampaign(btn.dataset.campaignId);
       });
     });
 
@@ -994,11 +1009,41 @@
     });
   }
 
+  function startEditCampaign(campaignId) {
+    const c = allCampaigns.find((x) => x.id === campaignId);
+    if (!c) return;
+    editingCampaignId = campaignId;
+    addCampaignName.value = c.name || '';
+    addCampaignPlatform.value = c.platform || '';
+    addCampaignObjective.value = c.objective || '';
+    addCampaignBudget.value = c.budget != null ? c.budget : '';
+    addCampaignStart.value = c.start_date || '';
+    addCampaignEnd.value = c.end_date || '';
+    addCampaignSummary.textContent = 'Edit Campaign';
+    addCampaignSubmitBtn.textContent = 'Save Changes';
+    cancelCampaignEditBtn.style.display = 'inline-flex';
+    addCampaignStatus.textContent = '';
+    addCampaignDetails.open = true;
+    addCampaignName.focus();
+  }
+
+  function stopEditCampaign() {
+    editingCampaignId = null;
+    addCampaignSummary.textContent = '+ Add Campaign';
+    addCampaignSubmitBtn.textContent = 'Add';
+    cancelCampaignEditBtn.style.display = 'none';
+    addCampaignForm.reset();
+  }
+
+  cancelCampaignEditBtn.addEventListener('click', () => {
+    stopEditCampaign();
+    addCampaignDetails.open = false;
+  });
+
   addCampaignForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     addCampaignStatus.textContent = '';
     const row = {
-      client_id: currentClientId,
       name: addCampaignName.value.trim(),
       platform: addCampaignPlatform.value || null,
       objective: addCampaignObjective.value.trim() || null,
@@ -1006,7 +1051,21 @@
       start_date: addCampaignStart.value || null,
       end_date: addCampaignEnd.value || null,
     };
-    const { error } = await client.from('campaigns').insert([row]);
+
+    if (editingCampaignId) {
+      const { error } = await client.from('campaigns').update(row).eq('id', editingCampaignId);
+      if (error) {
+        addCampaignStatus.textContent = 'Failed to save changes: ' + error.message;
+        return;
+      }
+      addCampaignStatus.textContent = `${row.name} updated.`;
+      addCampaignStatus.style.color = 'var(--sky)';
+      stopEditCampaign();
+      loadCampaigns();
+      return;
+    }
+
+    const { error } = await client.from('campaigns').insert([{ ...row, client_id: currentClientId }]);
     if (error) {
       addCampaignStatus.textContent = 'Failed to add campaign: ' + error.message;
       return;
