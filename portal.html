@@ -38,9 +38,28 @@
       </div>
       <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="portal-login-submit">Sign In</button>
       <p class="admin-error" id="portal-login-error"></p>
+      <p class="admin-login-links" id="portal-forgot-password-wrap" style="margin-top:16px;">
+        <a href="#" id="portal-forgot-password-link">Forgot password?</a>
+      </p>
       <p style="margin-top:14px; font-size:13px; color:var(--text-2); text-align:center;">
         <a href="#" id="portal-toggle-mode" style="color:var(--sky); text-decoration:none; font-weight:600;">Need an account? Request access</a>
       </p>
+    </form>
+  </div>
+</div>
+
+<!-- PASSWORD RESET (reached via the recovery link from a "Forgot password?" email) -->
+<div id="portal-reset" class="admin-standalone-screen">
+  <div class="admin-login-card">
+    <div class="admin-login-title">Set a new password</div>
+    <p class="admin-login-sub">Choose a new password for your account.</p>
+    <form id="portal-reset-form">
+      <div class="form-group">
+        <label class="form-label" for="portal-reset-password">New password</label>
+        <input class="form-input" id="portal-reset-password" type="password" required minlength="6" autocomplete="new-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;">Update Password</button>
+      <p class="admin-error" id="portal-reset-error"></p>
     </form>
   </div>
 </div>

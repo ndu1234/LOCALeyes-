@@ -2,6 +2,7 @@
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   const loginScreen = document.getElementById('portal-login');
+  const resetScreen = document.getElementById('portal-reset');
   const pendingScreen = document.getElementById('portal-pending');
   const noAccessScreen = document.getElementById('portal-no-access');
   const dashboard = document.getElementById('portal-dashboard');
@@ -17,6 +18,11 @@
   const loginEmailInput = document.getElementById('portal-login-email');
   const loginPasswordInput = document.getElementById('portal-login-password');
   const loginError = document.getElementById('portal-login-error');
+  const forgotPasswordWrap = document.getElementById('portal-forgot-password-wrap');
+  const forgotPasswordLink = document.getElementById('portal-forgot-password-link');
+  const resetForm = document.getElementById('portal-reset-form');
+  const resetPasswordInput = document.getElementById('portal-reset-password');
+  const resetError = document.getElementById('portal-reset-error');
 
   const pendingCompanyEl = document.getElementById('portal-pending-company');
   const pendingLogoutBtn = document.getElementById('pending-logout-btn');
@@ -25,6 +31,7 @@
   const companyNameEl = document.getElementById('portal-company-name');
 
   let mode = 'signin'; // 'signin' | 'signup'
+  let recoveryMode = false; // true while the user arrived via a password-recovery email link
 
   function updateAuthUI() {
     signupCompanyGroup.style.display = mode === 'signup' ? 'block' : 'none';
@@ -32,6 +39,7 @@
     signupCompanyInput.required = mode === 'signup';
     signupNameInput.required = mode === 'signup';
     loginPasswordInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+    forgotPasswordWrap.style.display = mode === 'signup' ? 'none' : 'flex';
     if (mode === 'signup') {
       authSub.textContent = 'Tell us about your company to request portal access.';
       authSubmitBtn.textContent = 'Request Access';
@@ -48,6 +56,50 @@
     mode = mode === 'signup' ? 'signin' : 'signup';
     loginError.textContent = '';
     updateAuthUI();
+  });
+
+  forgotPasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = loginEmailInput.value.trim();
+    if (!email) {
+      loginError.textContent = 'Enter your email above first, then click "Forgot password?"';
+      return;
+    }
+    loginError.textContent = 'Sending…';
+    loginError.style.color = 'var(--sky)';
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) {
+      loginError.textContent = error.message;
+      loginError.style.color = '';
+      return;
+    }
+    // Deliberately worded not to confirm whether the email has an account --
+    // avoids leaking account existence to whoever is at this form.
+    loginError.textContent = 'If an account exists for that email, a reset link is on its way.';
+    loginError.style.color = 'var(--sky)';
+  });
+
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    resetError.textContent = '';
+    const password = resetPasswordInput.value;
+    const { error } = await client.auth.updateUser({ password });
+    if (error) {
+      resetError.textContent = error.message;
+      return;
+    }
+    recoveryMode = false;
+    const { data: { session } } = await client.auth.getSession();
+    afterAuth(session);
+  });
+
+  client.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      recoveryMode = true;
+      showScreen('reset');
+    }
   });
 
   const campaignsTbody = document.getElementById('portal-campaigns-tbody');
@@ -78,6 +130,7 @@
 
   function showScreen(screen) {
     loginScreen.style.display = screen === 'login' ? 'flex' : 'none';
+    resetScreen.style.display = screen === 'reset' ? 'flex' : 'none';
     pendingScreen.style.display = screen === 'pending' ? 'flex' : 'none';
     noAccessScreen.style.display = screen === 'no-access' ? 'flex' : 'none';
     dashboard.style.display = screen === 'dashboard' ? 'flex' : 'none';
@@ -179,6 +232,7 @@
   }
 
   async function afterAuth(session) {
+    if (recoveryMode) return; // the password-reset screen owns the UI until the password is updated
     if (!session) {
       showScreen('login');
       return;
