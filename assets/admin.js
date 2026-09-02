@@ -96,6 +96,19 @@
   const addMetricRoas = document.getElementById('add-metric-roas');
   const addMetricStatus = document.getElementById('add-metric-status');
 
+  const adCreativesSection = document.getElementById('ad-creatives-section');
+  const adCreativesCampaignName = document.getElementById('ad-creatives-campaign-name');
+  const adCreativesTbody = document.getElementById('ad-creatives-tbody');
+  const adCreativesEmpty = document.getElementById('ad-creatives-empty');
+  const addAdCreativeForm = document.getElementById('add-ad-creative-form');
+  const addAdCreativeHeadline = document.getElementById('add-ad-creative-headline');
+  const addAdCreativeCta = document.getElementById('add-ad-creative-cta');
+  const addAdCreativeFormat = document.getElementById('add-ad-creative-format');
+  const addAdCreativeUgc = document.getElementById('add-ad-creative-ugc');
+  const addAdCreativeAsset = document.getElementById('add-ad-creative-asset');
+  const addAdCreativeBody = document.getElementById('add-ad-creative-body');
+  const addAdCreativeStatus = document.getElementById('add-ad-creative-status');
+
   const creatorsTbody = document.getElementById('creators-tbody');
   const creatorsEmpty = document.getElementById('creators-empty');
   const addCreatorForm = document.getElementById('add-creator-form');
@@ -774,6 +787,7 @@
     currentBriefId = null;
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
+    adCreativesSection.style.display = 'none';
     submissionsSection.style.display = 'none';
     clientsListView.style.display = 'none';
     clientDetailView.style.display = 'block';
@@ -1275,9 +1289,12 @@
     currentCampaignId = campaignId;
     const c = allCampaigns.find((x) => x.id === campaignId);
     metricsCampaignName.textContent = c ? c.name : '';
+    adCreativesCampaignName.textContent = c ? c.name : '';
     metricsSection.style.display = 'block';
+    adCreativesSection.style.display = 'block';
     renderCampaigns();
     loadMetrics();
+    loadAdCreatives();
   }
 
   async function loadMetrics() {
@@ -1361,6 +1378,100 @@
     addMetricStatus.style.color = 'var(--sky)';
     addMetricForm.reset();
     loadMetrics();
+  });
+
+  let allAdCreatives = [];
+  const AD_STATUSES = ['draft', 'approved', 'rejected', 'live'];
+
+  async function loadAdCreatives() {
+    const [creativesRes, ugcRes] = await Promise.all([
+      client
+        .from('ad_creatives')
+        .select('id, headline, cta, format, asset_url, status')
+        .eq('campaign_id', currentCampaignId)
+        .order('id', { ascending: true }),
+      client
+        .from('ugc_content')
+        .select('id, type, file_url')
+        .eq('client_id', currentClientId)
+        .eq('status', 'approved'),
+    ]);
+
+    addAdCreativeUgc.innerHTML = '<option value="">Based on submission (optional)</option>' + (ugcRes.data || []).map((u) =>
+      `<option value="${u.id}">${escapeHtml(u.type)} — ${escapeHtml(u.file_url || 'no file')}</option>`
+    ).join('');
+
+    if (creativesRes.error) {
+      adCreativesTbody.innerHTML = '';
+      adCreativesEmpty.style.display = 'block';
+      adCreativesEmpty.textContent = 'Could not load ad creatives: ' + creativesRes.error.message;
+      return;
+    }
+
+    allAdCreatives = creativesRes.data || [];
+    renderAdCreatives();
+  }
+
+  function renderAdCreatives() {
+    if (!allAdCreatives.length) {
+      adCreativesTbody.innerHTML = '';
+      adCreativesEmpty.style.display = 'block';
+      adCreativesEmpty.textContent = 'No ad creative yet — add one above.';
+      return;
+    }
+
+    adCreativesEmpty.style.display = 'none';
+    adCreativesTbody.innerHTML = allAdCreatives.map((a) => `
+        <tr>
+          <td>${escapeHtml(a.headline || '—')}</td>
+          <td>${escapeHtml(a.format || '—')}</td>
+          <td>${escapeHtml(a.cta || '—')}</td>
+          <td>${a.asset_url ? `<a href="${escapeHtml(a.asset_url)}" target="_blank" rel="noopener" style="color:var(--sky);">Asset</a>` : '—'}</td>
+          <td>
+            <select class="status-select ${a.status}" data-ad-creative-id="${a.id}">
+              ${AD_STATUSES.map((s) => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `).join('');
+
+    adCreativesTbody.querySelectorAll('.status-select').forEach((sel) => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.adCreativeId;
+        const status = e.target.value;
+        const { error } = await client.from('ad_creatives').update({ status }).eq('id', id);
+        if (error) {
+          alert('Failed to update status: ' + error.message);
+          return;
+        }
+        const a = allAdCreatives.find((x) => x.id === id);
+        if (a) a.status = status;
+        e.target.className = 'status-select ' + status;
+      });
+    });
+  }
+
+  addAdCreativeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addAdCreativeStatus.textContent = '';
+    const row = {
+      campaign_id: currentCampaignId,
+      ugc_content_id: addAdCreativeUgc.value || null,
+      headline: addAdCreativeHeadline.value.trim() || null,
+      body_copy: addAdCreativeBody.value.trim() || null,
+      cta: addAdCreativeCta.value.trim() || null,
+      asset_url: addAdCreativeAsset.value.trim() || null,
+      format: addAdCreativeFormat.value || null,
+    };
+    const { error } = await client.from('ad_creatives').insert([row]);
+    if (error) {
+      addAdCreativeStatus.textContent = 'Failed to add ad creative: ' + error.message;
+      return;
+    }
+    addAdCreativeStatus.textContent = 'Ad creative added.';
+    addAdCreativeStatus.style.color = 'var(--sky)';
+    addAdCreativeForm.reset();
+    loadAdCreatives();
   });
 
   updateAuthUI();

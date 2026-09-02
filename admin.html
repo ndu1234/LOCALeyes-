@@ -442,6 +442,53 @@
               <div class="admin-empty" id="metrics-empty" style="display:none;"></div>
             </div>
           </div>
+
+          <div id="ad-creatives-section" style="display:none; margin-top:32px;">
+            <div class="admin-page-header">
+              <h1 class="admin-title" id="ad-creatives-campaign-name" style="font-size:20px;"></h1>
+              <p class="admin-page-sub">Ad creative for this campaign — headline, copy, and asset.</p>
+            </div>
+
+            <div class="admin-toolbar">
+              <div></div>
+              <details class="admin-approve">
+                <summary>+ Add Ad Creative</summary>
+                <form id="add-ad-creative-form">
+                  <input class="form-input" id="add-ad-creative-headline" type="text" placeholder="Headline" style="max-width:180px;" />
+                  <input class="form-input" id="add-ad-creative-cta" type="text" placeholder="CTA" style="max-width:120px;" />
+                  <select class="form-select" id="add-ad-creative-format">
+                    <option value="">Format</option>
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="carousel">Carousel</option>
+                  </select>
+                  <select class="form-select" id="add-ad-creative-ugc">
+                    <option value="">Based on submission (optional)</option>
+                  </select>
+                  <input class="form-input" id="add-ad-creative-asset" type="url" placeholder="Asset URL" style="max-width:200px;" />
+                  <textarea class="form-textarea" id="add-ad-creative-body" placeholder="Body copy" rows="2" style="width:100%; margin-top:8px;"></textarea>
+                  <button type="submit" class="btn btn-primary" style="padding:10px 18px; font-size:13px;">Add</button>
+                </form>
+                <p class="admin-error" id="add-ad-creative-status"></p>
+              </details>
+            </div>
+
+            <div class="leads-table-wrap">
+              <table class="leads-table">
+                <thead>
+                  <tr>
+                    <th>Headline</th>
+                    <th>Format</th>
+                    <th>CTA</th>
+                    <th>Asset</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="ad-creatives-tbody"></tbody>
+              </table>
+              <div class="admin-empty" id="ad-creatives-empty" style="display:none;"></div>
+            </div>
+          </div>
         </div>
       </div>
 
