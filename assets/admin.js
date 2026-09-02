@@ -703,13 +703,36 @@
             </select>
           </td>
           <td><span class="status-select ${portalCls}">${portalLabel}</span></td>
-          <td><button type="button" class="btn btn-ghost clients-manage-btn" data-client-id="${c.id}">Manage</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost clients-manage-btn" data-client-id="${c.id}">Manage</button>
+            <button type="button" class="btn btn-ghost client-delete-btn" data-client-id="${c.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `;
     }).join('');
 
     clientsTbody.querySelectorAll('.clients-manage-btn').forEach((btn) => {
       btn.addEventListener('click', () => openClientDetail(btn.dataset.clientId));
+    });
+
+    clientsTbody.querySelectorAll('.client-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.clientId;
+        const c = allClients.find((x) => x.id === id);
+        if (!c) return;
+        if (!confirm(`Delete client "${c.company_name}"? This will also permanently delete ALL of their campaigns, invoices, content briefs, case studies, UGC submissions, and ad creatives. This cannot be undone.`)) return;
+        const { error } = await client.from('clients').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete client: ' + error.message);
+          return;
+        }
+        allClients = allClients.filter((x) => x.id !== id);
+        if (currentClientId === id) closeClientDetailView();
+        renderClients();
+        // The client's case studies cascade-delete in the DB too -- refresh that
+        // tab's list so it doesn't keep showing a now-deleted client's entry.
+        loadCaseStudies();
+      });
     });
 
     clientsTbody.querySelectorAll('select.status-select').forEach((sel) => {
@@ -786,7 +809,10 @@
           <td>${formatMoney(c.rate_per_video)}</td>
           <td>${c.portfolio_url ? `<a href="${escapeHtml(c.portfolio_url)}" target="_blank" rel="noopener" style="color:var(--sky);">Link</a>` : '—'}</td>
           <td><button type="button" class="status-select ${c.availability ? 'available' : 'unavailable'}" data-creator-id="${c.id}">${c.availability ? 'Available' : 'Unavailable'}</button></td>
-          <td><button type="button" class="btn btn-ghost creator-edit-btn" data-creator-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost creator-edit-btn" data-creator-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost creator-delete-btn" data-creator-id="${c.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
@@ -808,6 +834,27 @@
 
     creatorsTbody.querySelectorAll('.creator-edit-btn').forEach((btn) => {
       btn.addEventListener('click', () => startEditCreator(btn.dataset.creatorId));
+    });
+
+    creatorsTbody.querySelectorAll('.creator-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.creatorId;
+        const c = allCreators.find((x) => x.id === id);
+        if (!c) return;
+        const name = c.users ? (c.users.name || c.users.email) : 'this creator';
+        if (!confirm(`Delete creator "${name}"? Any UGC submissions they made will be kept but unlinked. This cannot be undone.`)) return;
+        // Deleting the linked users row (not just ugc_creators) cascades to remove
+        // the ugc_creators row too, and frees up their email if they're re-added later.
+        const { error } = await client.from('users').delete().eq('id', c.user_id);
+        if (error) {
+          alert('Failed to delete creator: ' + error.message);
+          return;
+        }
+        allCreators = allCreators.filter((x) => x.id !== id);
+        if (editingCreatorId === id) stopEditCreator();
+        renderCreators();
+        renderSubmissionCreatorOptions();
+      });
     });
   }
 
@@ -943,7 +990,10 @@
           <td>${escapeHtml(cs.industry_tag)}</td>
           <td>${escapeHtml(cs.headline_stat)}</td>
           <td><button type="button" class="status-select ${cs.published ? 'available' : 'unavailable'}" data-case-study-id="${cs.id}">${cs.published ? 'Published' : 'Unpublished'}</button></td>
-          <td><button type="button" class="btn btn-ghost case-study-edit-btn" data-case-study-id="${cs.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost case-study-edit-btn" data-case-study-id="${cs.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost case-study-delete-btn" data-case-study-id="${cs.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
@@ -965,6 +1015,23 @@
 
     caseStudiesTbody.querySelectorAll('.case-study-edit-btn').forEach((btn) => {
       btn.addEventListener('click', () => startEditCaseStudy(btn.dataset.caseStudyId));
+    });
+
+    caseStudiesTbody.querySelectorAll('.case-study-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.caseStudyId;
+        const cs = allCaseStudies.find((x) => x.id === id);
+        if (!cs) return;
+        if (!confirm(`Delete case study "${cs.brand_name}"? This will remove it from the public case studies page. This cannot be undone.`)) return;
+        const { error } = await client.from('case_studies').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete case study: ' + error.message);
+          return;
+        }
+        allCaseStudies = allCaseStudies.filter((x) => x.id !== id);
+        if (editingCaseStudyId === id) stopEditCaseStudy();
+        renderCaseStudies();
+      });
     });
   }
 
@@ -1239,13 +1306,16 @@
               ${CAMPAIGN_STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
-          <td><button type="button" class="btn btn-ghost campaign-edit-btn" data-campaign-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost campaign-edit-btn" data-campaign-id="${c.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost campaign-delete-btn" data-campaign-id="${c.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
     campaignsTbody.querySelectorAll('.campaign-row').forEach((row) => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.status-select') || e.target.closest('.campaign-edit-btn')) return;
+        if (e.target.closest('.status-select') || e.target.closest('.campaign-edit-btn') || e.target.closest('.campaign-delete-btn')) return;
         openMetrics(row.dataset.campaignId);
       });
     });
@@ -1254,6 +1324,30 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         startEditCampaign(btn.dataset.campaignId);
+      });
+    });
+
+    campaignsTbody.querySelectorAll('.campaign-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.campaignId;
+        const c = allCampaigns.find((x) => x.id === id);
+        if (!c) return;
+        if (!confirm(`Delete campaign "${c.name}"? This will also delete its ad creatives and performance metrics. This cannot be undone.`)) return;
+        const { error } = await client.from('campaigns').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete campaign: ' + error.message);
+          return;
+        }
+        allCampaigns = allCampaigns.filter((x) => x.id !== id);
+        if (editingCampaignId === id) stopEditCampaign();
+        if (currentCampaignId === id) {
+          currentCampaignId = null;
+          stopEditAdCreative();
+          metricsSection.style.display = 'none';
+          adCreativesSection.style.display = 'none';
+        }
+        renderCampaigns();
       });
     });
 
@@ -1401,7 +1495,10 @@
               ${INVOICE_STATUSES.map((s) => `<option value="${s}" ${s === inv.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
-          <td><button type="button" class="btn btn-ghost invoice-edit-btn" data-invoice-id="${inv.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost invoice-edit-btn" data-invoice-id="${inv.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost invoice-delete-btn" data-invoice-id="${inv.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
@@ -1423,6 +1520,23 @@
 
     invoicesTbody.querySelectorAll('.invoice-edit-btn').forEach((btn) => {
       btn.addEventListener('click', () => startEditInvoice(btn.dataset.invoiceId));
+    });
+
+    invoicesTbody.querySelectorAll('.invoice-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.invoiceId;
+        const inv = allInvoices.find((x) => x.id === id);
+        if (!inv) return;
+        if (!confirm(`Delete invoice for ${formatMoney(inv.amount)}? This cannot be undone.`)) return;
+        const { error } = await client.from('invoices').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete invoice: ' + error.message);
+          return;
+        }
+        allInvoices = allInvoices.filter((x) => x.id !== id);
+        if (editingInvoiceId === id) stopEditInvoice();
+        renderInvoices();
+      });
     });
   }
 
@@ -1522,13 +1636,16 @@
           <td>${escapeHtml(b.title)}</td>
           <td>${escapeHtml((b.talking_points || []).join(', ') || '—')}</td>
           <td>${formatDateOnly(b.deadline)}</td>
-          <td><button type="button" class="btn btn-ghost brief-edit-btn" data-brief-id="${b.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost brief-edit-btn" data-brief-id="${b.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost brief-delete-btn" data-brief-id="${b.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
     briefsTbody.querySelectorAll('.brief-row').forEach((row) => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.brief-edit-btn')) return;
+        if (e.target.closest('.brief-edit-btn') || e.target.closest('.brief-delete-btn')) return;
         openSubmissions(row.dataset.briefId);
       });
     });
@@ -1537,6 +1654,28 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         startEditBrief(btn.dataset.briefId);
+      });
+    });
+
+    briefsTbody.querySelectorAll('.brief-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.briefId;
+        const b = allBriefs.find((x) => x.id === id);
+        if (!b) return;
+        if (!confirm(`Delete content brief "${b.title}"? Any UGC submissions tied to it will be kept but unlinked from this brief. This cannot be undone.`)) return;
+        const { error } = await client.from('content_briefs').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete content brief: ' + error.message);
+          return;
+        }
+        allBriefs = allBriefs.filter((x) => x.id !== id);
+        if (editingBriefId === id) stopEditBrief();
+        if (currentBriefId === id) {
+          currentBriefId = null;
+          submissionsSection.style.display = 'none';
+        }
+        renderContentBriefs();
       });
     });
   }
@@ -1859,7 +1998,10 @@
               ${AD_STATUSES.map((s) => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
-          <td><button type="button" class="btn btn-ghost ad-creative-edit-btn" data-ad-creative-id="${a.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost ad-creative-edit-btn" data-ad-creative-id="${a.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
+            <button type="button" class="btn btn-ghost ad-creative-delete-btn" data-ad-creative-id="${a.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
         </tr>
       `).join('');
 
@@ -1880,6 +2022,24 @@
 
     adCreativesTbody.querySelectorAll('.ad-creative-edit-btn').forEach((btn) => {
       btn.addEventListener('click', () => startEditAdCreative(btn.dataset.adCreativeId));
+    });
+
+    adCreativesTbody.querySelectorAll('.ad-creative-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.adCreativeId;
+        const a = allAdCreatives.find((x) => x.id === id);
+        if (!a) return;
+        const label = a.headline ? `"${a.headline}"` : 'this ad creative';
+        if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+        const { error } = await client.from('ad_creatives').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete ad creative: ' + error.message);
+          return;
+        }
+        allAdCreatives = allAdCreatives.filter((x) => x.id !== id);
+        if (editingAdCreativeId === id) stopEditAdCreative();
+        renderAdCreatives();
+      });
     });
   }
 
