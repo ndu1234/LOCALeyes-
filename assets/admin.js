@@ -137,6 +137,22 @@
   const addCreatorSubmitBtn = document.getElementById('add-creator-submit');
   const cancelCreatorEditBtn = document.getElementById('cancel-creator-edit');
 
+  const caseStudiesTbody = document.getElementById('case-studies-tbody');
+  const caseStudiesEmpty = document.getElementById('case-studies-empty');
+  const addCaseStudyForm = document.getElementById('add-case-study-form');
+  const addCaseStudyClient = document.getElementById('add-case-study-client');
+  const addCaseStudyIndustry = document.getElementById('add-case-study-industry');
+  const addCaseStudyBrand = document.getElementById('add-case-study-brand');
+  const addCaseStudyStat = document.getElementById('add-case-study-stat');
+  const addCaseStudyChips = document.getElementById('add-case-study-chips');
+  const addCaseStudyLink = document.getElementById('add-case-study-link');
+  const addCaseStudyBlurb = document.getElementById('add-case-study-blurb');
+  const addCaseStudyStatus = document.getElementById('add-case-study-status');
+  const addCaseStudyDetails = document.getElementById('add-case-study-details');
+  const addCaseStudySummary = document.getElementById('add-case-study-summary');
+  const addCaseStudySubmitBtn = document.getElementById('add-case-study-submit');
+  const cancelCaseStudyEditBtn = document.getElementById('cancel-case-study-edit');
+
   const briefsTbody = document.getElementById('briefs-tbody');
   const briefsEmpty = document.getElementById('briefs-empty');
   const addBriefForm = document.getElementById('add-brief-form');
@@ -174,6 +190,7 @@
       applyTab(item.dataset.tab);
       closeClientDetailView();
       stopEditCreator();
+      stopEditCaseStudy();
       history.pushState({ tab: item.dataset.tab }, '');
     });
   });
@@ -303,6 +320,7 @@
       loadTraffic();
       loadClients();
       loadCreators();
+      loadCaseStudies();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -874,6 +892,148 @@
     addCreatorStatus.style.color = 'var(--sky)';
     addCreatorForm.reset();
     loadCreators();
+  });
+
+  let allCaseStudies = [];
+  let editingCaseStudyId = null;
+
+  async function loadCaseStudies() {
+    const [studiesRes, clientsRes] = await Promise.all([
+      client
+        .from('case_studies')
+        .select('id, client_id, industry_tag, brand_name, headline_stat, blurb, chips, link_url, published, clients(company_name)')
+        .order('display_order', { ascending: true }),
+      client.from('clients').select('id, company_name').order('company_name', { ascending: true }),
+    ]);
+
+    addCaseStudyClient.innerHTML = '<option value="">Client</option>' + (clientsRes.data || []).map((c) =>
+      `<option value="${c.id}">${escapeHtml(c.company_name)}</option>`
+    ).join('');
+
+    if (studiesRes.error) {
+      caseStudiesTbody.innerHTML = '';
+      caseStudiesEmpty.style.display = 'block';
+      caseStudiesEmpty.textContent = 'Could not load case studies: ' + studiesRes.error.message;
+      return;
+    }
+
+    allCaseStudies = studiesRes.data || [];
+    renderCaseStudies();
+  }
+
+  function renderCaseStudies() {
+    if (!allCaseStudies.length) {
+      caseStudiesTbody.innerHTML = '';
+      caseStudiesEmpty.style.display = 'block';
+      caseStudiesEmpty.textContent = 'No case studies yet — add one above.';
+      return;
+    }
+
+    caseStudiesEmpty.style.display = 'none';
+    caseStudiesTbody.innerHTML = allCaseStudies.map((cs) => `
+        <tr>
+          <td>${escapeHtml(cs.brand_name)}</td>
+          <td>${escapeHtml(cs.clients ? cs.clients.company_name : '—')}</td>
+          <td>${escapeHtml(cs.industry_tag)}</td>
+          <td>${escapeHtml(cs.headline_stat)}</td>
+          <td><button type="button" class="status-select ${cs.published ? 'available' : 'unavailable'}" data-case-study-id="${cs.id}">${cs.published ? 'Published' : 'Unpublished'}</button></td>
+          <td><button type="button" class="btn btn-ghost case-study-edit-btn" data-case-study-id="${cs.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
+        </tr>
+      `).join('');
+
+    caseStudiesTbody.querySelectorAll('button.status-select').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.caseStudyId;
+        const cs = allCaseStudies.find((x) => x.id === id);
+        if (!cs) return;
+        const newPublished = !cs.published;
+        const { error } = await client.from('case_studies').update({ published: newPublished }).eq('id', id);
+        if (error) {
+          alert('Failed to update: ' + error.message);
+          return;
+        }
+        cs.published = newPublished;
+        renderCaseStudies();
+      });
+    });
+
+    caseStudiesTbody.querySelectorAll('.case-study-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => startEditCaseStudy(btn.dataset.caseStudyId));
+    });
+  }
+
+  function startEditCaseStudy(caseStudyId) {
+    const cs = allCaseStudies.find((x) => x.id === caseStudyId);
+    if (!cs) return;
+    editingCaseStudyId = caseStudyId;
+    addCaseStudyClient.value = cs.client_id || '';
+    addCaseStudyIndustry.value = cs.industry_tag || '';
+    addCaseStudyBrand.value = cs.brand_name || '';
+    addCaseStudyStat.value = cs.headline_stat || '';
+    addCaseStudyChips.value = (cs.chips || []).join(', ');
+    addCaseStudyLink.value = cs.link_url || '';
+    addCaseStudyBlurb.value = cs.blurb || '';
+    addCaseStudySummary.textContent = 'Edit Case Study';
+    addCaseStudySubmitBtn.textContent = 'Save Changes';
+    cancelCaseStudyEditBtn.style.display = 'inline-flex';
+    addCaseStudyStatus.textContent = '';
+    addCaseStudyDetails.open = true;
+    addCaseStudyClient.focus();
+  }
+
+  function stopEditCaseStudy() {
+    editingCaseStudyId = null;
+    addCaseStudySummary.textContent = '+ Add Case Study';
+    addCaseStudySubmitBtn.textContent = 'Add';
+    cancelCaseStudyEditBtn.style.display = 'none';
+    addCaseStudyForm.reset();
+  }
+
+  cancelCaseStudyEditBtn.addEventListener('click', () => {
+    stopEditCaseStudy();
+    addCaseStudyDetails.open = false;
+  });
+
+  addCaseStudyForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addCaseStudyStatus.textContent = '';
+    const chips = addCaseStudyChips.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const row = {
+      client_id: addCaseStudyClient.value || null,
+      industry_tag: addCaseStudyIndustry.value.trim(),
+      brand_name: addCaseStudyBrand.value.trim(),
+      headline_stat: addCaseStudyStat.value.trim(),
+      blurb: addCaseStudyBlurb.value.trim(),
+      chips: chips.length ? chips : null,
+      link_url: addCaseStudyLink.value.trim() || null,
+    };
+    if (!row.client_id) {
+      addCaseStudyStatus.textContent = 'Pick a client first.';
+      return;
+    }
+
+    if (editingCaseStudyId) {
+      const { error } = await client.from('case_studies').update(row).eq('id', editingCaseStudyId);
+      if (error) {
+        addCaseStudyStatus.textContent = 'Failed to save changes: ' + error.message;
+        return;
+      }
+      addCaseStudyStatus.textContent = `${row.brand_name} updated.`;
+      addCaseStudyStatus.style.color = 'var(--sky)';
+      stopEditCaseStudy();
+      loadCaseStudies();
+      return;
+    }
+
+    const { error } = await client.from('case_studies').insert([row]);
+    if (error) {
+      addCaseStudyStatus.textContent = 'Failed to add case study: ' + error.message;
+      return;
+    }
+    addCaseStudyStatus.textContent = `${row.brand_name} added.`;
+    addCaseStudyStatus.style.color = 'var(--sky)';
+    addCaseStudyForm.reset();
+    loadCaseStudies();
   });
 
   function openClientDetail(clientId, opts = {}) {
