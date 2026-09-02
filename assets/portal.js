@@ -116,42 +116,26 @@
     if (mode === 'signup') {
       const companyName = signupCompanyInput.value.trim();
       const contactName = signupNameInput.value.trim();
-      const { data, error } = await client.auth.signUp({ email, password });
+      // Company/contact name can't be written to our tables yet -- there's
+      // no session until the email is confirmed, and RLS requires an
+      // authenticated JWT for the self-insert. Stashed as auth user
+      // metadata instead, so afterAuth() can read it back and finish
+      // provisioning the account once they return with a confirmed session.
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: { data: { company_name: companyName, contact_name: contactName } },
+      });
       if (error) {
         loginError.textContent = error.message;
         return;
       }
       if (!data.session) {
-        // Project has email confirmation required -- rare for this app, but handle it.
         loginError.textContent = 'Check your email to confirm your account, then sign in.';
         loginError.style.color = 'var(--sky)';
         mode = 'signin';
         updateAuthUI();
         return;
-      }
-      const { data: userRow, error: userErr } = await client
-        .from('users')
-        .insert([{ email, name: contactName, role: 'client' }])
-        .select('id')
-        .single();
-      if (userErr) {
-        loginError.textContent = 'Could not create account: ' + userErr.message;
-        return;
-      }
-
-      // If an admin already pre-authorized this exact email on an existing
-      // client record, claim it (instant approval) instead of creating a
-      // second, disconnected client row for the same company.
-      const claimedClient = await claimAuthorizedClient(email, userRow.id);
-
-      if (!claimedClient) {
-        const { error: clientErr } = await client
-          .from('clients')
-          .insert([{ company_name: companyName, user_id: userRow.id }]);
-        if (clientErr) {
-          loginError.textContent = 'Could not create account: ' + clientErr.message;
-          return;
-        }
       }
       afterAuth(data.session);
       return;
@@ -209,14 +193,37 @@
     let { data } = await client.from('clients').select('id, company_name, portal_approved').not('user_id', 'is', null).maybeSingle();
 
     if (!data) {
-      // No client linked to this account yet -- an admin may have
-      // authorized this email for instant access after the account was
-      // created (e.g. they signed up before being authorized, or this is
-      // an ordinary sign-in and access was only just granted). Check every
-      // time, not just at signup, so authorization always takes effect.
-      const { data: userRow } = await client.from('users').select('id').eq('email', email).maybeSingle();
+      // No client linked to this account yet. Two cases land here: (a) an
+      // admin authorized this email for instant access after the account
+      // was created, or this is just an ordinary sign-in and access was
+      // only just granted -- check every time, not just at signup, so
+      // authorization always takes effect; (b) this is a signup's *first*
+      // return with a confirmed session -- our own users/clients rows were
+      // never created yet (no session existed at signup time to write them
+      // under), so finish provisioning now using the company/contact name
+      // stashed in auth user metadata at signup.
+      let { data: userRow } = await client.from('users').select('id').eq('email', email).maybeSingle();
+      const metadata = session.user.user_metadata || {};
+
+      if (!userRow && metadata.company_name) {
+        const { data: newUser, error: userErr } = await client
+          .from('users')
+          .insert([{ email, name: metadata.contact_name || null, role: 'client' }])
+          .select('id')
+          .single();
+        if (!userErr) userRow = newUser;
+      }
+
       if (userRow) {
         data = await claimAuthorizedClient(email, userRow.id);
+        if (!data && metadata.company_name) {
+          const { data: newClient } = await client
+            .from('clients')
+            .insert([{ company_name: metadata.company_name, user_id: userRow.id }])
+            .select('id, company_name, portal_approved')
+            .maybeSingle();
+          data = newClient || null;
+        }
       }
     }
 
