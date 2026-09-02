@@ -118,6 +118,10 @@
   const addAdCreativeAsset = document.getElementById('add-ad-creative-asset');
   const addAdCreativeBody = document.getElementById('add-ad-creative-body');
   const addAdCreativeStatus = document.getElementById('add-ad-creative-status');
+  const addAdCreativeDetails = document.getElementById('add-ad-creative-details');
+  const addAdCreativeSummary = document.getElementById('add-ad-creative-summary');
+  const addAdCreativeSubmitBtn = document.getElementById('add-ad-creative-submit');
+  const cancelAdCreativeEditBtn = document.getElementById('cancel-ad-creative-edit');
 
   const creatorsTbody = document.getElementById('creators-tbody');
   const creatorsEmpty = document.getElementById('creators-empty');
@@ -881,6 +885,7 @@
     stopEditCampaign();
     stopEditInvoice();
     stopEditBrief();
+    stopEditAdCreative();
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
     adCreativesSection.style.display = 'none';
@@ -903,6 +908,7 @@
     stopEditCampaign();
     stopEditInvoice();
     stopEditBrief();
+    stopEditAdCreative();
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
   }
@@ -1540,6 +1546,7 @@
 
   function openMetrics(campaignId) {
     currentCampaignId = campaignId;
+    stopEditAdCreative();
     const c = allCampaigns.find((x) => x.id === campaignId);
     metricsCampaignName.textContent = c ? c.name : '';
     adCreativesCampaignName.textContent = c ? c.name : '';
@@ -1634,13 +1641,14 @@
   });
 
   let allAdCreatives = [];
+  let editingAdCreativeId = null;
   const AD_STATUSES = ['draft', 'approved', 'rejected', 'live'];
 
   async function loadAdCreatives() {
     const [creativesRes, ugcRes] = await Promise.all([
       client
         .from('ad_creatives')
-        .select('id, headline, cta, format, asset_url, status')
+        .select('id, headline, body_copy, cta, format, asset_url, status, ugc_content_id')
         .eq('campaign_id', currentCampaignId)
         .order('id', { ascending: true }),
       client
@@ -1685,6 +1693,7 @@
               ${AD_STATUSES.map((s) => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
+          <td><button type="button" class="btn btn-ghost ad-creative-edit-btn" data-ad-creative-id="${a.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
         </tr>
       `).join('');
 
@@ -1702,13 +1711,47 @@
         e.target.className = 'status-select ' + status;
       });
     });
+
+    adCreativesTbody.querySelectorAll('.ad-creative-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => startEditAdCreative(btn.dataset.adCreativeId));
+    });
   }
+
+  function startEditAdCreative(adCreativeId) {
+    const a = allAdCreatives.find((x) => x.id === adCreativeId);
+    if (!a) return;
+    editingAdCreativeId = adCreativeId;
+    addAdCreativeHeadline.value = a.headline || '';
+    addAdCreativeCta.value = a.cta || '';
+    addAdCreativeFormat.value = a.format || '';
+    addAdCreativeUgc.value = a.ugc_content_id || '';
+    addAdCreativeAsset.value = a.asset_url || '';
+    addAdCreativeBody.value = a.body_copy || '';
+    addAdCreativeSummary.textContent = 'Edit Ad Creative';
+    addAdCreativeSubmitBtn.textContent = 'Save Changes';
+    cancelAdCreativeEditBtn.style.display = 'inline-flex';
+    addAdCreativeStatus.textContent = '';
+    addAdCreativeDetails.open = true;
+    addAdCreativeHeadline.focus();
+  }
+
+  function stopEditAdCreative() {
+    editingAdCreativeId = null;
+    addAdCreativeSummary.textContent = '+ Add Ad Creative';
+    addAdCreativeSubmitBtn.textContent = 'Add';
+    cancelAdCreativeEditBtn.style.display = 'none';
+    addAdCreativeForm.reset();
+  }
+
+  cancelAdCreativeEditBtn.addEventListener('click', () => {
+    stopEditAdCreative();
+    addAdCreativeDetails.open = false;
+  });
 
   addAdCreativeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     addAdCreativeStatus.textContent = '';
     const row = {
-      campaign_id: currentCampaignId,
       ugc_content_id: addAdCreativeUgc.value || null,
       headline: addAdCreativeHeadline.value.trim() || null,
       body_copy: addAdCreativeBody.value.trim() || null,
@@ -1716,7 +1759,21 @@
       asset_url: addAdCreativeAsset.value.trim() || null,
       format: addAdCreativeFormat.value || null,
     };
-    const { error } = await client.from('ad_creatives').insert([row]);
+
+    if (editingAdCreativeId) {
+      const { error } = await client.from('ad_creatives').update(row).eq('id', editingAdCreativeId);
+      if (error) {
+        addAdCreativeStatus.textContent = 'Failed to save changes: ' + error.message;
+        return;
+      }
+      addAdCreativeStatus.textContent = 'Ad creative updated.';
+      addAdCreativeStatus.style.color = 'var(--sky)';
+      stopEditAdCreative();
+      loadAdCreatives();
+      return;
+    }
+
+    const { error } = await client.from('ad_creatives').insert([{ ...row, campaign_id: currentCampaignId }]);
     if (error) {
       addAdCreativeStatus.textContent = 'Failed to add ad creative: ' + error.message;
       return;
