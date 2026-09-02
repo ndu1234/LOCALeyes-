@@ -612,6 +612,8 @@
     renderClients(allClients);
   }
 
+  const CLIENT_STATUSES = ['active', 'paused', 'churned'];
+
   function renderClients(clients) {
     if (!clients.length) {
       clientsTbody.innerHTML = '';
@@ -627,7 +629,11 @@
       return `
         <tr>
           <td>${escapeHtml(c.company_name)}</td>
-          <td><span class="status-select ${c.status}">${escapeHtml(c.status)}</span></td>
+          <td>
+            <select class="status-select ${c.status}" data-client-id="${c.id}">
+              ${CLIENT_STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
           <td><span class="status-select ${portalCls}">${portalLabel}</span></td>
           <td><button type="button" class="btn btn-ghost clients-manage-btn" data-client-id="${c.id}">Manage</button></td>
         </tr>
@@ -636,6 +642,21 @@
 
     clientsTbody.querySelectorAll('.clients-manage-btn').forEach((btn) => {
       btn.addEventListener('click', () => openClientDetail(btn.dataset.clientId));
+    });
+
+    clientsTbody.querySelectorAll('select.status-select').forEach((sel) => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.clientId;
+        const status = e.target.value;
+        const { error } = await client.from('clients').update({ status }).eq('id', id);
+        if (error) {
+          alert('Failed to update status: ' + error.message);
+          return;
+        }
+        const c = allClients.find((x) => x.id === id);
+        if (c) c.status = status;
+        e.target.className = 'status-select ' + status;
+      });
     });
   }
 
