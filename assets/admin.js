@@ -87,6 +87,10 @@
   const addInvoiceDue = document.getElementById('add-invoice-due');
   const addInvoiceStatusSelect = document.getElementById('add-invoice-status');
   const addInvoiceStatusMsg = document.getElementById('add-invoice-status-msg');
+  const addInvoiceDetails = document.getElementById('add-invoice-details');
+  const addInvoiceSummary = document.getElementById('add-invoice-summary');
+  const addInvoiceSubmitBtn = document.getElementById('add-invoice-submit');
+  const cancelInvoiceEditBtn = document.getElementById('cancel-invoice-edit');
 
   const metricsSection = document.getElementById('metrics-section');
   const metricsCampaignName = document.getElementById('metrics-campaign-name');
@@ -803,6 +807,7 @@
     currentCampaignId = null;
     currentBriefId = null;
     stopEditCampaign();
+    stopEditInvoice();
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
     adCreativesSection.style.display = 'none';
@@ -823,6 +828,7 @@
     currentCampaignId = null;
     currentBriefId = null;
     stopEditCampaign();
+    stopEditInvoice();
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
   }
@@ -1090,6 +1096,7 @@
   });
 
   let allInvoices = [];
+  let editingInvoiceId = null;
   const INVOICE_STATUSES = ['draft', 'sent', 'paid', 'overdue'];
 
   async function loadInvoices() {
@@ -1148,6 +1155,7 @@
               ${INVOICE_STATUSES.map((s) => `<option value="${s}" ${s === inv.status ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </td>
+          <td><button type="button" class="btn btn-ghost invoice-edit-btn" data-invoice-id="${inv.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
         </tr>
       `).join('');
 
@@ -1166,18 +1174,63 @@
         renderInvoices();
       });
     });
+
+    invoicesTbody.querySelectorAll('.invoice-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => startEditInvoice(btn.dataset.invoiceId));
+    });
   }
+
+  function startEditInvoice(invoiceId) {
+    const inv = allInvoices.find((x) => x.id === invoiceId);
+    if (!inv) return;
+    editingInvoiceId = invoiceId;
+    addInvoiceAmount.value = inv.amount != null ? inv.amount : '';
+    addInvoiceDue.value = inv.due_date || '';
+    addInvoiceStatusSelect.value = inv.status;
+    addInvoiceSummary.textContent = 'Edit Invoice';
+    addInvoiceSubmitBtn.textContent = 'Save Changes';
+    cancelInvoiceEditBtn.style.display = 'inline-flex';
+    addInvoiceStatusMsg.textContent = '';
+    addInvoiceDetails.open = true;
+    addInvoiceAmount.focus();
+  }
+
+  function stopEditInvoice() {
+    editingInvoiceId = null;
+    addInvoiceSummary.textContent = '+ Add Invoice';
+    addInvoiceSubmitBtn.textContent = 'Add';
+    cancelInvoiceEditBtn.style.display = 'none';
+    addInvoiceForm.reset();
+  }
+
+  cancelInvoiceEditBtn.addEventListener('click', () => {
+    stopEditInvoice();
+    addInvoiceDetails.open = false;
+  });
 
   addInvoiceForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     addInvoiceStatusMsg.textContent = '';
     const row = {
-      client_id: currentClientId,
       amount: Number(addInvoiceAmount.value),
       due_date: addInvoiceDue.value || null,
       status: addInvoiceStatusSelect.value,
     };
-    const { error } = await client.from('invoices').insert([row]);
+
+    if (editingInvoiceId) {
+      const { error } = await client.from('invoices').update(row).eq('id', editingInvoiceId);
+      if (error) {
+        addInvoiceStatusMsg.textContent = 'Failed to save changes: ' + error.message;
+        return;
+      }
+      addInvoiceStatusMsg.textContent = `Invoice updated.`;
+      addInvoiceStatusMsg.style.color = 'var(--sky)';
+      stopEditInvoice();
+      loadInvoices();
+      return;
+    }
+
+    const { error } = await client.from('invoices').insert([{ ...row, client_id: currentClientId }]);
     if (error) {
       addInvoiceStatusMsg.textContent = 'Failed to add invoice: ' + error.message;
       return;
