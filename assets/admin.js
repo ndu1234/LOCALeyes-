@@ -137,6 +137,10 @@
   const addBriefDeadline = document.getElementById('add-brief-deadline');
   const addBriefDescription = document.getElementById('add-brief-description');
   const addBriefStatus = document.getElementById('add-brief-status');
+  const addBriefDetails = document.getElementById('add-brief-details');
+  const addBriefSummary = document.getElementById('add-brief-summary');
+  const addBriefSubmitBtn = document.getElementById('add-brief-submit');
+  const cancelBriefEditBtn = document.getElementById('cancel-brief-edit');
 
   const submissionsSection = document.getElementById('submissions-section');
   const submissionsBriefTitle = document.getElementById('submissions-brief-title');
@@ -808,6 +812,7 @@
     currentBriefId = null;
     stopEditCampaign();
     stopEditInvoice();
+    stopEditBrief();
     clientDetailName.textContent = clientRow.company_name;
     metricsSection.style.display = 'none';
     adCreativesSection.style.display = 'none';
@@ -829,6 +834,7 @@
     currentBriefId = null;
     stopEditCampaign();
     stopEditInvoice();
+    stopEditBrief();
     clientDetailView.style.display = 'none';
     clientsListView.style.display = 'block';
   }
@@ -1242,6 +1248,7 @@
   });
 
   let allBriefs = [];
+  let editingBriefId = null;
 
   async function loadContentBriefs() {
     const { data, error } = await client
@@ -1275,26 +1282,79 @@
           <td>${escapeHtml(b.title)}</td>
           <td>${escapeHtml((b.talking_points || []).join(', ') || '—')}</td>
           <td>${formatDateOnly(b.deadline)}</td>
+          <td><button type="button" class="btn btn-ghost brief-edit-btn" data-brief-id="${b.id}" style="padding:6px 12px; font-size:12px;">Edit</button></td>
         </tr>
       `).join('');
 
     briefsTbody.querySelectorAll('.brief-row').forEach((row) => {
-      row.addEventListener('click', () => openSubmissions(row.dataset.briefId));
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.brief-edit-btn')) return;
+        openSubmissions(row.dataset.briefId);
+      });
+    });
+
+    briefsTbody.querySelectorAll('.brief-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startEditBrief(btn.dataset.briefId);
+      });
     });
   }
+
+  function startEditBrief(briefId) {
+    const b = allBriefs.find((x) => x.id === briefId);
+    if (!b) return;
+    editingBriefId = briefId;
+    addBriefTitle.value = b.title || '';
+    addBriefTalkingPoints.value = (b.talking_points || []).join(', ');
+    addBriefDeadline.value = b.deadline || '';
+    addBriefDescription.value = b.description || '';
+    addBriefSummary.textContent = 'Edit Brief';
+    addBriefSubmitBtn.textContent = 'Save Changes';
+    cancelBriefEditBtn.style.display = 'inline-flex';
+    addBriefStatus.textContent = '';
+    addBriefDetails.open = true;
+    addBriefTitle.focus();
+  }
+
+  function stopEditBrief() {
+    editingBriefId = null;
+    addBriefSummary.textContent = '+ Add Brief';
+    addBriefSubmitBtn.textContent = 'Add';
+    cancelBriefEditBtn.style.display = 'none';
+    addBriefForm.reset();
+  }
+
+  cancelBriefEditBtn.addEventListener('click', () => {
+    stopEditBrief();
+    addBriefDetails.open = false;
+  });
 
   addBriefForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     addBriefStatus.textContent = '';
     const talkingPoints = addBriefTalkingPoints.value.split(',').map((s) => s.trim()).filter(Boolean);
     const row = {
-      client_id: currentClientId,
       title: addBriefTitle.value.trim(),
       description: addBriefDescription.value.trim() || null,
       talking_points: talkingPoints.length ? talkingPoints : null,
       deadline: addBriefDeadline.value || null,
     };
-    const { error } = await client.from('content_briefs').insert([row]);
+
+    if (editingBriefId) {
+      const { error } = await client.from('content_briefs').update(row).eq('id', editingBriefId);
+      if (error) {
+        addBriefStatus.textContent = 'Failed to save changes: ' + error.message;
+        return;
+      }
+      addBriefStatus.textContent = `${row.title} updated.`;
+      addBriefStatus.style.color = 'var(--sky)';
+      stopEditBrief();
+      loadContentBriefs();
+      return;
+    }
+
+    const { error } = await client.from('content_briefs').insert([{ ...row, client_id: currentClientId }]);
     if (error) {
       addBriefStatus.textContent = 'Failed to add brief: ' + error.message;
       return;
