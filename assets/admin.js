@@ -222,9 +222,16 @@
   }
 
   function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str == null ? '' : String(str);
-    return div.innerHTML;
+    // innerHTML round-tripping escapes & < > but NOT quotes -- and this
+    // helper is used inside attribute values (href="...", value="..."),
+    // where an embedded " would terminate the attribute and let the rest
+    // of the string inject new ones. Escape all five metacharacters.
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function setLoginMessage(text, isSuccess) {
@@ -1308,6 +1315,13 @@
   let editingCampaignId = null;
   const CAMPAIGN_STATUSES = ['draft', 'live', 'paused', 'ended'];
 
+  // Campaigns store the platform select's lowercase value ("tiktok"); show
+  // the same label the picker shows instead of the raw stored token.
+  const PLATFORM_LABELS = { meta: 'Meta', google: 'Google', tiktok: 'TikTok', youtube: 'YouTube' };
+  function formatPlatform(p) {
+    return p ? (PLATFORM_LABELS[p] || p) : '—';
+  }
+
   async function loadCampaigns() {
     const { data, error } = await client
       .from('campaigns')
@@ -1327,7 +1341,14 @@
   }
 
   function formatMoney(n) {
-    return n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if (n == null) return '—';
+    const num = Number(n);
+    // Whole-dollar amounts stay clean ($2,500); anything with cents gets the
+    // full two digits ($900.50, not $900.5).
+    return '$' + num.toLocaleString(undefined, {
+      minimumFractionDigits: Number.isInteger(num) ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   // Postgres `date` columns come back as plain "YYYY-MM-DD" strings with no
@@ -1357,7 +1378,7 @@
     campaignsTbody.innerHTML = allCampaigns.map((c) => `
         <tr class="campaign-row ${c.id === currentCampaignId ? 'active-row' : ''}" data-campaign-id="${c.id}">
           <td>${escapeHtml(c.name)}</td>
-          <td>${escapeHtml(c.platform || '—')}</td>
+          <td>${escapeHtml(formatPlatform(c.platform))}</td>
           <td>${escapeHtml(c.objective || '—')}</td>
           <td>${formatMoney(c.budget)}</td>
           <td>${formatDateRange(c.start_date, c.end_date)}</td>

@@ -72,6 +72,10 @@ nav.scrolled {
 }
 .nav-links a:hover { color: var(--text); }
 .nav-links a.active { color: var(--sky); }
+/* .nav-links a (0-1-1) outranks .btn-primary (0-1-0), which was turning the
+   nav's Book a Call pill grey-on-sky. Re-assert the button's ink color. */
+.nav-links a.btn-primary,
+.nav-links a.btn-primary:hover { color: #071019; }
 .nav-links .nav-cta-item { margin-left: 4px; }
 
 .nav-toggle {

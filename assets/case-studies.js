@@ -5,9 +5,16 @@
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str == null ? '' : String(str);
-    return div.innerHTML;
+    // innerHTML round-tripping escapes & < > but NOT quotes -- and this
+    // helper is used inside attribute values (href="..."), where an
+    // embedded " would terminate the attribute and let the rest of the
+    // string inject new ones. Escape all five metacharacters.
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   (async function loadPublishedCaseStudies() {
