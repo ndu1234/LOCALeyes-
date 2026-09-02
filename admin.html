@@ -186,7 +186,15 @@
           </div>
 
           <div class="admin-toolbar">
-            <div></div>
+            <div class="admin-controls">
+              <input class="form-input" id="clients-search-input" type="text" placeholder="Search company name..." />
+              <select class="form-select" id="clients-status-filter">
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="churned">Churned</option>
+              </select>
+            </div>
             <details class="admin-approve">
               <summary>+ Add Client</summary>
               <form id="add-client-form">

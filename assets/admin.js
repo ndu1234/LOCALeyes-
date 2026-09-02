@@ -44,6 +44,8 @@
 
   const clientsTbody = document.getElementById('clients-tbody');
   const clientsEmpty = document.getElementById('clients-empty');
+  const clientsSearchInput = document.getElementById('clients-search-input');
+  const clientsStatusFilter = document.getElementById('clients-status-filter');
   const addClientForm = document.getElementById('add-client-form');
   const addClientName = document.getElementById('add-client-name');
   const addClientEmail = document.getElementById('add-client-email');
@@ -626,16 +628,24 @@
     }
 
     allClients = clientRows || [];
-    renderClients(allClients);
+    renderClients();
   }
 
   const CLIENT_STATUSES = ['active', 'paused', 'churned'];
 
-  function renderClients(clients) {
+  function renderClients() {
+    const q = clientsSearchInput.value.trim().toLowerCase();
+    const statusVal = clientsStatusFilter.value;
+    const clients = allClients.filter((c) => {
+      const matchesQ = !q || c.company_name.toLowerCase().includes(q);
+      const matchesStatus = statusVal === 'all' || c.status === statusVal;
+      return matchesQ && matchesStatus;
+    });
+
     if (!clients.length) {
       clientsTbody.innerHTML = '';
       clientsEmpty.style.display = 'block';
-      clientsEmpty.textContent = 'No clients yet — add one above.';
+      clientsEmpty.textContent = allClients.length ? 'No clients match your filters.' : 'No clients yet — add one above.';
       return;
     }
 
@@ -676,6 +686,9 @@
       });
     });
   }
+
+  clientsSearchInput.addEventListener('input', renderClients);
+  clientsStatusFilter.addEventListener('change', renderClients);
 
   addClientForm.addEventListener('submit', async (e) => {
     e.preventDefault();
