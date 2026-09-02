@@ -394,15 +394,21 @@
     }
   });
 
-  logoutBtn.addEventListener('click', async () => {
+  async function signOutAndReset() {
     await client.auth.signOut();
+    // Clears client-detail/campaign/brief drill-down state and any
+    // in-progress edits so a different admin signing in on the same
+    // browser never sees a previous session's leftover DOM content
+    // flash before their own data loads.
+    closeClientDetailView();
+    stopEditCreator();
+    stopEditCaseStudy();
+    applyTab('traffic');
     showScreen('login');
-  });
+  }
 
-  pendingLogoutBtn.addEventListener('click', async () => {
-    await client.auth.signOut();
-    showScreen('login');
-  });
+  logoutBtn.addEventListener('click', signOutAndReset);
+  pendingLogoutBtn.addEventListener('click', signOutAndReset);
 
   addAdminForm.addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -209,6 +209,14 @@
 
   async function signOut() {
     await client.auth.signOut();
+    // Clears drill-down state and hides nested sections so a different
+    // client signing in on the same browser never sees a previous
+    // session's leftover campaign/submission data flash before their
+    // own loads.
+    currentClientId = null;
+    currentBriefId = null;
+    metricsSection.style.display = 'none';
+    submissionsSection.style.display = 'none';
     showScreen('login');
   }
   pendingLogoutBtn.addEventListener('click', signOut);
