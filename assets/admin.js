@@ -56,6 +56,7 @@
 
   const portalAccessStatusEl = document.getElementById('portal-access-status');
   const portalApproveBtn = document.getElementById('portal-approve-btn');
+  const portalRevokeBtn = document.getElementById('portal-revoke-btn');
   const authorizedEmailForm = document.getElementById('authorized-email-form');
   const authorizedEmailInput = document.getElementById('authorized-email-input');
   const authorizedEmailStatus = document.getElementById('authorized-email-status');
@@ -785,6 +786,7 @@
     if (error || !data) {
       portalAccessStatusEl.textContent = '';
       portalApproveBtn.style.display = 'none';
+      portalRevokeBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
       return;
     }
@@ -793,15 +795,18 @@
         ? 'No signup yet — they get instant access once they sign up with the email below.'
         : 'No signup yet. Optionally authorize an email below for instant access.';
       portalApproveBtn.style.display = 'none';
+      portalRevokeBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'flex';
       authorizedEmailInput.value = data.authorized_email || '';
     } else if (!data.portal_approved) {
       portalAccessStatusEl.textContent = `Pending approval — signed up as ${data.users ? data.users.email : 'unknown'}.`;
       portalApproveBtn.style.display = 'inline-flex';
+      portalRevokeBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
     } else {
       portalAccessStatusEl.textContent = `Approved — ${data.users ? data.users.email : 'unknown'} can sign in.`;
       portalApproveBtn.style.display = 'none';
+      portalRevokeBtn.style.display = 'inline-flex';
       authorizedEmailForm.style.display = 'none';
     }
   }
@@ -828,6 +833,17 @@
     const { error } = await client.from('clients').update({ portal_approved: true }).eq('id', currentClientId);
     if (error) {
       alert('Failed to approve portal access: ' + error.message);
+      return;
+    }
+    loadPortalAccessStatus();
+    loadClients();
+  });
+
+  portalRevokeBtn.addEventListener('click', async () => {
+    if (!confirm('Revoke portal access for this client? They will be signed out of the dashboard until re-approved.')) return;
+    const { error } = await client.from('clients').update({ portal_approved: false }).eq('id', currentClientId);
+    if (error) {
+      alert('Failed to revoke portal access: ' + error.message);
       return;
     }
     loadPortalAccessStatus();
