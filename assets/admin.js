@@ -57,6 +57,7 @@
   const portalAccessStatusEl = document.getElementById('portal-access-status');
   const portalApproveBtn = document.getElementById('portal-approve-btn');
   const portalRevokeBtn = document.getElementById('portal-revoke-btn');
+  const revokeAuthorizationBtn = document.getElementById('revoke-authorization-btn');
   const authorizedEmailForm = document.getElementById('authorized-email-form');
   const authorizedEmailInput = document.getElementById('authorized-email-input');
   const authorizedEmailStatus = document.getElementById('authorized-email-status');
@@ -787,26 +788,34 @@
       portalAccessStatusEl.textContent = '';
       portalApproveBtn.style.display = 'none';
       portalRevokeBtn.style.display = 'none';
+      revokeAuthorizationBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
       return;
     }
     if (!data.user_id) {
-      portalAccessStatusEl.textContent = data.authorized_email
-        ? 'No signup yet — they get instant access once they sign up with the email below.'
-        : 'No signup yet. Optionally authorize an email below for instant access.';
       portalApproveBtn.style.display = 'none';
       portalRevokeBtn.style.display = 'none';
-      authorizedEmailForm.style.display = 'flex';
-      authorizedEmailInput.value = data.authorized_email || '';
+      if (data.authorized_email) {
+        portalAccessStatusEl.textContent = `No signup yet — instant access authorized for ${data.authorized_email}.`;
+        authorizedEmailForm.style.display = 'none';
+        revokeAuthorizationBtn.style.display = 'inline-flex';
+      } else {
+        portalAccessStatusEl.textContent = 'No signup yet. Optionally authorize an email below for instant access.';
+        authorizedEmailForm.style.display = 'flex';
+        authorizedEmailInput.value = '';
+        revokeAuthorizationBtn.style.display = 'none';
+      }
     } else if (!data.portal_approved) {
       portalAccessStatusEl.textContent = `Pending approval — signed up as ${data.users ? data.users.email : 'unknown'}.`;
       portalApproveBtn.style.display = 'inline-flex';
       portalRevokeBtn.style.display = 'none';
+      revokeAuthorizationBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
     } else {
       portalAccessStatusEl.textContent = `Approved — ${data.users ? data.users.email : 'unknown'} can sign in.`;
       portalApproveBtn.style.display = 'none';
       portalRevokeBtn.style.display = 'inline-flex';
+      revokeAuthorizationBtn.style.display = 'none';
       authorizedEmailForm.style.display = 'none';
     }
   }
@@ -825,6 +834,18 @@
     authorizedEmailStatus.textContent = email
       ? `Saved — ${email} has been granted client portal access. They'll get in as soon as they sign up (or sign in, if they already have an account) with that email.`
       : 'Cleared — that email no longer has pre-authorized access.';
+    authorizedEmailStatus.style.color = 'var(--sky)';
+    loadPortalAccessStatus();
+  });
+
+  revokeAuthorizationBtn.addEventListener('click', async () => {
+    authorizedEmailStatus.textContent = '';
+    const { error } = await client.from('clients').update({ authorized_email: null }).eq('id', currentClientId);
+    if (error) {
+      authorizedEmailStatus.textContent = 'Failed to revoke: ' + error.message;
+      return;
+    }
+    authorizedEmailStatus.textContent = 'Authorization revoked.';
     authorizedEmailStatus.style.color = 'var(--sky)';
     loadPortalAccessStatus();
   });
