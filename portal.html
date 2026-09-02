@@ -92,12 +92,17 @@
     <div style="padding:16px 4px; color:var(--text-2); font-size:13px;">
       Signed in as<br /><strong id="portal-company-name" style="color:var(--text); font-size:15px;"></strong>
     </div>
+    <div class="portal-quicknav">
+      <a href="#portal-section-campaigns" data-quicknav="campaigns">Campaigns</a>
+      <a href="#portal-section-invoices" data-quicknav="invoices">Invoices</a>
+      <a href="#portal-section-briefs" data-quicknav="briefs">Content Briefs</a>
+    </div>
     <button class="btn btn-ghost btn-block admin-sidebar-signout" id="portal-logout-btn">Sign Out</button>
   </aside>
 
   <main class="admin-main">
     <div class="admin-body">
-      <div class="admin-page-header">
+      <div class="admin-page-header" id="portal-section-campaigns">
         <h1 class="admin-title">Campaigns</h1>
         <p class="admin-page-sub">What LocalEyes is running for you.</p>
       </div>
@@ -125,6 +130,7 @@
           <p class="admin-page-sub">Daily performance.</p>
         </div>
         <div class="admin-stats admin-stats-3" id="portal-metrics-summary"></div>
+        <div class="area-chart-wrap portal-metrics-chart-card" id="portal-metrics-chart" style="display:none;"></div>
         <div class="leads-table-wrap" style="margin-top:20px;">
           <table class="leads-table">
             <thead>
@@ -143,7 +149,7 @@
         </div>
       </div>
 
-      <div class="admin-page-header">
+      <div class="admin-page-header" id="portal-section-invoices">
         <h1 class="admin-title">Invoices</h1>
         <p class="admin-page-sub">Billing history.</p>
       </div>
@@ -164,7 +170,7 @@
         <div class="admin-empty" id="portal-invoices-empty" style="display:none;"></div>
       </div>
 
-      <div class="admin-page-header">
+      <div class="admin-page-header" id="portal-section-briefs">
         <h1 class="admin-title">Content Briefs</h1>
         <p class="admin-page-sub">UGC requests. Click a brief to review submissions.</p>
       </div>

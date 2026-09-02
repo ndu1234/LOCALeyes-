@@ -748,6 +748,16 @@ section { padding: 120px clamp(20px,5vw,64px); }
 
 .admin-sidebar-signout { margin-top: 12px; }
 
+.portal-quicknav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.portal-quicknav a {
+  display: block; border-radius: var(--r);
+  padding: 10px 12px; text-align: left; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--text-2);
+  transition: background 0.2s, color 0.2s;
+}
+.portal-quicknav a:hover { background: var(--bg-3); color: var(--text); }
+.portal-quicknav a.active { background: var(--sky-dim); color: var(--sky); }
+
 .admin-main { flex: 1; min-width: 0; }
 .admin-body { padding: 40px clamp(20px,4vw,48px) 64px; max-width: 1180px; }
 
@@ -760,6 +770,7 @@ section { padding: 120px clamp(20px,5vw,64px); }
   .admin-sidebar-top { margin-bottom: 0; }
   .admin-nav { flex-direction: row; flex: 1; justify-content: center; }
   .admin-sidebar-signout { margin-top: 0; width: auto; }
+  .portal-quicknav { display: none; }
 }
 .admin-page-header { margin-bottom: 28px; }
 .admin-title { font-family: 'Inter Tight', sans-serif; font-size: clamp(24px,3vw,30px); font-weight: 800; margin-bottom: 6px; }
@@ -893,6 +904,15 @@ section { padding: 120px clamp(20px,5vw,64px); }
 }
 .area-chart-labels { display: flex; margin-top: 8px; }
 .area-chart-labels span { flex: 1; text-align: center; font-size: 11px; color: var(--text-2); }
+
+.portal-metrics-chart-card {
+  border: 1px solid var(--border); border-radius: var(--r); background: var(--bg-2);
+  padding: 22px 24px 18px; margin-bottom: 20px;
+}
+.portal-metrics-chart-title {
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em; color: var(--text-2);
+  text-transform: uppercase; margin-bottom: 14px;
+}
 
 /* Inline sparkline (inside stat cards) */
 .admin-stat-card-spark { padding-bottom: 12px; }

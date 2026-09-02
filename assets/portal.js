@@ -109,6 +109,7 @@
   const metricsSummary = document.getElementById('portal-metrics-summary');
   const metricsTbody = document.getElementById('portal-metrics-tbody');
   const metricsEmpty = document.getElementById('portal-metrics-empty');
+  const metricsChart = document.getElementById('portal-metrics-chart');
 
   const invoicesSummary = document.getElementById('portal-invoices-summary');
   const invoicesTbody = document.getElementById('portal-invoices-tbody');
@@ -158,6 +159,54 @@
   function formatDateRange(start, end) {
     if (!start && !end) return '—';
     return `${start ? formatDateOnly(start) : '…'} – ${end ? formatDateOnly(end) : '…'}`;
+  }
+
+  // ROAS trend across a campaign's daily metrics, oldest to newest. Same visual
+  // language as the admin dashboard's area chart (gradient fill, glowing
+  // endpoint), but built from real dated rows rather than a fixed day-bucket
+  // window, since a campaign can have any number of metric rows.
+  function renderRoasTrend(el, metrics) {
+    const sorted = [...metrics].sort((a, b) => a.date.localeCompare(b.date));
+    const points = sorted.map((m) => Number(m.roas)).filter((n) => !isNaN(n));
+    if (points.length < 2) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+
+    const viewH = 40;
+    const max = Math.max(0.01, ...points);
+    const n = points.length;
+    const coords = points.map((v, i) => ({
+      x: n === 1 ? 0 : (i / (n - 1)) * 100,
+      y: viewH - (v / max) * (viewH - 4) - 2,
+    }));
+    const gradId = 'portalRoas-' + Math.random().toString(36).slice(2);
+    const line = coords.map((p) => `${p.x},${p.y.toFixed(2)}`).join(' ');
+    const area = `0,${viewH} ${line} 100,${viewH}`;
+    const last = coords[coords.length - 1];
+
+    const firstDated = sorted[0], lastDated = sorted[sorted.length - 1];
+    el.innerHTML = `
+      <div class="portal-metrics-chart-title">ROAS trend</div>
+      <div class="area-chart-svg">
+        <svg viewBox="0 0 100 ${viewH}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.32" />
+              <stop offset="100%" stop-color="var(--sky)" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon points="${area}" fill="url(#${gradId})" />
+          <polyline points="${line}" fill="none" stroke="var(--sky)" stroke-width="1" vector-effect="non-scaling-stroke" />
+        </svg>
+        <div class="area-chart-endpoint" style="left:${last.x}%; top:${(last.y / viewH) * 100}%"></div>
+      </div>
+      <div class="area-chart-labels">
+        <span style="text-align:left;">${escapeHtml(formatDateOnly(firstDated.date))}</span>
+        <span style="text-align:right;">${escapeHtml(formatDateOnly(lastDated.date))}</span>
+      </div>
+    `;
   }
 
   loginForm.addEventListener('submit', async (e) => {
@@ -389,10 +438,12 @@
       metricsEmpty.style.display = 'block';
       metricsEmpty.textContent = 'Could not load metrics: ' + error.message;
       metricsSummary.innerHTML = '';
+      metricsChart.style.display = 'none';
       return;
     }
 
     const metrics = data || [];
+    renderRoasTrend(metricsChart, metrics);
     const totals = metrics.reduce((acc, m) => {
       acc.spend += Number(m.spend) || 0;
       acc.conversions += Number(m.conversions) || 0;
@@ -604,6 +655,21 @@
   }
 
   updateAuthUI();
+
+  // Highlight the sidebar quick-nav link for whichever section is in view.
+  // Sections stay in the DOM (just hidden behind the login screen) until
+  // afterAuth shows the dashboard, so this can be wired up once at load.
+  const quicknavLinks = document.querySelectorAll('.portal-quicknav a');
+  if (quicknavLinks.length) {
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const key = entry.target.id.replace('portal-section-', '');
+        quicknavLinks.forEach((a) => a.classList.toggle('active', a.dataset.quicknav === key));
+      });
+    }, { rootMargin: '-10% 0px -70% 0px' });
+    document.querySelectorAll('[id^="portal-section-"]').forEach((el) => sectionObserver.observe(el));
+  }
 
   (async function checkSession() {
     const { data: { session } } = await client.auth.getSession();
