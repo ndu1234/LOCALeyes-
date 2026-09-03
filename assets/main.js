@@ -119,9 +119,16 @@ document.querySelectorAll('form[data-form]').forEach(form => {
 });
 
 /* ══ BEFORE/AFTER COMPARISON SLIDER ══ */
-document.querySelectorAll('.ba-compare').forEach(widget => {
+// Exposed on window so staging.js can re-run it after injecting admin-
+// published sliders (which arrive async, after this file's initial pass).
+// The data-ba-init flag makes it idempotent — already-wired sliders are
+// skipped, so calling it again only binds freshly added ones.
+function initBaCompare(root = document) {
+root.querySelectorAll('.ba-compare').forEach(widget => {
+  if (widget.dataset.baInit) return;
   const handle = widget.querySelector('.ba-handle');
   if (!handle) return;
+  widget.dataset.baInit = '1';
 
   function setPos(pct) {
     const clamped = Math.max(0, Math.min(100, pct));
@@ -161,6 +168,9 @@ document.querySelectorAll('.ba-compare').forEach(widget => {
     else if (e.key === 'End') { setPos(100); e.preventDefault(); }
   });
 });
+}
+window.initBaCompare = initBaCompare;
+initBaCompare();
 
 /* ══ PAGE ENTRANCE ══ */
 window.addEventListener('load', () => document.body.classList.add('loaded'));

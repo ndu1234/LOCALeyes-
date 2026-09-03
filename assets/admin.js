@@ -152,6 +152,16 @@
   const addCaseStudySubmitBtn = document.getElementById('add-case-study-submit');
   const cancelCaseStudyEditBtn = document.getElementById('cancel-case-study-edit');
 
+  const stagingTbody = document.getElementById('staging-tbody');
+  const stagingEmpty = document.getElementById('staging-empty');
+  const addStagingForm = document.getElementById('add-staging-form');
+  const addStagingLabel = document.getElementById('add-staging-label');
+  const addStagingBefore = document.getElementById('add-staging-before');
+  const addStagingAfter = document.getElementById('add-staging-after');
+  const addStagingStatus = document.getElementById('add-staging-status');
+  const addStagingDetails = document.getElementById('add-staging-details');
+  const addStagingSubmitBtn = document.getElementById('add-staging-submit');
+
   const briefsTbody = document.getElementById('briefs-tbody');
   const briefsEmpty = document.getElementById('briefs-empty');
   const addBriefForm = document.getElementById('add-brief-form');
@@ -327,6 +337,7 @@
       loadClients();
       loadCreators();
       loadCaseStudies();
+      loadStagingExamples();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -1142,6 +1153,144 @@
     addCaseStudyStatus.style.color = 'var(--sky)';
     addCaseStudyForm.reset();
     loadCaseStudies();
+  });
+
+  let allStagingExamples = [];
+
+  async function loadStagingExamples() {
+    const { data, error } = await client
+      .from('staging_examples')
+      .select('id, label, before_url, after_url, published, display_order')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      stagingTbody.innerHTML = '';
+      stagingEmpty.style.display = 'block';
+      stagingEmpty.textContent = 'Could not load staging examples: ' + error.message;
+      return;
+    }
+
+    allStagingExamples = data || [];
+    renderStagingExamples();
+  }
+
+  function renderStagingExamples() {
+    if (!allStagingExamples.length) {
+      stagingTbody.innerHTML = '';
+      stagingEmpty.style.display = 'block';
+      stagingEmpty.textContent = 'No staging examples yet — upload a before/after pair above.';
+      return;
+    }
+
+    stagingEmpty.style.display = 'none';
+    stagingTbody.innerHTML = allStagingExamples.map((s) => `
+        <tr>
+          <td>
+            <span class="staging-thumb-pair">
+              <img src="${escapeHtml(s.before_url)}" alt="Before" class="staging-thumb" />
+              <img src="${escapeHtml(s.after_url)}" alt="After" class="staging-thumb" />
+            </span>
+          </td>
+          <td>${escapeHtml(s.label || '—')}</td>
+          <td><button type="button" class="status-select ${s.published ? 'available' : 'unavailable'}" data-staging-id="${s.id}">${s.published ? 'Published' : 'Unpublished'}</button></td>
+          <td>
+            <button type="button" class="btn btn-ghost staging-delete-btn" data-staging-id="${s.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+    stagingTbody.querySelectorAll('button.status-select').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.stagingId;
+        const s = allStagingExamples.find((x) => x.id === id);
+        if (!s) return;
+        const newPublished = !s.published;
+        const { error } = await client.from('staging_examples').update({ published: newPublished }).eq('id', id);
+        if (error) {
+          alert('Failed to update: ' + error.message);
+          return;
+        }
+        s.published = newPublished;
+        renderStagingExamples();
+      });
+    });
+
+    stagingTbody.querySelectorAll('.staging-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.stagingId;
+        const s = allStagingExamples.find((x) => x.id === id);
+        if (!s) return;
+        if (!confirm('Delete this before/after example? This removes it from the virtual staging page and deletes its images. This cannot be undone.')) return;
+        const { error } = await client.from('staging_examples').delete().eq('id', id);
+        if (error) {
+          alert('Failed to delete: ' + error.message);
+          return;
+        }
+        // Best-effort cleanup of the two image files so the bucket doesn't
+        // accumulate orphans. A failure here doesn't block the row delete.
+        const paths = [s.before_url, s.after_url].map(stagingPathFromUrl).filter(Boolean);
+        if (paths.length) client.storage.from('staging').remove(paths);
+        allStagingExamples = allStagingExamples.filter((x) => x.id !== id);
+        renderStagingExamples();
+      });
+    });
+  }
+
+  // The public URL looks like <project>/storage/v1/object/public/staging/<path>.
+  // Recover just <path> so we can delete the file from the bucket.
+  function stagingPathFromUrl(url) {
+    const marker = '/staging/';
+    const i = url.indexOf(marker);
+    return i === -1 ? null : url.slice(i + marker.length);
+  }
+
+  async function uploadStagingImage(file, kind) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `${kind}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await client.storage.from('staging').upload(path, file, {
+      contentType: file.type || 'image/jpeg',
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = client.storage.from('staging').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  addStagingForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addStagingStatus.textContent = '';
+    addStagingStatus.style.color = '';
+    const beforeFile = addStagingBefore.files[0];
+    const afterFile = addStagingAfter.files[0];
+    if (!beforeFile || !afterFile) {
+      addStagingStatus.textContent = 'Pick both a before and an after image.';
+      return;
+    }
+
+    addStagingSubmitBtn.disabled = true;
+    addStagingSubmitBtn.textContent = 'Uploading…';
+    try {
+      const [beforeUrl, afterUrl] = await Promise.all([
+        uploadStagingImage(beforeFile, 'before'),
+        uploadStagingImage(afterFile, 'after'),
+      ]);
+      const { error } = await client.from('staging_examples').insert([{
+        label: addStagingLabel.value.trim() || null,
+        before_url: beforeUrl,
+        after_url: afterUrl,
+      }]);
+      if (error) throw error;
+      addStagingStatus.textContent = 'Uploaded. Toggle it to Published to show it on the site.';
+      addStagingStatus.style.color = 'var(--sky)';
+      addStagingForm.reset();
+      loadStagingExamples();
+    } catch (err) {
+      addStagingStatus.textContent = 'Upload failed: ' + (err.message || err);
+    } finally {
+      addStagingSubmitBtn.disabled = false;
+      addStagingSubmitBtn.textContent = 'Upload';
+    }
   });
 
   function openClientDetail(clientId, opts = {}) {

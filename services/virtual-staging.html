@@ -73,23 +73,29 @@
     <h2 class="section-title">Same room, sold as a lifestyle</h2>
     <p class="section-sub">No furniture trucks, no physical staging costs — just a photo in, a staged render out.</p>
   </div>
-  <div class="ba-compare reveal">
-    <img class="ba-img" src="../assets/staging-before.jpg" alt="Empty living and dining room before virtual staging" />
-    <div class="ba-after-wrap" aria-hidden="true">
-      <img class="ba-img" src="../assets/staging-after.jpg" alt="" />
+  <!-- Gallery of before/after comparison sliders. Admin-published examples
+       (staging_examples table) replace this default pair when any exist --
+       see assets/staging.js. The default pair below is the fallback so the
+       section is never empty. -->
+  <div class="ba-gallery" id="staging-gallery">
+    <div class="ba-compare reveal">
+      <img class="ba-img" src="../assets/staging-before.jpg" alt="Empty living and dining room before virtual staging" />
+      <div class="ba-after-wrap" aria-hidden="true">
+        <img class="ba-img" src="../assets/staging-after.jpg" alt="" />
+      </div>
+      <span class="ba-label before">Before</span>
+      <span class="ba-label after">After</span>
+      <div class="ba-divider" aria-hidden="true"></div>
+      <button
+        class="ba-handle"
+        type="button"
+        role="slider"
+        aria-label="Compare before and after staging"
+        aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
+      </button>
     </div>
-    <span class="ba-label before">Before</span>
-    <span class="ba-label after">After</span>
-    <div class="ba-divider" aria-hidden="true"></div>
-    <button
-      class="ba-handle"
-      type="button"
-      role="slider"
-      aria-label="Compare before and after staging"
-      aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
-    </button>
   </div>
   <p class="ba-hint reveal">Drag the handle to compare &mdash; same photo, staged virtually.</p>
 </section>
@@ -168,7 +174,9 @@
   </ul>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/supabase-config.js"></script>
+<script src="../assets/staging.js"></script>
 <script src="../assets/analytics.js"></script>
 <script src="../assets/main.js"></script>
 </body>

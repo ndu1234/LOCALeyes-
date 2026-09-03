@@ -560,6 +560,19 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .ba-label.before { color: var(--text-2); border: 1px solid var(--border); }
 .ba-label.after  { color: var(--sky); border: 1px solid var(--border-2); }
 
+/* Gallery of comparison sliders. One example centers like a hero; two or
+   more flow into a responsive grid. */
+.ba-gallery { max-width: 900px; margin: 0 auto; }
+.ba-gallery-multi {
+  max-width: 1100px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+}
+.ba-item-wrap { margin: 0; }
+.ba-caption {
+  margin-top: 12px; text-align: center;
+  font-size: 13px; color: var(--text-2);
+}
+
 /* Draggable before/after comparison. --pos (0-100) is the divider position:
    the after image sits on top, clipped to the region right of the divider. */
 .ba-compare {
@@ -568,6 +581,7 @@ section { padding: 120px clamp(20px,5vw,64px); }
   border: 1px solid var(--border); background: var(--bg-2);
   --pos: 50; user-select: none; -webkit-user-select: none;
 }
+.ba-item-wrap .ba-compare { max-width: none; }
 .ba-compare .ba-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; display: block; pointer-events: none;
@@ -597,6 +611,15 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .ba-hint {
   text-align: center; margin-top: 16px;
   font-size: 13px; color: var(--text-2);
+}
+
+/* ── ADMIN: STAGING UPLOAD ── */
+.staging-upload-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
+.staging-upload-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-2); }
+.staging-thumb-pair { display: inline-flex; gap: 6px; }
+.staging-thumb {
+  width: 64px; height: 44px; object-fit: cover;
+  border-radius: 6px; border: 1px solid var(--border); display: block;
 }
 
 /* ── PRICING ── */
@@ -1050,7 +1073,7 @@ footer {
   .cta-form { flex-direction: column; }
   footer { flex-direction: column; align-items: flex-start; }
   .hero-stats { gap: 24px; }
-  .ps-grid, .compare-grid, .contact-grid, .form-row, .before-after { grid-template-columns: 1fr; }
+  .ps-grid, .compare-grid, .contact-grid, .form-row, .before-after, .ba-gallery-multi { grid-template-columns: 1fr; }
   .included-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
 
