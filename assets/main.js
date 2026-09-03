@@ -118,5 +118,49 @@ document.querySelectorAll('form[data-form]').forEach(form => {
   });
 });
 
+/* ══ BEFORE/AFTER COMPARISON SLIDER ══ */
+document.querySelectorAll('.ba-compare').forEach(widget => {
+  const handle = widget.querySelector('.ba-handle');
+  if (!handle) return;
+
+  function setPos(pct) {
+    const clamped = Math.max(0, Math.min(100, pct));
+    widget.style.setProperty('--pos', clamped);
+    handle.setAttribute('aria-valuenow', Math.round(clamped));
+  }
+
+  function posFromEvent(e) {
+    const rect = widget.getBoundingClientRect();
+    return ((e.clientX - rect.left) / rect.width) * 100;
+  }
+
+  // Drag from the handle (touch-action:none there keeps page scroll working
+  // when a phone user is just swiping past the image itself)…
+  let dragging = false;
+  handle.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    dragging = true;
+    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* capture is an optimization, not required */ }
+  });
+  window.addEventListener('pointermove', e => {
+    if (dragging) setPos(posFromEvent(e));
+  });
+  window.addEventListener('pointerup', () => { dragging = false; });
+  window.addEventListener('pointercancel', () => { dragging = false; });
+
+  // …and let mouse users click anywhere on the image to jump the divider.
+  widget.addEventListener('pointerdown', e => {
+    if (e.target !== handle && e.pointerType === 'mouse') setPos(posFromEvent(e));
+  });
+
+  handle.addEventListener('keydown', e => {
+    const cur = Number(widget.style.getPropertyValue('--pos')) || 50;
+    if (e.key === 'ArrowLeft') { setPos(cur - 3); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { setPos(cur + 3); e.preventDefault(); }
+    else if (e.key === 'Home') { setPos(0); e.preventDefault(); }
+    else if (e.key === 'End') { setPos(100); e.preventDefault(); }
+  });
+});
+
 /* ══ PAGE ENTRANCE ══ */
 window.addEventListener('load', () => document.body.classList.add('loaded'));
