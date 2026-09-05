@@ -1096,6 +1096,25 @@ footer {
   .nav-links a.btn { display: inline-flex; padding: 13px 22px; }
 }
 
+/* ── STICKY MOBILE CTA BAR ── */
+.mobile-cta-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 400;
+  padding: 12px clamp(20px, 5vw, 64px);
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 860px) {
+  .mobile-cta-bar { display: flex; }
+  body.has-mobile-cta { padding-bottom: 80px; }
+}
+
 /* ── HERO LOGO GLOW (Home) ── */
 .hero-logo-glow {
   position: absolute; top: 42%; left: 50%;
