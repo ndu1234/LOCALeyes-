@@ -20,6 +20,44 @@
 
 html { scroll-behavior: smooth; }
 
+/* ── SKIP TO CONTENT ── */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: var(--sky);
+  color: #071019;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ── FOCUS VISIBLE ── */
+:focus-visible {
+  outline: 2px solid var(--sky);
+  outline-offset: 2px;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--sky);
+  outline-offset: 2px;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--sky-light);
+  outline-offset: 3px;
+}
+
 body {
   background: var(--bg);
   color: var(--text);

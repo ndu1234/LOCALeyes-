@@ -1,3 +1,17 @@
+/* ══ SKIP TO CONTENT ══ */
+(function () {
+  var link = document.createElement('a');
+  link.className = 'skip-link';
+  link.href = '#main-content';
+  link.textContent = 'Skip to content';
+  document.body.insertBefore(link, document.body.firstChild);
+
+  var firstSection = document.querySelector('section');
+  if (firstSection && !document.getElementById('main-content')) {
+    firstSection.id = 'main-content';
+  }
+})();
+
 /* ══ NAV SCROLL STATE + MOBILE TOGGLE ══ */
 const nav = document.getElementById('nav');
 const navToggle = document.getElementById('nav-toggle');
@@ -171,6 +185,17 @@ root.querySelectorAll('.ba-compare').forEach(widget => {
 }
 window.initBaCompare = initBaCompare;
 initBaCompare();
+
+/* ══ STICKY MOBILE CTA BAR ══ */
+(function () {
+  const bar = document.createElement('div');
+  bar.className = 'mobile-cta-bar';
+  const isSubdir = location.pathname.includes('/services/');
+  var href = isSubdir ? '../contact.html' : 'contact.html';
+  bar.innerHTML = '<a href="' + href + '" class="btn btn-primary btn-block" style="padding:13px 24px;font-size:15px;">Book a Call</a>';
+  document.body.appendChild(bar);
+  document.body.classList.add('has-mobile-cta');
+})();
 
 /* ══ PAGE ENTRANCE ══ */
 window.addEventListener('load', () => document.body.classList.add('loaded'));

@@ -75,11 +75,47 @@
   </div>
   <!-- Gallery of before/after comparison sliders. Admin-published examples
        (staging_examples table) replace this default pair when any exist --
-       see assets/staging.js. The default pair below is the fallback so the
+       see assets/staging.js. The defaults below are the fallback so the
        section is never empty. -->
   <div class="ba-gallery" id="staging-gallery">
     <div class="ba-compare reveal">
       <img class="ba-img" src="../assets/staging-before.jpg" alt="Empty living and dining room before virtual staging" />
+      <div class="ba-after-wrap" aria-hidden="true">
+        <img class="ba-img" src="../assets/staging-after.jpg" alt="" />
+      </div>
+      <span class="ba-label before">Before</span>
+      <span class="ba-label after">After</span>
+      <div class="ba-divider" aria-hidden="true"></div>
+      <button
+        class="ba-handle"
+        type="button"
+        role="slider"
+        aria-label="Compare before and after staging"
+        aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
+      </button>
+    </div>
+    <div class="ba-compare reveal">
+      <img class="ba-img" src="../assets/staging-before.jpg" alt="Empty bedroom before virtual staging" />
+      <div class="ba-after-wrap" aria-hidden="true">
+        <img class="ba-img" src="../assets/staging-after.jpg" alt="" />
+      </div>
+      <span class="ba-label before">Before</span>
+      <span class="ba-label after">After</span>
+      <div class="ba-divider" aria-hidden="true"></div>
+      <button
+        class="ba-handle"
+        type="button"
+        role="slider"
+        aria-label="Compare before and after staging"
+        aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
+      </button>
+    </div>
+    <div class="ba-compare reveal">
+      <img class="ba-img" src="../assets/staging-before.jpg" alt="Empty kitchen before virtual staging" />
       <div class="ba-after-wrap" aria-hidden="true">
         <img class="ba-img" src="../assets/staging-after.jpg" alt="" />
       </div>
