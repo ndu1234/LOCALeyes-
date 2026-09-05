@@ -38,7 +38,7 @@
     }
 
     btn.disabled = true;
-    btn.textContent = 'Sending...';
+    btn.innerHTML = '<span class="btn-spinner"></span>Sending...';
     setStatus('', '');
 
     const payload = {

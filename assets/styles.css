@@ -58,6 +58,66 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
+/* ── SKELETON LOADING ── */
+.skeleton-pulse {
+  background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-2) 50%, var(--bg-3) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: var(--r);
+}
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg-2);
+  padding: 30px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.skeleton-tag {
+  width: 120px;
+  height: 22px;
+  border-radius: var(--r-pill);
+}
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  width: 100%;
+}
+.skeleton-line.w50 { width: 50%; }
+.skeleton-line.w70 { width: 70%; }
+.skeleton-line.w80 { width: 80%; }
+.skeleton-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.skeleton-chip {
+  width: 70px;
+  height: 24px;
+  border-radius: var(--r-pill);
+}
+
+/* ── BUTTON SPINNER ── */
+.btn-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(7,16,25,0.25);
+  border-top-color: #071019;
+  border-radius: 50%;
+  animation: btnSpin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
 body {
   background: var(--bg);
   color: var(--text);
