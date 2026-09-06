@@ -1,6 +1,73 @@
 (function () {
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
+  /* ══ TOAST NOTIFICATIONS ══ */
+  function showToast(message, kind) {
+    kind = kind || 'success';
+    var container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+      document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    var bg = kind === 'success' ? '#22C55E' : kind === 'error' ? '#F87171' : '#38BDF8';
+    toast.style.cssText = 'background:' + bg + ';color:#071019;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);opacity:0;transform:translateX(40px);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);max-width:360px;';
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; });
+    setTimeout(function () {
+      toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)';
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 3500);
+  }
+
+  /* ══ CONFIRMATION MODAL ══ */
+  function showConfirm(message) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
+      var box = document.createElement('div');
+      box.style.cssText = 'background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:420px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.5);';
+      box.innerHTML = '<p style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:22px;">' + message + '</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button class="btn btn-ghost" id="confirm-cancel" style="padding:10px 18px;font-size:13px;">Cancel</button><button class="btn btn-primary" id="confirm-ok" style="padding:10px 18px;font-size:13px;">Confirm</button></div>';
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      document.getElementById('confirm-cancel').addEventListener('click', function () { document.body.removeChild(overlay); resolve(false); });
+      document.getElementById('confirm-ok').addEventListener('click', function () { document.body.removeChild(overlay); resolve(true); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) { document.body.removeChild(overlay); resolve(false); } });
+    });
+  }
+
+  /* ══ DEBOUNCE ══ */
+  function debounce(fn, wait) {
+    var timer;
+    return function () {
+      var ctx = this, args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(ctx, args); }, wait);
+    };
+  }
+
+  /* ══ TIMEZONE-AWARE DATE BUCKETING ══ */
+  function bucketDaily(events, numDays, valueFn) {
+    var days = [], now = new Date();
+    for (var i = numDays - 1; i >= 0; i--) {
+      var d = new Date(now);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      var key = d.toISOString().slice(0, 10);
+      var label = d.toLocaleDateString('en-US', { weekday: 'short' });
+      var dayEvents = events.filter(function (e) {
+        var ed = new Date(e.created_at);
+        var eLocal = ed.getFullYear() + '-' + String(ed.getMonth() + 1).padStart(2,'0') + '-' + String(ed.getDate()).padStart(2,'0');
+        return eLocal === key;
+      });
+      days.push({ label: label, count: valueFn(dayEvents) });
+    }
+    return days;
+  }
+
   const loginScreen = document.getElementById('admin-login');
   const pendingScreen = document.getElementById('admin-pending');
   const resetScreen = document.getElementById('admin-reset');
@@ -332,6 +399,19 @@
       pendingEmailEl.textContent = '';
       showScreen('dashboard');
       if (!history.state) history.replaceState({ tab: 'traffic' }, '');
+      // Show loading states
+      var loadTargets = [
+        { el: trafficStatsEl, html: '<div class="admin-empty">Loading traffic data\u2026</div>' },
+        { el: trafficTopPagesEl, html: '<div class="admin-empty">Loading\u2026</div>' },
+        { el: trafficTopServicesEl, html: '<div class="admin-empty">Loading\u2026</div>' },
+        { el: trafficTrendEl, html: '<div class="admin-empty">Loading\u2026</div>' },
+        { el: statsEl, html: '<div class="admin-empty">Loading leads\u2026</div>' },
+        { el: clientsTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading clients\u2026</div>' },
+        { el: creatorsTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading creators\u2026</div>' },
+        { el: caseStudiesTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading case studies\u2026</div>' },
+        { el: stagingTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading staging examples\u2026</div>' },
+      ];
+      loadTargets.forEach(function (t) { if (t.el) t.el.innerHTML = t.html; });
       loadLeads();
       loadTraffic();
       loadClients();
@@ -519,7 +599,7 @@
         const status = e.target.value;
         const { error } = await client.from('leads').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const lead = allLeads.find((l) => l.id === id);
@@ -530,7 +610,8 @@
     });
   }
 
-  searchInput.addEventListener('input', renderLeads);
+  var debouncedRenderLeads = debounce(renderLeads, 200);
+  searchInput.addEventListener('input', debouncedRenderLeads);
   statusFilter.addEventListener('change', renderLeads);
 
   function countBy(items, key) {
@@ -603,20 +684,6 @@
 
   function sparklineSvg(days) {
     return areaSvgMarkup(svgPoints(days, 28), 28);
-  }
-
-  function bucketDaily(events, numDays, valueFn) {
-    const days = [];
-    for (let i = numDays - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() - i);
-      const key = d.toDateString();
-      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayEvents = events.filter((e) => new Date(e.created_at).toDateString() === key);
-      days.push({ label, count: valueFn(dayEvents) });
-    }
-    return days;
   }
 
   async function loadTraffic() {
@@ -751,10 +818,10 @@
         const id = btn.dataset.clientId;
         const c = allClients.find((x) => x.id === id);
         if (!c) return;
-        if (!confirm(`Delete client "${c.company_name}"? This will also permanently delete ALL of their campaigns, invoices, content briefs, case studies, UGC submissions, and ad creatives. This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete client "${c.company_name}"? This will also permanently delete ALL of their campaigns, invoices, content briefs, case studies, UGC submissions, and ad creatives. This cannot be undone.`))) return;
         const { error } = await client.from('clients').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete client: ' + error.message);
+          showToast('Failed to delete client: ' + error.message, 'error');
           return;
         }
         allClients = allClients.filter((x) => x.id !== id);
@@ -772,7 +839,7 @@
         const status = e.target.value;
         const { error } = await client.from('clients').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const c = allClients.find((x) => x.id === id);
@@ -782,7 +849,8 @@
     });
   }
 
-  clientsSearchInput.addEventListener('input', renderClients);
+  var debouncedRenderClients = debounce(renderClients, 200);
+  clientsSearchInput.addEventListener('input', debouncedRenderClients);
   clientsStatusFilter.addEventListener('change', renderClients);
 
   addClientForm.addEventListener('submit', async (e) => {
@@ -870,7 +938,7 @@
         const newAvailability = !creator.availability;
         const { error } = await client.from('ugc_creators').update({ availability: newAvailability }).eq('id', id);
         if (error) {
-          alert('Failed to update availability: ' + error.message);
+          showToast('Failed to update availability: ' + error.message, 'error');
           return;
         }
         creator.availability = newAvailability;
@@ -888,12 +956,12 @@
         const c = allCreators.find((x) => x.id === id);
         if (!c) return;
         const name = c.users ? (c.users.name || c.users.email) : 'this creator';
-        if (!confirm(`Delete creator "${name}"? Any UGC submissions they made will be kept but unlinked. This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete creator "${name}"? Any UGC submissions they made will be kept but unlinked. This cannot be undone.`))) return;
         // Deleting the linked users row (not just ugc_creators) cascades to remove
         // the ugc_creators row too, and frees up their email if they're re-added later.
         const { error } = await client.from('users').delete().eq('id', c.user_id);
         if (error) {
-          alert('Failed to delete creator: ' + error.message);
+          showToast('Failed to delete creator: ' + error.message, 'error');
           return;
         }
         allCreators = allCreators.filter((x) => x.id !== id);
@@ -1051,7 +1119,7 @@
         const newPublished = !cs.published;
         const { error } = await client.from('case_studies').update({ published: newPublished }).eq('id', id);
         if (error) {
-          alert('Failed to update: ' + error.message);
+          showToast('Failed to update: ' + error.message, 'error');
           return;
         }
         cs.published = newPublished;
@@ -1068,10 +1136,10 @@
         const id = btn.dataset.caseStudyId;
         const cs = allCaseStudies.find((x) => x.id === id);
         if (!cs) return;
-        if (!confirm(`Delete case study "${cs.brand_name}"? This will remove it from the public case studies page. This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete case study "${cs.brand_name}"? This will remove it from the public case studies page. This cannot be undone.`))) return;
         const { error } = await client.from('case_studies').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete case study: ' + error.message);
+          showToast('Failed to delete case study: ' + error.message, 'error');
           return;
         }
         allCaseStudies = allCaseStudies.filter((x) => x.id !== id);
@@ -1208,7 +1276,7 @@
         const newPublished = !s.published;
         const { error } = await client.from('staging_examples').update({ published: newPublished }).eq('id', id);
         if (error) {
-          alert('Failed to update: ' + error.message);
+          showToast('Failed to update: ' + error.message, 'error');
           return;
         }
         s.published = newPublished;
@@ -1221,10 +1289,10 @@
         const id = btn.dataset.stagingId;
         const s = allStagingExamples.find((x) => x.id === id);
         if (!s) return;
-        if (!confirm('Delete this before/after example? This removes it from the virtual staging page and deletes its images. This cannot be undone.')) return;
+        if (!(await showConfirm('Delete this before/after example? This removes it from the virtual staging page and deletes its images. This cannot be undone.'))) return;
         const { error } = await client.from('staging_examples').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete: ' + error.message);
+          showToast('Failed to delete: ' + error.message, 'error');
           return;
         }
         // Best-effort cleanup of the two image files so the bucket doesn't
@@ -1409,7 +1477,7 @@
       btn.addEventListener('click', async () => {
         const { error } = await client.from('client_users').update({ portal_approved: true }).eq('id', btn.dataset.id);
         if (error) {
-          alert('Failed to approve portal access: ' + error.message);
+          showToast('Failed to approve portal access: ' + error.message, 'error');
           return;
         }
         loadPortalAccessStatus();
@@ -1419,10 +1487,10 @@
 
     portalAccessListEl.querySelectorAll('.portal-user-revoke-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        if (!confirm('Revoke portal access for this user? They will be signed out of the dashboard until re-approved.')) return;
+        if (!(await showConfirm('Revoke portal access for this user? They will be signed out of the dashboard until re-approved.'))) return;
         const { error } = await client.from('client_users').update({ portal_approved: false }).eq('id', btn.dataset.id);
         if (error) {
-          alert('Failed to revoke portal access: ' + error.message);
+          showToast('Failed to revoke portal access: ' + error.message, 'error');
           return;
         }
         loadPortalAccessStatus();
@@ -1434,7 +1502,7 @@
       btn.addEventListener('click', async () => {
         const { error } = await client.from('client_authorized_emails').delete().eq('id', btn.dataset.id);
         if (error) {
-          alert('Failed to revoke authorization: ' + error.message);
+          showToast('Failed to revoke authorization: ' + error.message, 'error');
           return;
         }
         loadPortalAccessStatus();
@@ -1563,10 +1631,10 @@
         const id = btn.dataset.campaignId;
         const c = allCampaigns.find((x) => x.id === id);
         if (!c) return;
-        if (!confirm(`Delete campaign "${c.name}"? This will also delete its ad creatives and performance metrics. This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete campaign "${c.name}"? This will also delete its ad creatives and performance metrics. This cannot be undone.`))) return;
         const { error } = await client.from('campaigns').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete campaign: ' + error.message);
+          showToast('Failed to delete campaign: ' + error.message, 'error');
           return;
         }
         allCampaigns = allCampaigns.filter((x) => x.id !== id);
@@ -1588,7 +1656,7 @@
         const status = e.target.value;
         const { error } = await client.from('campaigns').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const c = allCampaigns.find((x) => x.id === id);
@@ -1738,7 +1806,7 @@
         const status = e.target.value;
         const { error } = await client.from('invoices').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const inv = allInvoices.find((x) => x.id === id);
@@ -1757,10 +1825,10 @@
         const id = btn.dataset.invoiceId;
         const inv = allInvoices.find((x) => x.id === id);
         if (!inv) return;
-        if (!confirm(`Delete invoice for ${formatMoney(inv.amount)}? This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete invoice for ${formatMoney(inv.amount)}? This cannot be undone.`))) return;
         const { error } = await client.from('invoices').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete invoice: ' + error.message);
+          showToast('Failed to delete invoice: ' + error.message, 'error');
           return;
         }
         allInvoices = allInvoices.filter((x) => x.id !== id);
@@ -1893,10 +1961,10 @@
         const id = btn.dataset.briefId;
         const b = allBriefs.find((x) => x.id === id);
         if (!b) return;
-        if (!confirm(`Delete content brief "${b.title}"? Any UGC submissions tied to it will be kept but unlinked from this brief. This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete content brief "${b.title}"? Any UGC submissions tied to it will be kept but unlinked from this brief. This cannot be undone.`))) return;
         const { error } = await client.from('content_briefs').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete content brief: ' + error.message);
+          showToast('Failed to delete content brief: ' + error.message, 'error');
           return;
         }
         allBriefs = allBriefs.filter((x) => x.id !== id);
@@ -2042,7 +2110,7 @@
         const status = e.target.value;
         const { error } = await client.from('ugc_content').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const s = allSubmissions.find((x) => x.id === id);
@@ -2241,7 +2309,7 @@
         const status = e.target.value;
         const { error } = await client.from('ad_creatives').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const a = allAdCreatives.find((x) => x.id === id);
@@ -2260,10 +2328,10 @@
         const a = allAdCreatives.find((x) => x.id === id);
         if (!a) return;
         const label = a.headline ? `"${a.headline}"` : 'this ad creative';
-        if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+        if (!(await showConfirm(`Delete ${label}? This cannot be undone.`))) return;
         const { error } = await client.from('ad_creatives').delete().eq('id', id);
         if (error) {
-          alert('Failed to delete ad creative: ' + error.message);
+          showToast('Failed to delete ad creative: ' + error.message, 'error');
           return;
         }
         allAdCreatives = allAdCreatives.filter((x) => x.id !== id);
@@ -2346,4 +2414,20 @@
     const { data: { session } } = await client.auth.getSession();
     afterAuth(session);
   })();
+
+  /* ══ KEYBOARD SHORTCUTS ══ */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    var tabMap = { '1': 'traffic', '2': 'leads', '3': 'clients', '4': 'creators', '5': 'case-studies', '6': 'staging' };
+    var tab = tabMap[e.key];
+    if (tab && dashboard.style.display === 'flex') {
+      e.preventDefault();
+      applyTab(tab);
+      closeClientDetailView();
+      stopEditCreator();
+      stopEditCaseStudy();
+      history.pushState({ tab: tab }, '');
+    }
+  });
 })();

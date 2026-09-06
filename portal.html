@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Client Portal — LocalEyes</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="icon" type="image/png" href="assets/favicon-32.png" />
 </head>
@@ -34,7 +32,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="portal-login-password">Password</label>
-        <input class="form-input" id="portal-login-password" type="password" required minlength="6" autocomplete="current-password" />
+        <input class="form-input" id="portal-login-password" type="password" required minlength="8" autocomplete="current-password" />
       </div>
       <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;" id="portal-login-submit">Sign In</button>
       <p class="admin-error" id="portal-login-error"></p>
@@ -56,7 +54,7 @@
     <form id="portal-reset-form">
       <div class="form-group">
         <label class="form-label" for="portal-reset-password">New password</label>
-        <input class="form-input" id="portal-reset-password" type="password" required minlength="6" autocomplete="new-password" />
+        <input class="form-input" id="portal-reset-password" type="password" required minlength="8" autocomplete="new-password" />
       </div>
       <button type="submit" class="btn btn-primary btn-block" style="padding:13px 24px;">Update Password</button>
       <p class="admin-error" id="portal-reset-error"></p>

@@ -1,6 +1,44 @@
 (function () {
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
+  /* ══ TOAST NOTIFICATIONS ══ */
+  function showToast(message, kind) {
+    kind = kind || 'success';
+    var container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+      document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    var bg = kind === 'success' ? '#22C55E' : kind === 'error' ? '#F87171' : '#38BDF8';
+    toast.style.cssText = 'background:' + bg + ';color:#071019;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);opacity:0;transform:translateX(40px);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);max-width:360px;';
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; });
+    setTimeout(function () {
+      toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)';
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 3500);
+  }
+
+  /* ══ CONFIRMATION MODAL ══ */
+  function showConfirm(message) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
+      var box = document.createElement('div');
+      box.style.cssText = 'background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:420px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.5);';
+      box.innerHTML = '<p style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:22px;">' + message + '</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button class="btn btn-ghost" id="confirm-cancel" style="padding:10px 18px;font-size:13px;">Cancel</button><button class="btn btn-primary" id="confirm-ok" style="padding:10px 18px;font-size:13px;">Confirm</button></div>';
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      document.getElementById('confirm-cancel').addEventListener('click', function () { document.body.removeChild(overlay); resolve(false); });
+      document.getElementById('confirm-ok').addEventListener('click', function () { document.body.removeChild(overlay); resolve(true); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) { document.body.removeChild(overlay); resolve(false); } });
+    });
+  }
+
   const loginScreen = document.getElementById('portal-login');
   const resetScreen = document.getElementById('portal-reset');
   const pendingScreen = document.getElementById('portal-pending');
@@ -654,7 +692,7 @@
         const status = e.target.value;
         const { error } = await client.from('ugc_content').update({ status }).eq('id', id);
         if (error) {
-          alert('Failed to update status: ' + error.message);
+          showToast('Failed to update status: ' + error.message, 'error');
           return;
         }
         const s = allSubmissions.find((x) => x.id === id);
@@ -669,7 +707,7 @@
         const feedback = e.target.value.trim() || null;
         const { error } = await client.from('ugc_content').update({ feedback }).eq('id', id);
         if (error) {
-          alert('Failed to save feedback: ' + error.message);
+          showToast('Failed to save feedback: ' + error.message, 'error');
         }
       });
     });
