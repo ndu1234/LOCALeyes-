@@ -972,20 +972,6 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .track-name { font-family: 'Inter Tight', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
 .track-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 
-/* ── ROOM TYPE CHIPS (Virtual Staging) ── */
-.room-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.room-chip {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px; font-weight: 600;
-  padding: 9px 20px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  background: var(--bg-2);
-  transition: border-color 0.2s, color 0.2s;
-}
-.room-chip:hover { border-color: var(--border-2); color: var(--text); }
-
 /* ── VALUES (About) ── */
 .values-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .value-card {
