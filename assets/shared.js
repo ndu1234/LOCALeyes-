@@ -56,11 +56,27 @@ function showConfirm(message) {
     overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
     var box = document.createElement('div');
     box.style.cssText = 'background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:420px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.5);';
-    box.innerHTML = '<p style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:22px;">' + message + '</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button class="btn btn-ghost" id="confirm-cancel" style="padding:10px 18px;font-size:13px;">Cancel</button><button class="btn btn-primary" id="confirm-ok" style="padding:10px 18px;font-size:13px;">Confirm</button></div>';
+    var msgEl = document.createElement('p');
+    msgEl.style.cssText = 'font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:22px;';
+    msgEl.textContent = message; // textContent — never innerHTML: message can contain user-controlled data
+    box.appendChild(msgEl);
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-ghost';
+    cancelBtn.style.cssText = 'padding:10px 18px;font-size:13px;';
+    cancelBtn.textContent = 'Cancel';
+    var okBtn = document.createElement('button');
+    okBtn.className = 'btn btn-primary';
+    okBtn.style.cssText = 'padding:10px 18px;font-size:13px;';
+    okBtn.textContent = 'Confirm';
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    box.appendChild(actions);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
-    document.getElementById('confirm-cancel').addEventListener('click', function () { document.body.removeChild(overlay); resolve(false); });
-    document.getElementById('confirm-ok').addEventListener('click', function () { document.body.removeChild(overlay); resolve(true); });
+    cancelBtn.addEventListener('click', function () { document.body.removeChild(overlay); resolve(false); });
+    okBtn.addEventListener('click', function () { document.body.removeChild(overlay); resolve(true); });
     overlay.addEventListener('click', function (e) { if (e.target === overlay) { document.body.removeChild(overlay); resolve(false); } });
   });
 }
