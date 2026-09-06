@@ -1,44 +1,6 @@
 (function () {
   const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
-  /* ══ TOAST NOTIFICATIONS ══ */
-  function showToast(message, kind) {
-    kind = kind || 'success';
-    var container = document.getElementById('toast-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'toast-container';
-      container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
-      document.body.appendChild(container);
-    }
-    var toast = document.createElement('div');
-    var bg = kind === 'success' ? '#22C55E' : kind === 'error' ? '#F87171' : '#38BDF8';
-    toast.style.cssText = 'background:' + bg + ';color:#071019;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);opacity:0;transform:translateX(40px);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);max-width:360px;';
-    toast.textContent = message;
-    container.appendChild(toast);
-    requestAnimationFrame(function () { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; });
-    setTimeout(function () {
-      toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)';
-      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-    }, 3500);
-  }
-
-  /* ══ CONFIRMATION MODAL ══ */
-  function showConfirm(message) {
-    return new Promise(function (resolve) {
-      var overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
-      var box = document.createElement('div');
-      box.style.cssText = 'background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:420px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.5);';
-      box.innerHTML = '<p style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:22px;">' + message + '</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button class="btn btn-ghost" id="confirm-cancel" style="padding:10px 18px;font-size:13px;">Cancel</button><button class="btn btn-primary" id="confirm-ok" style="padding:10px 18px;font-size:13px;">Confirm</button></div>';
-      overlay.appendChild(box);
-      document.body.appendChild(overlay);
-      document.getElementById('confirm-cancel').addEventListener('click', function () { document.body.removeChild(overlay); resolve(false); });
-      document.getElementById('confirm-ok').addEventListener('click', function () { document.body.removeChild(overlay); resolve(true); });
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) { document.body.removeChild(overlay); resolve(false); } });
-    });
-  }
-
   const loginScreen = document.getElementById('portal-login');
   const resetScreen = document.getElementById('portal-reset');
   const pendingScreen = document.getElementById('portal-pending');
@@ -167,6 +129,38 @@
   let currentBriefId = null;
   const UGC_STATUSES = ['submitted', 'approved', 'rejected', 'revision'];
 
+  /* ══ ERROR BOUNDARY ══ */
+  function safeLoad(name, fn) {
+    return async function () {
+      try {
+        await fn();
+      } catch (err) {
+        console.error('Error loading ' + name + ':', err);
+        showToast('Failed to load ' + name + ': ' + (err.message || err), 'error');
+      }
+    };
+  }
+
+  /* ══ PAGINATION (10 rows per page) ══ */
+  var PAGE_SIZE = 10;
+  var campPage = 1, invPage = 1, briefPage = 1;
+
+  function renderPortalPagination(el, page, totalItems, onChange) {
+    var totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    if (page > totalPages) { onChange(totalPages); return; }
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    el.innerHTML = ''
+      + '<button class="page-btn" data-dir="-1" ' + (page <= 1 ? 'disabled' : '') + '>\u25C0 Prev</button>'
+      + '<span class="page-info">Page ' + page + ' of ' + totalPages + '</span>'
+      + '<button class="page-btn" data-dir="1" ' + (page >= totalPages ? 'disabled' : '') + '>Next \u25B6</button>';
+    el.querySelectorAll('.page-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        onChange(page + Number(btn.dataset.dir));
+      });
+    });
+  }
+
   function showScreen(screen) {
     loginScreen.style.display = screen === 'login' ? 'flex' : 'none';
     resetScreen.style.display = screen === 'reset' ? 'flex' : 'none';
@@ -175,44 +169,9 @@
     dashboard.style.display = screen === 'dashboard' ? 'flex' : 'none';
   }
 
-  function escapeHtml(str) {
-    // innerHTML round-tripping escapes & < > but NOT quotes -- and this
-    // helper is used inside attribute values (href="...", value="..."),
-    // where an embedded " would terminate the attribute and let the rest
-    // of the string inject new ones. Escape all five metacharacters.
-    return String(str == null ? '' : str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function formatMoney(n) {
-    if (n == null) return '—';
-    const num = Number(n);
-    // Whole-dollar amounts stay clean ($2,500); anything with cents gets the
-    // full two digits ($900.50, not $900.5).
-    return '$' + num.toLocaleString(undefined, {
-      minimumFractionDigits: Number.isInteger(num) ? 0 : 2,
-      maximumFractionDigits: 2,
-    });
-  }
-
   // Postgres `date` columns come back as "YYYY-MM-DD" with no time/zone --
   // new Date() on that parses as UTC midnight, which renders a day early in
   // timezones behind UTC. Build the Date from the local Y/M/D components.
-  function formatDateOnly(dateStr) {
-    if (!dateStr) return '—';
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString();
-  }
-
-  function formatDateRange(start, end) {
-    if (!start && !end) return '—';
-    return `${start ? formatDateOnly(start) : '…'} – ${end ? formatDateOnly(end) : '…'}`;
-  }
-
   // Campaigns store the admin platform picker's lowercase value ("tiktok");
   // show the human label instead of the raw stored token.
   const PLATFORM_LABELS = { meta: 'Meta', google: 'Google', tiktok: 'TikTok', youtube: 'YouTube' };
@@ -433,9 +392,13 @@
     currentClientId = membership.client_id;
     companyNameEl.textContent = membership.clients.company_name;
     showScreen('dashboard');
-    loadCampaigns();
-    loadInvoices();
-    loadContentBriefs();
+    // Loading states before data arrives
+    campaignsTbody.innerHTML = '<tr><td colspan="6" class="admin-empty" style="display:block;padding:24px 16px;">Loading campaigns\u2026</td></tr>';
+    invoicesTbody.innerHTML = '<tr><td colspan="3" class="admin-empty" style="display:block;padding:24px 16px;">Loading invoices\u2026</td></tr>';
+    briefsTbody.innerHTML = '<tr><td colspan="3" class="admin-empty" style="display:block;padding:24px 16px;">Loading content briefs\u2026</td></tr>';
+    safeLoad('campaigns', loadCampaigns)();
+    safeLoad('invoices', loadInvoices)();
+    safeLoad('content briefs', loadContentBriefs)();
   }
 
   async function loadCampaigns() {
@@ -461,11 +424,13 @@
       campaignsTbody.innerHTML = '';
       campaignsEmpty.style.display = 'block';
       campaignsEmpty.textContent = 'No campaigns yet.';
+      document.getElementById('portal-campaigns-pagination').innerHTML = '';
       return;
     }
 
     campaignsEmpty.style.display = 'none';
-    campaignsTbody.innerHTML = allCampaigns.map((c) => `
+    var paged = allCampaigns.slice((campPage - 1) * PAGE_SIZE, campPage * PAGE_SIZE);
+    campaignsTbody.innerHTML = paged.map((c) => `
         <tr class="campaign-row" data-campaign-id="${c.id}">
           <td>${escapeHtml(c.name)}</td>
           <td>${escapeHtml(formatPlatform(c.platform))}</td>
@@ -479,6 +444,12 @@
     campaignsTbody.querySelectorAll('.campaign-row').forEach((row) => {
       row.addEventListener('click', () => openMetrics(row.dataset.campaignId));
     });
+
+    renderPortalPagination(
+      document.getElementById('portal-campaigns-pagination'),
+      campPage, allCampaigns.length,
+      function (p) { campPage = p; renderCampaigns(); }
+    );
   }
 
   async function openMetrics(campaignId) {
@@ -580,16 +551,24 @@
       invoicesTbody.innerHTML = '';
       invoicesEmpty.style.display = 'block';
       invoicesEmpty.textContent = 'No invoices yet.';
+      document.getElementById('portal-invoices-pagination').innerHTML = '';
       return;
     }
     invoicesEmpty.style.display = 'none';
-    invoicesTbody.innerHTML = invoices.map((inv) => `
+    var pagedInvoices = invoices.slice((invPage - 1) * PAGE_SIZE, invPage * PAGE_SIZE);
+    invoicesTbody.innerHTML = pagedInvoices.map((inv) => `
         <tr>
           <td>${formatMoney(inv.amount)}</td>
           <td>${formatDateOnly(inv.due_date)}</td>
           <td><span class="status-select ${inv.status}">${escapeHtml(inv.status)}</span></td>
         </tr>
       `).join('');
+
+    renderPortalPagination(
+      document.getElementById('portal-invoices-pagination'),
+      invPage, invoices.length,
+      function (p) { invPage = p; loadInvoices(); }
+    );
   }
 
   async function loadContentBriefs() {
@@ -615,11 +594,13 @@
       briefsTbody.innerHTML = '';
       briefsEmpty.style.display = 'block';
       briefsEmpty.textContent = 'No content briefs yet.';
+      document.getElementById('portal-briefs-pagination').innerHTML = '';
       return;
     }
 
     briefsEmpty.style.display = 'none';
-    briefsTbody.innerHTML = allBriefs.map((b) => `
+    var pagedBriefs = allBriefs.slice((briefPage - 1) * PAGE_SIZE, briefPage * PAGE_SIZE);
+    briefsTbody.innerHTML = pagedBriefs.map((b) => `
         <tr class="brief-row ${b.id === currentBriefId ? 'active-row' : ''}" data-brief-id="${b.id}">
           <td>${escapeHtml(b.title)}</td>
           <td>${escapeHtml((b.talking_points || []).join(', ') || '—')}</td>
@@ -630,6 +611,12 @@
     briefsTbody.querySelectorAll('.brief-row').forEach((row) => {
       row.addEventListener('click', () => openSubmissions(row.dataset.briefId));
     });
+
+    renderPortalPagination(
+      document.getElementById('portal-briefs-pagination'),
+      briefPage, allBriefs.length,
+      function (p) { briefPage = p; renderContentBriefs(); }
+    );
   }
 
   function openSubmissions(briefId) {
