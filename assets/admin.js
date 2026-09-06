@@ -290,8 +290,8 @@
   // tab switch/detail-open now pushes a history entry, and this listener
   // replays that state on back/forward instead of re-pushing it.
   window.addEventListener('popstate', (e) => {
-    const state = e.state || { tab: 'traffic' };
-    applyTab(state.tab || 'traffic');
+    const state = e.state || { tab: 'leads' };
+    applyTab(state.tab || 'leads');
     if (state.view === 'client-detail' && state.clientId) {
       openClientDetail(state.clientId, { skipPush: true });
     } else {
@@ -415,7 +415,7 @@
     if (approved) {
       pendingEmailEl.textContent = '';
       showScreen('dashboard');
-      if (!history.state) history.replaceState({ tab: 'traffic' }, '');
+      if (!history.state) history.replaceState({ tab: 'leads' }, '');
       // Show loading states
       var loadTargets = [
         { el: trafficStatsEl, html: '<div class="admin-empty">Loading traffic data\u2026</div>' },
@@ -533,7 +533,7 @@
     closeClientDetailView();
     stopEditCreator();
     stopEditCaseStudy();
-    applyTab('traffic');
+    applyTab('leads');
     showScreen('login');
   }
 
@@ -576,6 +576,13 @@
     const counts = { new: 0, contacted: 0, converted: 0, closed: 0 };
     allLeads.forEach((l) => { if (counts[l.status] !== undefined) counts[l.status]++; });
 
+    // Sidebar badge — count of fresh (new) leads. Hidden when zero.
+    var badge = document.getElementById('lead-count-badge');
+    if (badge) {
+      badge.textContent = counts.new;
+      badge.style.display = counts.new > 0 ? 'inline-block' : 'none';
+    }
+
     const cards = [
       { label: 'Total', num: allLeads.length },
       { label: 'New', num: counts.new },
@@ -590,6 +597,18 @@
         <div class="admin-stat-label">${c.label}</div>
       </div>
     `).join('');
+  }
+
+  // Humanized relative time ("2m ago") — the freshness cue for leads.
+  function relativeTime(iso) {
+    var then = new Date(iso).getTime();
+    if (isNaN(then)) return '';
+    var diffSec = Math.max(0, (Date.now() - then) / 1000);
+    if (diffSec < 60) return 'just now';
+    if (diffSec < 3600) return Math.floor(diffSec / 60) + 'm ago';
+    if (diffSec < 86400) return Math.floor(diffSec / 3600) + 'h ago';
+    if (diffSec < 86400 * 7) return Math.floor(diffSec / 86400) + 'd ago';
+    return '';
   }
 
   function sortLeads(leads, field, dir) {
@@ -638,15 +657,14 @@
     var pageItems = filteredLeads.slice(start, start + leadPageSize);
 
     emptyState.style.display = 'none';
-    tbody.innerHTML = pageItems.map((l) => `
-      <tr>
+    tbody.innerHTML = pageItems.map((l) => `\n      <tr class="${l.status === 'new' ? 'lead-new-row' : ''}">
         <td><input type="checkbox" class="lead-checkbox" data-id="${l.id}" /></td>
         <td>${escapeHtml(l.name)}<div class="lead-email">${escapeHtml(l.email)}</div></td>
         <td>${escapeHtml(l.business_name || '—')}</td>
         <td>${escapeHtml(l.service_interested || '—')}</td>
         <td>${escapeHtml(l.budget_range || '—')}</td>
         <td class="lead-message">${escapeHtml(l.message || '—')}</td>
-        <td>${new Date(l.created_at).toLocaleDateString()}</td>
+        <td style="white-space:nowrap;">${relativeTime(l.created_at)}<br><span style="font-size:11px;color:var(--text-2);">${new Date(l.created_at).toLocaleDateString()}</span></td>
         <td>
           <select class="status-select ${l.status}" data-id="${l.id}">
             ${['new', 'contacted', 'converted', 'closed'].map((s) => `<option value="${s}" ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}
