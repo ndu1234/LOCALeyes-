@@ -197,5 +197,18 @@ initBaCompare();
   document.body.classList.add('has-mobile-cta');
 })();
 
+/* ══ COOKIE PREFERENCES LINK IN FOOTER ══ */
+(function () {
+  var footerList = document.querySelector('footer .footer-links');
+  if (!footerList) return;
+  var li = document.createElement('li');
+  li.innerHTML = '<a href="#" id="cookie-pref-link" style="font-size:13px;color:var(--text-2);text-decoration:none;">Cookie Preferences</a>';
+  footerList.appendChild(li);
+  document.getElementById('cookie-pref-link').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (window.showConsentBanner) window.showConsentBanner();
+  });
+})();
+
 /* ══ PAGE ENTRANCE ══ */
 window.addEventListener('load', () => document.body.classList.add('loaded'));

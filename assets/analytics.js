@@ -39,6 +39,17 @@
   }
 
   function track(eventType, serviceName) {
+    // Respect consent — don't track if not granted
+    if (window.__consent !== 'granted') {
+      // Queue for later if consent is pending
+      if (window.__consent === 'pending') {
+        (window.__consentCallbacks = window.__consentCallbacks || []).push(function () {
+          track(eventType, serviceName);
+        });
+      }
+      return;
+    }
+
     var visitorId = getVisitorId();
     if (!visitorId) return;
 
