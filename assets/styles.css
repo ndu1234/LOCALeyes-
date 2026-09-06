@@ -659,6 +659,23 @@ section { padding: 120px clamp(20px,5vw,64px); }
   transition: opacity 0.3s;
 }
 .gallery-card:hover .gallery-placeholder { opacity: 0.85; }
+.gallery-free-sample {
+  text-align: center;
+  margin-top: 40px;
+  padding: 36px 28px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r);
+  background: linear-gradient(160deg, rgba(56,189,248,0.06), var(--bg-2) 60%);
+}
+.gallery-free-sample p {
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin-bottom: 22px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
 .gallery-play {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 44px; height: 44px; border-radius: 50%;
