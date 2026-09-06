@@ -2514,7 +2514,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-    var tabMap = { '1': 'traffic', '2': 'leads', '3': 'clients', '4': 'creators', '5': 'case-studies', '6': 'staging' };
+    var tabMap = { '1': 'traffic', '2': 'leads', '3': 'clients', '4': 'creators', '5': 'case-studies', '6': 'staging', '7': 'research' };
     var tab = tabMap[e.key];
     if (tab && dashboard.style.display === 'flex') {
       e.preventDefault();

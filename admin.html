@@ -104,6 +104,10 @@
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
         Staging
       </button>
+      <button class="admin-nav-item" data-tab="research" type="button">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        Research
+      </button>
     </div>
 
     <button class="btn btn-ghost btn-block admin-sidebar-signout" id="logout-btn">Sign Out</button>
@@ -655,6 +659,78 @@
           </table>
           <div class="admin-empty" id="staging-empty" style="display:none;"></div>
         </div>
+      </div>
+
+      <div class="admin-tab-panel" data-panel="research">
+        <div class="admin-page-header">
+          <h1 class="admin-title">Content Research</h1>
+          <p class="admin-page-sub">Log top-performing creator content by niche, track what's blowing up, and surface reusable patterns.</p>
+        </div>
+
+        <div class="admin-toolbar">
+          <div class="admin-controls">
+            <input class="form-input" id="research-search-input" type="text" placeholder="Search niche, creator, hook..." />
+            <select class="form-select" id="research-niche-filter">
+              <option value="all">All niches</option>
+              <option value="real-estate">Real Estate</option>
+              <option value="skincare">Skincare &amp; Beauty</option>
+              <option value="fitness">Fitness</option>
+              <option value="food-beverage">Food &amp; Beverage</option>
+              <option value="home-services">Home Services</option>
+              <option value="ecommerce">E-Commerce</option>
+              <option value="healthcare">Healthcare</option>
+            </select>
+          </div>
+          <details class="admin-approve" id="add-research-details">
+            <summary id="add-research-summary">+ Add Clip</summary>
+            <form id="add-research-form">
+              <select class="form-select" id="add-research-niche" style="max-width:160px;">
+                <option value="">Niche</option>
+                <option value="real-estate">Real Estate</option>
+                <option value="skincare">Skincare &amp; Beauty</option>
+                <option value="fitness">Fitness</option>
+                <option value="food-beverage">Food &amp; Beverage</option>
+                <option value="home-services">Home Services</option>
+                <option value="ecommerce">E-Commerce</option>
+                <option value="healthcare">Healthcare</option>
+              </select>
+              <input class="form-input" id="add-research-creator" type="text" placeholder="Creator / account" required style="max-width:160px;" />
+              <input class="form-input" id="add-research-source" type="url" placeholder="Source URL" style="max-width:220px;" />
+              <input class="form-input" id="add-research-views" type="number" min="0" placeholder="Views" style="max-width:100px;" />
+              <input class="form-input" id="add-research-likes" type="number" min="0" placeholder="Likes" style="max-width:100px;" />
+              <input class="form-input" id="add-research-saves" type="number" min="0" placeholder="Saves" style="max-width:90px;" />
+              <button type="submit" class="btn btn-primary" id="add-research-submit" style="padding:10px 18px; font-size:13px;">Add</button>
+            </form>
+            <p class="admin-error" id="add-research-status"></p>
+          </details>
+        </div>
+
+        <div class="leads-table-wrap">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Creator / Account</th>
+                <th>Niche</th>
+                <th>Views</th>
+                <th>Likes</th>
+                <th>Saves</th>
+                <th>Hook Notes</th>
+                <th>Added</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="research-tbody"></tbody>
+          </table>
+          <div class="admin-empty" id="research-empty" style="display:none;"></div>
+        </div>
+
+        <!-- PATTERNS (populated later by the analysis pipeline) -->
+        <div class="admin-page-header" style="margin-top:40px;">
+          <h1 class="admin-title" style="font-size:20px;">Patterns</h1>
+          <p class="admin-page-sub">Correlations surfaced from the logged clips — hook styles, lengths, and structures that outperform in each niche. Run the analysis pipeline to populate.</p>
+        </div>
+        <div class="admin-empty" id="research-patterns-empty">No pattern insights yet — log clips above, then run analysis.</div>
+        <div class="pattern-grid" id="research-patterns" style="display:none;"></div>
       </div>
     </div>
   </main>
