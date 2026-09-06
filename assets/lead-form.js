@@ -44,10 +44,6 @@
     const payload = {
       name: form.querySelector('#name').value.trim(),
       email: form.querySelector('#email').value.trim(),
-      business_name: form.querySelector('#business').value.trim(),
-      phone: form.querySelector('#phone').value.trim() || null,
-      service_interested: form.querySelector('#service').value,
-      budget_range: form.querySelector('#budget').value,
       message: form.querySelector('#message').value.trim() || null
     };
 
