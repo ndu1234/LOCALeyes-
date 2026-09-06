@@ -144,6 +144,12 @@ root.querySelectorAll('.ba-compare').forEach(widget => {
   if (!handle) return;
   widget.dataset.baInit = '1';
 
+  // Allow dragging by touching/swiping anywhere on the widget itself, not
+  // just the handle. The handle has touch-action:none so dragging it
+  // doesn't scroll the page; setting it on the widget too means mobile
+  // swipes on the image also move the divider instead of scrolling.
+  widget.style.touchAction = 'none';
+
   function setPos(pct) {
     const clamped = Math.max(0, Math.min(100, pct));
     widget.style.setProperty('--pos', clamped);
@@ -155,24 +161,26 @@ root.querySelectorAll('.ba-compare').forEach(widget => {
     return ((e.clientX - rect.left) / rect.width) * 100;
   }
 
-  // Drag from the handle (touch-action:none there keeps page scroll working
-  // when a phone user is just swiping past the image itself)…
   let dragging = false;
-  handle.addEventListener('pointerdown', e => {
+
+  // Any pointer down on the widget starts a drag (handle or image).
+  // Mouse clicks jump the divider; touch/pen drags move it smoothly.
+  widget.addEventListener('pointerdown', e => {
+    if (e.target === handle && e.pointerType === 'mouse') {
+      // Mouse drag from the handle — same as below but without jump.
+    }
     e.preventDefault();
     dragging = true;
-    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* capture is an optimization, not required */ }
+    setPos(posFromEvent(e));
+    try { widget.setPointerCapture(e.pointerId); } catch (err) {}
   });
+
   window.addEventListener('pointermove', e => {
     if (dragging) setPos(posFromEvent(e));
   });
+
   window.addEventListener('pointerup', () => { dragging = false; });
   window.addEventListener('pointercancel', () => { dragging = false; });
-
-  // …and let mouse users click anywhere on the image to jump the divider.
-  widget.addEventListener('pointerdown', e => {
-    if (e.target !== handle && e.pointerType === 'mouse') setPos(posFromEvent(e));
-  });
 
   handle.addEventListener('keydown', e => {
     const cur = Number(widget.style.getPropertyValue('--pos')) || 50;
