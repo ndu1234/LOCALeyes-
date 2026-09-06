@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="icon" type="image/png" href="assets/favicon-32.png" />
+  <script src="assets/shared.js"></script>
 </head>
 <body>
 
@@ -169,18 +170,31 @@
           <table class="leads-table">
             <thead>
               <tr>
-                <th>Name / Email</th>
-                <th>Business</th>
-                <th>Service</th>
-                <th>Budget</th>
+                <th style="width:32px;"><input type="checkbox" id="leads-select-all" /></th>
+                <th class="sortable" data-sort="name">Name / Email <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="business">Business <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="service">Service <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="budget">Budget <span class="sort-icon"></span></th>
                 <th>Message</th>
-                <th>Received</th>
-                <th>Status</th>
+                <th class="sortable" data-sort="date">Received <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="status">Status <span class="sort-icon"></span></th>
               </tr>
             </thead>
             <tbody id="leads-tbody"></tbody>
           </table>
           <div class="admin-empty" id="admin-empty" style="display:none;"></div>
+          <div class="pagination-bar" id="leads-pagination"></div>
+        </div>
+        <div class="bulk-bar" id="leads-bulk-bar" style="display:none; margin-top:12px;">
+          <span id="bulk-count" style="font-size:13px;color:var(--text-2);margin-right:12px;"></span>
+          <select class="form-select" id="bulk-status" style="max-width:160px;">
+            <option value="">Change status to...</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="converted">Converted</option>
+            <option value="closed">Closed</option>
+          </select>
+          <button class="btn btn-primary" id="bulk-apply" style="padding:8px 16px;font-size:12.5px;">Apply</button>
         </div>
       </div>
 

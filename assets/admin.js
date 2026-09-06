@@ -68,6 +68,18 @@
     return days;
   }
 
+  /* ══ ERROR BOUNDARY ══ */
+  function safeLoad(name, fn) {
+    return async function () {
+      try {
+        await fn();
+      } catch (err) {
+        console.error('Error loading ' + name + ':', err);
+        showToast('Failed to load ' + name + ': ' + (err.message || err), 'error');
+      }
+    };
+  }
+
   const loginScreen = document.getElementById('admin-login');
   const pendingScreen = document.getElementById('admin-pending');
   const resetScreen = document.getElementById('admin-reset');
@@ -288,6 +300,11 @@
   });
 
   let allLeads = [];
+  let leadSortField = 'date';
+  let leadSortDir = 'desc';
+  let leadPage = 1;
+  let leadPageSize = 25;
+  let filteredLeads = [];
   let mode = 'signin'; // 'signin' | 'signup' | 'magiclink'
   let recoveryMode = false; // true while the user arrived via a password-recovery email link
 
@@ -412,20 +429,28 @@
         { el: stagingTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading staging examples\u2026</div>' },
       ];
       loadTargets.forEach(function (t) { if (t.el) t.el.innerHTML = t.html; });
-      loadLeads();
-      loadTraffic();
-      loadClients();
-      loadCreators();
-      loadCaseStudies();
-      loadStagingExamples();
+      safeLoad('leads', loadLeads)();
+      safeLoad('traffic', loadTraffic)();
+      safeLoad('clients', loadClients)();
+      safeLoad('creators', loadCreators)();
+      safeLoad('case studies', loadCaseStudies)();
+      safeLoad('staging examples', loadStagingExamples)();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
     }
   }
 
+  /* ══ RATE LIMITER ══ */
+  var loginAttempts = 0;
+  var loginCooldown = false;
+
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (loginCooldown) {
+      setLoginMessage('Too many attempts. Please wait 30 seconds.', false);
+      return;
+    }
     setLoginMessage('', false);
     const email = loginEmailInput.value.trim();
     const password = loginPasswordInput.value;
@@ -464,9 +489,17 @@
 
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
-      setLoginMessage('Invalid email or password.', false);
+      loginAttempts++;
+      if (loginAttempts >= 5) {
+        loginCooldown = true;
+        setTimeout(function () { loginCooldown = false; loginAttempts = 0; }, 30000);
+        setLoginMessage('Too many attempts. Please wait 30 seconds.', false);
+      } else {
+        setLoginMessage('Invalid email or password.', false);
+      }
       return;
     }
+    loginAttempts = 0;
     afterAuth(data.session);
   });
 
@@ -559,26 +592,55 @@
     `).join('');
   }
 
+  function sortLeads(leads, field, dir) {
+    var copy = leads.slice();
+    copy.sort(function (a, b) {
+      var av, bv;
+      if (field === 'date') { av = a.created_at; bv = b.created_at; }
+      else if (field === 'name') { av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase(); }
+      else if (field === 'business') { av = (a.business_name || '').toLowerCase(); bv = (b.business_name || '').toLowerCase(); }
+      else if (field === 'service') { av = (a.service_interested || '').toLowerCase(); bv = (b.service_interested || '').toLowerCase(); }
+      else if (field === 'budget') { av = (a.budget_range || '').toLowerCase(); bv = (b.budget_range || '').toLowerCase(); }
+      else if (field === 'status') { av = a.status || ''; bv = b.status || ''; }
+      if (av < bv) return dir === 'asc' ? -1 : 1;
+      if (av > bv) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }
+
   function renderLeads() {
     const q = searchInput.value.trim().toLowerCase();
     const statusVal = statusFilter.value;
 
-    const filtered = allLeads.filter((l) => {
+    filteredLeads = allLeads.filter((l) => {
       const matchesQ = !q || [l.name, l.email, l.business_name].some((v) => (v || '').toLowerCase().includes(q));
       const matchesStatus = statusVal === 'all' || l.status === statusVal;
       return matchesQ && matchesStatus;
     });
 
-    if (!filtered.length) {
+    // Sort
+    filteredLeads = sortLeads(filteredLeads, leadSortField, leadSortDir);
+
+    if (!filteredLeads.length) {
       tbody.innerHTML = '';
       emptyState.style.display = 'block';
       emptyState.textContent = allLeads.length ? 'No leads match your filters.' : 'No leads yet.';
+      document.getElementById('leads-pagination').innerHTML = '';
+      document.getElementById('leads-bulk-bar').style.display = 'none';
       return;
     }
 
+    // Paginate
+    var totalPages = Math.ceil(filteredLeads.length / leadPageSize);
+    if (leadPage > totalPages) leadPage = totalPages;
+    var start = (leadPage - 1) * leadPageSize;
+    var pageItems = filteredLeads.slice(start, start + leadPageSize);
+
     emptyState.style.display = 'none';
-    tbody.innerHTML = filtered.map((l) => `
+    tbody.innerHTML = pageItems.map((l) => `
       <tr>
+        <td><input type="checkbox" class="lead-checkbox" data-id="${l.id}" /></td>
         <td>${escapeHtml(l.name)}<div class="lead-email">${escapeHtml(l.email)}</div></td>
         <td>${escapeHtml(l.business_name || '—')}</td>
         <td>${escapeHtml(l.service_interested || '—')}</td>
@@ -593,6 +655,7 @@
       </tr>
     `).join('');
 
+    // Status change handlers
     tbody.querySelectorAll('.status-select').forEach((sel) => {
       sel.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
@@ -606,8 +669,40 @@
         if (lead) lead.status = status;
         e.target.className = 'status-select ' + status;
         renderStats();
+        showToast('Lead status updated to ' + status, 'info');
       });
     });
+
+    // Pagination controls
+    renderPagination(totalPages);
+
+    // Bulk bar
+    updateBulkBar();
+  }
+
+  function renderPagination(totalPages) {
+    var el = document.getElementById('leads-pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    var html = '';
+    html += '<button class="page-btn" data-page="prev" ' + (leadPage <= 1 ? 'disabled' : '') + '>\u25C0 Prev</button>';
+    html += '<span class="page-info">Page ' + leadPage + ' of ' + totalPages + '</span>';
+    html += '<button class="page-btn" data-page="next" ' + (leadPage >= totalPages ? 'disabled' : '') + '>Next \u25B6</button>';
+    el.innerHTML = html;
+    el.querySelectorAll('.page-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.dataset.page === 'prev' && leadPage > 1) { leadPage--; renderLeads(); }
+        if (btn.dataset.page === 'next' && leadPage < totalPages) { leadPage++; renderLeads(); }
+      });
+    });
+  }
+
+  function updateBulkBar() {
+    var checked = document.querySelectorAll('.lead-checkbox:checked');
+    var bar = document.getElementById('leads-bulk-bar');
+    var countEl = document.getElementById('bulk-count');
+    if (!checked.length) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    countEl.textContent = checked.length + ' selected';
   }
 
   var debouncedRenderLeads = debounce(renderLeads, 200);
@@ -2429,5 +2524,62 @@
       stopEditCaseStudy();
       history.pushState({ tab: tab }, '');
     }
+  });
+
+  /* ══ SORTABLE HEADERS ══ */
+  document.querySelectorAll('.sortable').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var field = th.dataset.sort;
+      if (leadSortField === field) {
+        leadSortDir = leadSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        leadSortField = field;
+        leadSortDir = 'asc';
+      }
+      // Update sort icons
+      document.querySelectorAll('.sort-icon').forEach(function (icon) {
+        icon.className = 'sort-icon';
+      });
+      var icon = th.querySelector('.sort-icon');
+      if (icon) icon.className = 'sort-icon ' + leadSortDir;
+      leadPage = 1;
+      renderLeads();
+    });
+  });
+
+  /* ══ SELECT ALL CHECKBOX ══ */
+  var selectAll = document.getElementById('leads-select-all');
+  if (selectAll) {
+    selectAll.addEventListener('change', function () {
+      document.querySelectorAll('.lead-checkbox').forEach(function (cb) {
+        cb.checked = selectAll.checked;
+      });
+      updateBulkBar();
+    });
+  }
+
+  /* ══ BULK STATUS CHANGE ══ */
+  document.getElementById('bulk-apply').addEventListener('click', async function () {
+    var status = document.getElementById('bulk-status').value;
+    if (!status) { showToast('Select a status first.', 'error'); return; }
+    var checked = document.querySelectorAll('.lead-checkbox:checked');
+    if (!checked.length) { showToast('No leads selected.', 'error'); return; }
+    var ids = Array.from(checked).map(function (cb) { return cb.dataset.id; });
+    if (!(await showConfirm('Change status to "' + status + '" for ' + ids.length + ' lead(s)?'))) return;
+    var errors = 0;
+    for (var i = 0; i < ids.length; i++) {
+      var err = (await client.from('leads').update({ status: status }).eq('id', ids[i])).error;
+      if (err) errors++;
+    }
+    if (errors) showToast(errors + ' of ' + ids.length + ' failed.', 'error');
+    else showToast(ids.length + ' lead(s) updated to ' + status + '.', 'success');
+    // Refresh
+    document.getElementById('leads-select-all').checked = false;
+    loadLeads();
+  });
+
+  /* ══ DELEGATED CHECKBOX CLICK (update bulk bar) ══ */
+  document.addEventListener('change', function (e) {
+    if (e.target.classList.contains('lead-checkbox')) updateBulkBar();
   });
 })();
