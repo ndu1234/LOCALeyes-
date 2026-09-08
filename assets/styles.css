@@ -1026,30 +1026,12 @@ section { padding: 120px clamp(20px,5vw,64px); }
   border-radius: var(--r-pill); border: 1px solid var(--border);
   background: var(--sky-dim); color: var(--sky-light);
 }
-.founder-cred {
-  display: flex; flex-wrap: wrap; margin-top: 26px;
-  padding-top: 22px; border-top: 1px solid var(--border);
-}
-.founder-cred-item { padding-right: 26px; margin-right: 26px; border-right: 1px solid var(--border); }
-.founder-cred-item:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
-.founder-cred-label {
-  font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--text-2); margin-bottom: 6px;
-}
-.founder-cred-val { font-family: 'Inter Tight', sans-serif; font-size: 14.5px; font-weight: 700; color: var(--text); }
 
 @media (max-width: 860px) {
   .founder { grid-template-columns: 1fr; gap: 26px; padding: 28px 22px; }
   .founder-photo-wrap { max-width: 250px; }
   .founder-photo { height: auto; min-height: 0; aspect-ratio: 4 / 5; }
   .founder-name { font-size: 23px; }
-  .founder-cred { gap: 18px 0; }
-  .founder-cred-item { padding-right: 18px; margin-right: 18px; }
-}
-
-@media (max-width: 560px) {
-  .founder-cred { flex-direction: column; gap: 16px; }
-  .founder-cred-item { padding-right: 0; margin-right: 0; border-right: 0; }
 }
 
 /* ── CONTACT ── */
