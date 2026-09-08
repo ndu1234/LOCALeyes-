@@ -96,7 +96,7 @@
     if (error) {
       btn.disabled = false;
       btn.textContent = btnDefaultText;
-      setStatus('Something went wrong — please email hello@localeyes.agency directly.', 'error');
+      setStatus('Something went wrong — please email info@thelocaleyes.net directly.', 'error');
       return;
     }
 
