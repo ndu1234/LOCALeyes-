@@ -992,6 +992,9 @@ section { padding: 120px clamp(20px,5vw,64px); }
 .value-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 
 /* ── FOUNDERS ── */
+/* Sits first on the About page, so it clears the 68px fixed navbar itself
+   (the page hero that used to provide that headroom was removed). */
+#founders { padding-top: 150px; }
 .founders-list { display: flex; flex-direction: column; gap: 28px; max-width: 1060px; margin: 0 auto; }
 .founder {
   display: grid; grid-template-columns: 320px 1fr; gap: 42px; align-items: stretch;
