@@ -792,6 +792,20 @@ section { padding: 120px clamp(20px,5vw,64px); }
   border-radius: 6px; border: 1px solid var(--border); display: block;
 }
 
+/* ── CONTENT VIDEO GALLERY ── */
+/* Vertical-first grid: creator content is overwhelmingly 9:16, so tiles are
+   portrait and the row holds three at desktop width. */
+.video-gallery {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.video-item { margin: 0; }
+.video-tile {
+  width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--bg-2);
+}
+
 /* ── PRICING ── */
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
 .price-card {
@@ -1489,6 +1503,7 @@ footer {
   footer { flex-direction: column; align-items: flex-start; }
   .hero-stats { gap: 24px; }
   .ps-grid, .compare-grid, .contact-grid, .form-row, .before-after, .ba-gallery-multi { grid-template-columns: 1fr; }
+  .video-gallery { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .included-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .platforms-grid, .content-types-grid, .track-grid { grid-template-columns: 1fr; }

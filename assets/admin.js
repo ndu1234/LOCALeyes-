@@ -241,6 +241,15 @@
   const addStagingDetails = document.getElementById('add-staging-details');
   const addStagingSubmitBtn = document.getElementById('add-staging-submit');
 
+  const videosTbody = document.getElementById('videos-tbody');
+  const videosEmpty = document.getElementById('videos-empty');
+  const addVideoForm = document.getElementById('add-video-form');
+  const addVideoLabel = document.getElementById('add-video-label');
+  const addVideoFile = document.getElementById('add-video-file');
+  const addVideoPoster = document.getElementById('add-video-poster');
+  const addVideoStatus = document.getElementById('add-video-status');
+  const addVideoSubmitBtn = document.getElementById('add-video-submit');
+
   const briefsTbody = document.getElementById('briefs-tbody');
   const briefsEmpty = document.getElementById('briefs-empty');
   const addBriefForm = document.getElementById('add-brief-form');
@@ -427,6 +436,7 @@
         { el: creatorsTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading creators\u2026</div>' },
         { el: caseStudiesTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading case studies\u2026</div>' },
         { el: stagingTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading staging examples\u2026</div>' },
+        { el: videosTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading videos\u2026</div>' },
       ];
       loadTargets.forEach(function (t) { if (t.el) t.el.innerHTML = t.html; });
       safeLoad('leads', loadLeads)();
@@ -435,6 +445,7 @@
       safeLoad('creators', loadCreators)();
       safeLoad('case studies', loadCaseStudies)();
       safeLoad('staging examples', loadStagingExamples)();
+      safeLoad('content videos', loadContentVideos)();
     } else {
       pendingEmailEl.textContent = session.user.email;
       showScreen('pending');
@@ -1471,6 +1482,165 @@
     } finally {
       addStagingSubmitBtn.disabled = false;
       addStagingSubmitBtn.textContent = 'Upload';
+    }
+  });
+
+  /* ══ CONTENT VIDEOS ══ */
+  // Mirrors the staging_examples flow above: upload file(s) to a public bucket,
+  // store the resulting public URLs on a row, and let the admin toggle whether
+  // the row is visible on the public content-creation page.
+
+  // Matches the bucket's file_size_limit in the migration. Checked client-side
+  // so an oversized pick fails instantly with a readable message instead of
+  // after a long upload that the storage API rejects.
+  const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+  let allContentVideos = [];
+
+  async function loadContentVideos() {
+    const { data, error } = await client
+      .from('content_videos')
+      .select('id, label, video_url, poster_url, published, display_order')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      videosTbody.innerHTML = '';
+      videosEmpty.style.display = 'block';
+      videosEmpty.textContent = 'Could not load videos: ' + error.message;
+      return;
+    }
+
+    allContentVideos = data || [];
+    renderContentVideos();
+  }
+
+  function renderContentVideos() {
+    if (!allContentVideos.length) {
+      videosTbody.innerHTML = '';
+      videosEmpty.style.display = 'block';
+      videosEmpty.textContent = 'No videos yet — upload one above.';
+      return;
+    }
+
+    videosEmpty.style.display = 'none';
+    videosTbody.innerHTML = allContentVideos.map((v) => {
+      // Show the poster when there is one; otherwise fall back to a muted
+      // <video> so the row still previews something recognisable.
+      const preview = v.poster_url
+        ? `<img src="${escapeHtml(v.poster_url)}" alt="" class="staging-thumb" />`
+        : `<video src="${escapeHtml(v.video_url)}" class="staging-thumb" muted preload="metadata"></video>`;
+      return `
+        <tr>
+          <td><span class="staging-thumb-pair">${preview}</span></td>
+          <td>${escapeHtml(v.label || '—')}</td>
+          <td><button type="button" class="status-select ${v.published ? 'available' : 'unavailable'}" data-video-id="${v.id}">${v.published ? 'Published' : 'Unpublished'}</button></td>
+          <td>
+            <a class="btn btn-ghost" href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener" style="padding:6px 12px; font-size:12px;">View</a>
+            <button type="button" class="btn btn-ghost video-delete-btn" data-video-id="${v.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    videosTbody.querySelectorAll('button.status-select').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.videoId;
+        const v = allContentVideos.find((x) => x.id === id);
+        if (!v) return;
+        const newPublished = !v.published;
+        const { error } = await client.from('content_videos').update({ published: newPublished }).eq('id', id);
+        if (error) {
+          showToast('Failed to update: ' + error.message, 'error');
+          return;
+        }
+        v.published = newPublished;
+        renderContentVideos();
+      });
+    });
+
+    videosTbody.querySelectorAll('.video-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.videoId;
+        const v = allContentVideos.find((x) => x.id === id);
+        if (!v) return;
+        if (!(await showConfirm('Delete this video? This removes it from the content creation page and deletes the uploaded file. This cannot be undone.'))) return;
+        const { error } = await client.from('content_videos').delete().eq('id', id);
+        if (error) {
+          showToast('Failed to delete: ' + error.message, 'error');
+          return;
+        }
+        // Best-effort file cleanup so the bucket doesn't accumulate orphans.
+        // A failure here doesn't block the row delete.
+        const paths = [v.video_url, v.poster_url].map(videoPathFromUrl).filter(Boolean);
+        if (paths.length) client.storage.from('content-videos').remove(paths);
+        allContentVideos = allContentVideos.filter((x) => x.id !== id);
+        renderContentVideos();
+      });
+    });
+  }
+
+  // The public URL looks like <project>/storage/v1/object/public/content-videos/<path>.
+  // Recover just <path> so we can delete the file from the bucket.
+  function videoPathFromUrl(url) {
+    if (!url) return null;
+    const marker = '/content-videos/';
+    const i = url.indexOf(marker);
+    return i === -1 ? null : url.slice(i + marker.length);
+  }
+
+  async function uploadVideoFile(file, kind) {
+    const ext = (file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+    const path = `${kind}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await client.storage.from('content-videos').upload(path, file, {
+      contentType: file.type || (kind === 'poster' ? 'image/jpeg' : 'video/mp4'),
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = client.storage.from('content-videos').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  addVideoForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addVideoStatus.textContent = '';
+    addVideoStatus.style.color = '';
+    const videoFile = addVideoFile.files[0];
+    const posterFile = addVideoPoster.files[0];
+    if (!videoFile) {
+      addVideoStatus.textContent = 'Pick a video file.';
+      return;
+    }
+    if (videoFile.size > MAX_VIDEO_BYTES) {
+      const mb = (videoFile.size / 1024 / 1024).toFixed(1);
+      addVideoStatus.textContent = `That video is ${mb}MB — the limit is 50MB. Compress it or trim it shorter and try again.`;
+      return;
+    }
+
+    addVideoSubmitBtn.disabled = true;
+    addVideoSubmitBtn.textContent = 'Uploading…';
+    try {
+      // Videos are large, so the poster (if any) uploads alongside rather than
+      // after — same parallel pattern as the staging before/after pair.
+      const [videoUrl, posterUrl] = await Promise.all([
+        uploadVideoFile(videoFile, 'video'),
+        posterFile ? uploadVideoFile(posterFile, 'poster') : Promise.resolve(null),
+      ]);
+      const { error } = await client.from('content_videos').insert([{
+        label: addVideoLabel.value.trim() || null,
+        video_url: videoUrl,
+        poster_url: posterUrl,
+      }]);
+      if (error) throw error;
+      addVideoStatus.textContent = 'Uploaded. Toggle it to Published to show it on the site.';
+      addVideoStatus.style.color = 'var(--sky)';
+      addVideoForm.reset();
+      loadContentVideos();
+    } catch (err) {
+      addVideoStatus.textContent = 'Upload failed: ' + (err.message || err);
+    } finally {
+      addVideoSubmitBtn.disabled = false;
+      addVideoSubmitBtn.textContent = 'Upload';
     }
   });
 
@@ -2532,7 +2702,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-    var tabMap = { '1': 'traffic', '2': 'leads', '3': 'clients', '4': 'creators', '5': 'case-studies', '6': 'staging', '7': 'research' };
+    var tabMap = { '1': 'traffic', '2': 'leads', '3': 'clients', '4': 'creators', '5': 'case-studies', '6': 'staging', '7': 'videos', '8': 'research' };
     var tab = tabMap[e.key];
     if (tab && dashboard.style.display === 'flex') {
       e.preventDefault();
