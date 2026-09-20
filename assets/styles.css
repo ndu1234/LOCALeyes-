@@ -792,6 +792,20 @@ section { padding: 120px clamp(20px,5vw,64px); }
   border-radius: 6px; border: 1px solid var(--border); display: block;
 }
 
+/* ── ADMIN: CONTENT VIDEO ORDERING ── */
+/* Stacked arrows keep the control inside one narrow table cell; a disabled
+   arrow stays visible (rather than hidden) so rows don't shift width at the
+   ends of the list. */
+.video-order { display: inline-flex; flex-direction: column; gap: 3px; }
+.video-move-btn {
+  width: 26px; height: 20px; padding: 0; line-height: 1; font-size: 9px;
+  color: var(--text-2); background: transparent; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 5px;
+  transition: color .15s, border-color .15s;
+}
+.video-move-btn:hover:not(:disabled) { color: var(--text-1); border-color: var(--text-2); }
+.video-move-btn:disabled { opacity: .3; cursor: default; }
+
 /* ── CONTENT VIDEO GALLERY ── */
 /* Vertical-first grid: creator content is overwhelmingly 9:16, so tiles are
    portrait and the row holds three at desktop width. */

@@ -425,20 +425,34 @@
       pendingEmailEl.textContent = '';
       showScreen('dashboard');
       if (!history.state) history.replaceState({ tab: 'leads' }, '');
-      // Show loading states
+      // Show loading states. Panels that own their whole area get their
+      // innerHTML swapped outright.
       var loadTargets = [
         { el: trafficStatsEl, html: '<div class="admin-empty">Loading traffic data\u2026</div>' },
         { el: trafficTopPagesEl, html: '<div class="admin-empty">Loading\u2026</div>' },
         { el: trafficTopServicesEl, html: '<div class="admin-empty">Loading\u2026</div>' },
         { el: trafficTrendEl, html: '<div class="admin-empty">Loading\u2026</div>' },
         { el: statsEl, html: '<div class="admin-empty">Loading leads\u2026</div>' },
-        { el: clientsTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading clients\u2026</div>' },
-        { el: creatorsTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading creators\u2026</div>' },
-        { el: caseStudiesTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading case studies\u2026</div>' },
-        { el: stagingTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading staging examples\u2026</div>' },
-        { el: videosTbody.parentElement.querySelector('.leads-table-wrap'), html: '<div class="admin-empty" style="display:block;">Loading videos\u2026</div>' },
       ];
       loadTargets.forEach(function (t) { if (t.el) t.el.innerHTML = t.html; });
+
+      // The tables instead reuse their own empty-state div. Writing into the
+      // .leads-table-wrap around them would tear out the <table> and detach
+      // the cached *Tbody nodes every loader below renders into, leaving the
+      // tables permanently blank. Each render path resets its empty div on all
+      // three outcomes -- rows, no rows, error -- so this message clears itself.
+      var loadingEmpties = [
+        { el: clientsEmpty, text: 'Loading clients\u2026' },
+        { el: creatorsEmpty, text: 'Loading creators\u2026' },
+        { el: caseStudiesEmpty, text: 'Loading case studies\u2026' },
+        { el: stagingEmpty, text: 'Loading staging examples\u2026' },
+        { el: videosEmpty, text: 'Loading videos\u2026' },
+      ];
+      loadingEmpties.forEach(function (t) {
+        if (!t.el) return;
+        t.el.textContent = t.text;
+        t.el.style.display = 'block';
+      });
       safeLoad('leads', loadLeads)();
       safeLoad('traffic', loadTraffic)();
       safeLoad('clients', loadClients)();
@@ -1496,6 +1510,8 @@
   const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
   let allContentVideos = [];
+  // Serialises the display_order writes fired by the reorder arrows.
+  let orderWriteChain = Promise.resolve();
 
   async function loadContentVideos() {
     const { data, error } = await client
@@ -1524,19 +1540,28 @@
     }
 
     videosEmpty.style.display = 'none';
-    videosTbody.innerHTML = allContentVideos.map((v) => {
+    videosTbody.innerHTML = allContentVideos.map((v, i) => {
       // Show the poster when there is one; otherwise fall back to a muted
       // <video> so the row still previews something recognisable.
       const preview = v.poster_url
         ? `<img src="${escapeHtml(v.poster_url)}" alt="" class="staging-thumb" />`
         : `<video src="${escapeHtml(v.video_url)}" class="staging-thumb" muted preload="metadata"></video>`;
+      const atTop = i === 0 ? ' disabled' : '';
+      const atBottom = i === allContentVideos.length - 1 ? ' disabled' : '';
       return `
         <tr>
+          <td>
+            <span class="video-order">
+              <button type="button" class="video-move-btn" data-video-id="${v.id}" data-move="up" aria-label="Move up"${atTop}>&#9650;</button>
+              <button type="button" class="video-move-btn" data-video-id="${v.id}" data-move="down" aria-label="Move down"${atBottom}>&#9660;</button>
+            </span>
+          </td>
           <td><span class="staging-thumb-pair">${preview}</span></td>
           <td>${escapeHtml(v.label || '—')}</td>
           <td><button type="button" class="status-select ${v.published ? 'available' : 'unavailable'}" data-video-id="${v.id}">${v.published ? 'Published' : 'Unpublished'}</button></td>
           <td>
             <a class="btn btn-ghost" href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener" style="padding:6px 12px; font-size:12px;">View</a>
+            <button type="button" class="btn btn-ghost video-edit-btn" data-video-id="${v.id}" style="padding:6px 12px; font-size:12px;">Edit</button>
             <button type="button" class="btn btn-ghost video-delete-btn" data-video-id="${v.id}" style="padding:6px 12px; font-size:12px;">Delete</button>
           </td>
         </tr>
@@ -1559,6 +1584,14 @@
       });
     });
 
+    videosTbody.querySelectorAll('.video-move-btn').forEach((btn) => {
+      btn.addEventListener('click', () => moveContentVideo(btn.dataset.videoId, btn.dataset.move));
+    });
+
+    videosTbody.querySelectorAll('.video-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => editContentVideo(btn.dataset.videoId));
+    });
+
     videosTbody.querySelectorAll('.video-delete-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.videoId;
@@ -1577,6 +1610,138 @@
         allContentVideos = allContentVideos.filter((x) => x.id !== id);
         renderContentVideos();
       });
+    });
+  }
+
+  // Moving a row one place up or down. Every row uploaded before this control
+  // existed carries display_order 0, so swapping two neighbours' stored values
+  // would be a no-op -- the list is instead renumbered from its on-screen
+  // position, and only the rows whose number actually changed are written back.
+  async function moveContentVideo(id, direction) {
+    const from = allContentVideos.findIndex((x) => x.id === id);
+    const to = direction === 'up' ? from - 1 : from + 1;
+    if (from === -1 || to < 0 || to >= allContentVideos.length) return;
+
+    const [moved] = allContentVideos.splice(from, 1);
+    allContentVideos.splice(to, 0, moved);
+    renderContentVideos(); // repaint before the round trip so the arrow feels instant
+
+    const changed = [];
+    allContentVideos.forEach((v, i) => {
+      if (v.display_order !== i) {
+        v.display_order = i;
+        changed.push(v);
+      }
+    });
+
+    // Two quick clicks would otherwise overlap: both write the same rows, and
+    // whichever response lands last wins regardless of which click was the
+    // final one. Chaining keeps the writes in click order. Each write reads
+    // display_order off the live row object, so a click that lands mid-flight
+    // just makes the queued write carry the newer number.
+    orderWriteChain = orderWriteChain.then(async () => {
+      const results = await Promise.all(changed.map((v) =>
+        client.from('content_videos').update({ display_order: v.display_order }).eq('id', v.id)
+      ));
+      const failed = results.find((r) => r.error);
+      if (failed) {
+        showToast('Could not save the new order: ' + failed.error.message, 'error');
+        // Some of the updates may have landed, so the screen and the table now
+        // disagree in a way we can't reconstruct -- reload rather than guess.
+        loadContentVideos();
+      }
+    });
+    await orderWriteChain;
+  }
+
+  async function editContentVideo(id) {
+    const v = allContentVideos.find((x) => x.id === id);
+    if (!v) return;
+    const edit = await showVideoEditor(v);
+    if (!edit) return;
+
+    if (edit.posterFile && edit.posterFile.size > MAX_VIDEO_BYTES) {
+      showToast('That poster is over the 50MB limit.', 'error');
+      return;
+    }
+
+    const previousPoster = v.poster_url;
+    try {
+      let posterUrl = previousPoster;
+      if (edit.posterFile) posterUrl = await uploadVideoFile(edit.posterFile, 'poster');
+      else if (edit.removePoster) posterUrl = null;
+
+      const { error } = await client
+        .from('content_videos')
+        .update({ label: edit.label || null, poster_url: posterUrl })
+        .eq('id', id);
+      if (error) throw error;
+
+      // The old poster is only an orphan once the row has stopped pointing at
+      // it, so clean it up after the update lands -- best-effort, as in delete.
+      if (previousPoster && previousPoster !== posterUrl) {
+        const path = videoPathFromUrl(previousPoster);
+        if (path) client.storage.from('content-videos').remove([path]);
+      }
+
+      v.label = edit.label || null;
+      v.poster_url = posterUrl;
+      renderContentVideos();
+      showToast('Video updated.');
+    } catch (err) {
+      showToast('Could not update: ' + (err.message || err), 'error');
+    }
+  }
+
+  // Hand-built overlay in the same shape as showConfirm above -- the admin has
+  // no modal framework. Resolves with the edited fields, or null if cancelled.
+  function showVideoEditor(video) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px;';
+      var box = document.createElement('div');
+      box.style.cssText = 'background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:460px;width:100%;box-shadow:0 40px 80px rgba(0,0,0,0.5);';
+      box.innerHTML =
+        '<h3 style="font-size:16px;margin:0 0 18px;">Edit video</h3>'
+        + '<label class="staging-upload-field" style="margin-bottom:16px;"><span>Caption</span>'
+        + '<input class="form-input" id="edit-video-label" type="text" value="' + escapeHtml(video.label || '') + '" placeholder="Optional, e.g. Skincare brand testimonial" style="width:100%;" /></label>'
+        + '<label class="staging-upload-field" style="margin-bottom:10px;"><span>' + (video.poster_url ? 'Replace poster image' : 'Add poster image') + '</span>'
+        + '<input class="form-input" id="edit-video-poster" type="file" accept="image/*" /></label>'
+        + (video.poster_url
+            ? '<label style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-2);margin-bottom:10px;"><input type="checkbox" id="edit-video-remove-poster" /> Remove the current poster</label>'
+            : '')
+        + '<p class="admin-page-sub" style="margin:0 0 20px;">The video file itself can&rsquo;t be swapped here &mdash; delete the row and upload again to change it.</p>'
+        + '<div style="display:flex;gap:10px;justify-content:flex-end;"><button type="button" class="btn btn-ghost" id="edit-video-cancel" style="padding:10px 18px;font-size:13px;">Cancel</button><button type="button" class="btn btn-primary" id="edit-video-save" style="padding:10px 18px;font-size:13px;">Save</button></div>';
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      var labelInput = box.querySelector('#edit-video-label');
+      var posterInput = box.querySelector('#edit-video-poster');
+      var removeInput = box.querySelector('#edit-video-remove-poster');
+      labelInput.focus();
+
+      function close(value) {
+        document.body.removeChild(overlay);
+        resolve(value);
+      }
+
+      // Picking a replacement and ticking "remove" contradict each other. The
+      // picked file wins, so keep the two controls mutually exclusive rather
+      // than resolving the conflict silently on save.
+      if (removeInput) {
+        posterInput.addEventListener('change', function () { if (posterInput.files[0]) removeInput.checked = false; });
+        removeInput.addEventListener('change', function () { if (removeInput.checked) posterInput.value = ''; });
+      }
+
+      box.querySelector('#edit-video-cancel').addEventListener('click', function () { close(null); });
+      box.querySelector('#edit-video-save').addEventListener('click', function () {
+        close({
+          label: labelInput.value.trim(),
+          posterFile: posterInput.files[0] || null,
+          removePoster: !!(removeInput && removeInput.checked),
+        });
+      });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) close(null); });
     });
   }
 
@@ -1626,10 +1791,14 @@
         uploadVideoFile(videoFile, 'video'),
         posterFile ? uploadVideoFile(posterFile, 'poster') : Promise.resolve(null),
       ]);
+      // Land new uploads at the end of the gallery. Defaulting display_order
+      // to 0 would push every new video ahead of the ones already ordered.
+      const nextOrder = allContentVideos.reduce((max, v) => Math.max(max, v.display_order || 0), -1) + 1;
       const { error } = await client.from('content_videos').insert([{
         label: addVideoLabel.value.trim() || null,
         video_url: videoUrl,
         poster_url: posterUrl,
+        display_order: nextOrder,
       }]);
       if (error) throw error;
       addVideoStatus.textContent = 'Uploaded. Toggle it to Published to show it on the site.';
