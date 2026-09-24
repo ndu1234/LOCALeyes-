@@ -1,0 +1,142 @@
+<!--
+DIRECTION: Editorial Index (oversized display type + directory/tag structure)
+
+Rationale: Pushes the headline to genuinely editorial scale — the H1 wraps
+across three lines at a size no SaaS template would use, so the first thing a
+visitor reads is unmistakably a statement, not a hero banner. "Right amount of
+information" is solved by splitting services into two passes instead of one:
+a scannable tag directory (all seven names, instantly skimmable in five
+seconds) followed by a two-column reading block with the full descriptions —
+so a rushed visitor gets the full picture from the tags alone, and an
+interested one gets the detail without either group feeling shortchanged.
+Blue is used as a hairline rule and the tag-hover state only; everything else
+is black, off-white, and type.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Direction: Editorial Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000000;
+    --text: #F5F3EE;
+    --text-2: #8C8A82;
+    --sky: #38BDF8;
+    --rule: rgba(245,243,238,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 26px 40px;
+  }
+  .logo { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 15px; }
+  .logo span { color: var(--sky); }
+  .nav-links { display: flex; gap: 34px; list-style: none; font-size: 13px; color: var(--text-2); }
+  .nav-links a { color: inherit; text-decoration: none; }
+  .nav-cta { font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
+
+  header.hero { padding: 40px 40px 80px; }
+  .eyebrow-row { display: flex; align-items: center; gap: 40px; margin-bottom: 40px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); }
+  .eyebrow strong { color: var(--sky); }
+
+  h1.hero-title {
+    font-family: 'Inter Tight', sans-serif; font-weight: 700;
+    font-size: clamp(48px, 9vw, 108px); line-height: 0.98; letter-spacing: -0.03em;
+    max-width: 1200px; margin-bottom: 48px;
+  }
+  h1.hero-title .accent { color: var(--sky); }
+
+  .hero-foot { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 40px; padding-top: 32px; border-top: 1px solid var(--rule); }
+  p.hero-sub { font-size: 16px; color: var(--text-2); max-width: 480px; line-height: 1.6; }
+  .hero-ctas { display: flex; gap: 20px; align-items: center; white-space: nowrap; }
+  .btn-primary { background: var(--text); color: #000; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13.5px; padding: 13px 24px; text-decoration: none; }
+  .btn-ghost { font-size: 13.5px; color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+
+  .stats-strip { display: flex; gap: 0; margin-top: 56px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .stats-strip > div { flex: 1; padding: 22px 0; border-right: 1px solid var(--rule); text-align: center; }
+  .stats-strip > div:last-child { border-right: none; }
+  .stat-num { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 22px; }
+  .stat-label { font-size: 11.5px; color: var(--text-2); margin-top: 4px; }
+
+  section.services { padding: 90px 40px 120px; }
+  .services-head { margin-bottom: 44px; }
+  .services-eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 12px; }
+  h2.services-title { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 32px; margin-bottom: 10px; }
+  .services-sub { font-size: 14px; color: var(--text-2); max-width: 460px; }
+
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 56px; }
+  .tag { border: 1px solid var(--rule); border-radius: 100px; padding: 9px 18px; font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 13.5px; }
+  .tag.accent { border-color: var(--sky); color: var(--sky); }
+
+  .service-detail-grid { columns: 2; column-gap: 48px; }
+  .service-detail { break-inside: avoid; padding-bottom: 26px; margin-bottom: 26px; border-bottom: 1px solid var(--rule); }
+  .service-detail-name { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .service-detail-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Local<span>Eyes</span></div>
+  <ul class="nav-links">
+    <li>Home</li><li>Services</li><li>Case Studies</li><li>Content &amp; AI Video</li><li>About</li>
+  </ul>
+  <div class="nav-cta">Book a Call</div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow-row">
+    <div class="eyebrow"><strong>Est. 2025</strong> &middot; Full-Service Growth Agency</div>
+  </div>
+  <h1 class="hero-title">Ads, content, and creative<br>production <span class="accent">under<br>one roof.</span></h1>
+  <div class="hero-foot">
+    <p class="hero-sub">Meta, Google, TikTok &amp; YouTube campaigns. Real content creators. AI video and 3D virtual staging at scale. One team, one dashboard, built to convert.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn-primary">Book a Call</a>
+      <a href="#" class="btn-ghost">See Our Services</a>
+    </div>
+  </div>
+  <div class="stats-strip">
+    <div><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+    <div><div class="stat-num">3.2x</div><div class="stat-label">Avg. return on ad spend</div></div>
+    <div><div class="stat-num">48hr</div><div class="stat-label">Brief to live campaign</div></div>
+  </div>
+</header>
+
+<section class="services">
+  <div class="services-head">
+    <div class="services-eyebrow">What We Do</div>
+    <h2 class="services-title">Seven services. One accountable team.</h2>
+    <p class="services-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
+  </div>
+
+  <div class="tag-cloud">
+    <span class="tag accent">Paid Ads Management</span>
+    <span class="tag">Content Creation</span>
+    <span class="tag">AI Video Generation</span>
+    <span class="tag">Creative Strategy</span>
+    <span class="tag">Content Packages</span>
+    <span class="tag">Analytics &amp; Reporting</span>
+    <span class="tag">3D Virtual Staging</span>
+  </div>
+
+  <div class="service-detail-grid">
+    <div class="service-detail"><div class="service-detail-name">Paid Ads Management</div><div class="service-detail-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</div></div>
+    <div class="service-detail"><div class="service-detail-name">Content Creation</div><div class="service-detail-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</div></div>
+    <div class="service-detail"><div class="service-detail-name">AI Video Generation</div><div class="service-detail-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</div></div>
+    <div class="service-detail"><div class="service-detail-name">Creative Strategy</div><div class="service-detail-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</div></div>
+    <div class="service-detail"><div class="service-detail-name">Content Packages</div><div class="service-detail-desc">Bundled content creation + AI video + ad copy delivered monthly. Recurring and predictable for clients.</div></div>
+    <div class="service-detail"><div class="service-detail-name">Analytics &amp; Reporting</div><div class="service-detail-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</div></div>
+    <div class="service-detail"><div class="service-detail-name">3D Virtual Staging</div><div class="service-detail-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</div></div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!--
+DIRECTION: Glow Deck (mesh-gradient depth / glassmorphism)
+
+Rationale: Where the first round rationed or removed blue, this lets it flood the page as
+atmosphere -- a layered mesh of radial glows sits behind everything, and the stat panel and
+service rows are glass: translucent, blurred, backlit. This is "look good" as production-agency
+confidence -- depth, light, and a genuinely rich blue rather than a restrained accent line.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Direction: Glow Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #030507; --bg-2: #0a0e14; --sky: #38BDF8; --sky-light: #7DD3FC; --indigo: #6366F1;
+    --text: #F5F3EE; --text-2: #9AA3B2; --glass-border: rgba(125,211,252,0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif;
+    position: relative; overflow-x: hidden;
+  }
+  .mesh {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 900px 600px at 15% -5%, rgba(56,189,248,0.28), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 85% 10%, rgba(99,102,241,0.24), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 50% 100%, rgba(56,189,248,0.14), transparent 60%);
+  }
+  nav {
+    position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+    padding: 26px 56px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px); background: rgba(3,5,7,0.5);
+  }
+  .logo { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 19px; color: var(--text); }
+  .logo span { color: var(--sky-light); }
+  .nav-links { display: flex; gap: 30px; list-style: none; align-items: center; }
+  .nav-links a { color: var(--text-2); text-decoration: none; font-size: 14px; font-weight: 500; }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--sky), var(--indigo)); color: #051019; font-weight: 700;
+    padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 14px;
+    box-shadow: 0 8px 30px rgba(56,189,248,0.35);
+  }
+  main { position: relative; z-index: 2; max-width: 1280px; margin: 0 auto; padding: 0 56px; }
+  .hero { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; padding: 88px 0 70px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-light);
+    background: rgba(56,189,248,0.10); border: 1px solid var(--glass-border);
+    padding: 7px 16px; border-radius: 100px; margin-bottom: 26px;
+  }
+  .eyebrow::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--sky); box-shadow: 0 0 10px var(--sky); }
+  h1 {
+    font-family: 'Inter Tight', sans-serif; font-weight: 900; font-size: clamp(40px,4.4vw,60px);
+    line-height: 1.04; letter-spacing: -1.5px; margin-bottom: 22px;
+  }
+  h1 .accent {
+    background: linear-gradient(100deg, var(--sky-light), var(--sky) 45%, var(--indigo));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { font-size: 17.5px; line-height: 1.65; color: var(--text-2); max-width: 480px; margin-bottom: 34px; }
+  .ctas { display: flex; gap: 14px; margin-bottom: 48px; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--sky), var(--indigo)); color: #051019; font-weight: 700;
+    padding: 15px 30px; border-radius: 12px; text-decoration: none; font-size: 15px;
+    box-shadow: 0 12px 40px rgba(56,189,248,0.4);
+  }
+  .btn-ghost {
+    color: var(--text); font-weight: 600; padding: 15px 28px; border-radius: 12px;
+    border: 1px solid var(--glass-border); text-decoration: none; font-size: 15px;
+    background: rgba(255,255,255,0.03);
+  }
+  .stats-row { display: flex; gap: 34px; }
+  .stat-num { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 27px; }
+  .stat-label { font-size: 12.5px; color: var(--text-2); margin-top: 3px; }
+
+  .hero-visual {
+    position: relative; height: 420px; border-radius: 24px;
+    background: linear-gradient(160deg, rgba(56,189,248,0.14), rgba(99,102,241,0.10));
+    border: 1px solid var(--glass-border); backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px rgba(56,189,248,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    padding: 30px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .hero-visual::after {
+    content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(56,189,248,0.5), transparent 70%); filter: blur(20px); z-index: -1;
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+    padding: 18px 20px; backdrop-filter: blur(10px);
+  }
+  .glass-card .stat-num { font-size: 30px; }
+  .glass-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-light); margin-bottom: 16px; }
+
+  .services-section { padding: 40px 0 100px; }
+  .sh { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; gap: 40px; }
+  .sh-eyebrow { color: var(--sky-light); font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: clamp(26px,3vw,36px); letter-spacing: -0.8px; }
+  .sh-sub { color: var(--text-2); font-size: 14.5px; max-width: 320px; text-align: right; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .service-card {
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 26px;
+    transition: none; position: relative; overflow: hidden;
+  }
+  .service-card:nth-child(1) { border-color: var(--glass-border); box-shadow: 0 20px 50px rgba(56,189,248,0.12); }
+  .service-icon {
+    width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(99,102,241,0.2)); margin-bottom: 18px;
+    border: 1px solid var(--glass-border);
+  }
+  .service-name { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 16.5px; margin-bottom: 8px; }
+  .service-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<nav>
+  <div class="logo">Local<span>Eyes</span></div>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Services</a></li>
+    <li><a href="#">Case Studies</a></li>
+    <li><a href="#">Content Creation &amp; AI Video</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Book a Call</a>
+</nav>
+
+<main>
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Est. 2025 &middot; Full-Service Growth Agency</div>
+      <h1>Ads, content, and creative production <span class="accent">under one roof.</span></h1>
+      <p class="sub">Meta, Google, TikTok &amp; YouTube campaigns. Real content creators. AI video and 3D virtual staging at scale. One team, one dashboard, built to convert.</p>
+      <div class="ctas">
+        <a href="#" class="btn-primary">Book a Call</a>
+        <a href="#" class="btn-ghost">See Our Services</a>
+      </div>
+      <div class="stats-row">
+        <div><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+        <div><div class="stat-num">3.2x</div><div class="stat-label">Avg. return on ad spend</div></div>
+        <div><div class="stat-num">48hr</div><div class="stat-label">Brief to live campaign</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="glass-title">Live Performance</div>
+      <div class="glass-card"><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+      <div class="glass-card"><div class="stat-num">3.2x</div><div class="stat-label">Average return on ad spend</div></div>
+      <div class="glass-card"><div class="stat-num">48hr</div><div class="stat-label">Brief to live campaign</div></div>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="sh">
+      <div>
+        <div class="sh-eyebrow">What We Do</div>
+        <h2>Seven services. One accountable team.</h2>
+      </div>
+      <p class="sh-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card"><div class="service-icon">⚡</div><div class="service-name">Paid Ads Management</div><div class="service-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</div></div>
+      <div class="service-card"><div class="service-icon">🎬</div><div class="service-name">Content Creation</div><div class="service-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</div></div>
+      <div class="service-card"><div class="service-icon">✨</div><div class="service-name">AI Video Generation</div><div class="service-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</div></div>
+      <div class="service-card"><div class="service-icon">🧠</div><div class="service-name">Creative Strategy</div><div class="service-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</div></div>
+      <div class="service-card"><div class="service-icon">📦</div><div class="service-name">Content Packages</div><div class="service-desc">Bundled content creation + AI video + ad copy delivered monthly. Recurring and predictable for clients.</div></div>
+      <div class="service-card"><div class="service-icon">📊</div><div class="service-name">Analytics &amp; Reporting</div><div class="service-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</div></div>
+      <div class="service-card"><div class="service-icon">🏠</div><div class="service-name">3D Virtual Staging</div><div class="service-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</div></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

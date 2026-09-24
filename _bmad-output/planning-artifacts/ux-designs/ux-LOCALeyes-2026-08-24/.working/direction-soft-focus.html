@@ -1,0 +1,128 @@
+<!--
+DIRECTION: Soft Focus (airy / generous / single-column calm)
+
+Rationale: Where the other directions strip or restructure, this one just
+gives everything room to breathe — one centered column, generous line-height,
+DM Sans doing more of the talking than Inter Tight so the voice feels less
+"engineered SaaS" and more human. The single ambient glow behind the headline
+is the only atmosphere the page gets; everywhere else is flat black with soft
+off-white text and near-invisible dividers (dotted, low-opacity). Services run
+as a tall single-column list with generous padding per row rather than a
+grid — slower to scan than a card grid, but calmer, and each one gets to read
+like a short paragraph rather than a feature bullet.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Direction: Soft Focus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000000;
+    --text: #F5F3EE;
+    --text-2: #8C8A82;
+    --sky: #38BDF8;
+    --dot: rgba(245,243,238,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+  .col { max-width: 680px; margin: 0 auto; padding: 0 28px; }
+
+  nav { display: flex; align-items: center; justify-content: space-between; max-width: 680px; margin: 0 auto; padding: 36px 28px 0; }
+  .logo { font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 15px; }
+  .logo span { color: var(--sky); font-weight: 600; }
+  .nav-links { display: flex; gap: 26px; list-style: none; font-size: 13px; color: var(--text-2); }
+  .nav-links a { color: inherit; text-decoration: none; }
+  .nav-cta { font-size: 13px; color: var(--sky); }
+
+  header.hero { position: relative; padding: 120px 28px 90px; max-width: 680px; margin: 0 auto; text-align: center; }
+  .glow {
+    position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+    width: 520px; height: 320px; background: radial-gradient(ellipse, rgba(56,189,248,0.16) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  header.hero > * { position: relative; z-index: 1; }
+
+  .eyebrow { font-size: 13px; color: var(--text-2); margin-bottom: 28px; }
+  .eyebrow strong { color: var(--sky); font-weight: 500; }
+
+  h1.hero-title {
+    font-family: 'Inter Tight', sans-serif; font-weight: 500;
+    font-size: clamp(32px, 5vw, 44px); line-height: 1.25; letter-spacing: -0.01em;
+    margin-bottom: 28px;
+  }
+  h1.hero-title .accent { color: var(--sky); }
+
+  p.hero-sub { font-size: 16.5px; color: var(--text-2); line-height: 1.75; max-width: 480px; margin: 0 auto 40px; }
+
+  .hero-ctas { display: flex; gap: 16px; justify-content: center; margin-bottom: 64px; }
+  .btn-primary { background: var(--sky); color: #000; font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 14px; padding: 13px 26px; border-radius: 100px; text-decoration: none; }
+  .btn-ghost { border: 1px solid var(--dot); color: var(--text); font-size: 14px; padding: 13px 26px; border-radius: 100px; text-decoration: none; }
+
+  .stats-row { display: flex; justify-content: center; gap: 48px; }
+  .stat-num { font-family: 'Inter Tight', sans-serif; font-weight: 500; font-size: 22px; }
+  .stat-label { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+
+  section.services { max-width: 680px; margin: 0 auto; padding: 70px 28px 120px; border-top: 1px dotted var(--dot); }
+  .services-head { text-align: center; margin-bottom: 48px; }
+  .services-eyebrow { font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
+  h2.services-title { font-family: 'Inter Tight', sans-serif; font-weight: 500; font-size: 26px; margin-bottom: 12px; }
+  .services-sub { font-size: 14.5px; color: var(--text-2); max-width: 420px; margin: 0 auto; line-height: 1.6; }
+
+  .service-list { list-style: none; }
+  .service-item { padding: 28px 0; border-bottom: 1px dotted var(--dot); }
+  .service-item:last-child { border-bottom: none; }
+  .service-name { font-family: 'Inter Tight', sans-serif; font-weight: 500; font-size: 17px; margin-bottom: 8px; }
+  .service-name .dot { color: var(--sky); margin-right: 8px; }
+  .service-desc { font-size: 14.5px; color: var(--text-2); line-height: 1.7; max-width: 540px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Local<span>Eyes</span></div>
+  <ul class="nav-links">
+    <li>Home</li><li>Services</li><li>About</li>
+  </ul>
+  <div class="nav-cta">Book a Call</div>
+</nav>
+
+<header class="hero">
+  <div class="glow"></div>
+  <div class="eyebrow"><strong>Est. 2025</strong> &middot; Full-Service Growth Agency</div>
+  <h1 class="hero-title">Ads, content, and creative production <span class="accent">under one roof.</span></h1>
+  <p class="hero-sub">Meta, Google, TikTok &amp; YouTube campaigns. Real content creators. AI video and 3D virtual staging at scale. One team, one dashboard, built to convert.</p>
+  <div class="hero-ctas">
+    <a href="#" class="btn-primary">Book a Call</a>
+    <a href="#" class="btn-ghost">See Our Services</a>
+  </div>
+  <div class="stats-row">
+    <div><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+    <div><div class="stat-num">3.2x</div><div class="stat-label">Avg. ROAS</div></div>
+    <div><div class="stat-num">48hr</div><div class="stat-label">Brief to live</div></div>
+  </div>
+</header>
+
+<section class="services">
+  <div class="services-head">
+    <div class="services-eyebrow">What We Do</div>
+    <h2 class="services-title">Seven services. One accountable team.</h2>
+    <p class="services-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
+  </div>
+
+  <ul class="service-list">
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>Paid Ads Management</div><div class="service-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>Content Creation</div><div class="service-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>AI Video Generation</div><div class="service-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>Creative Strategy</div><div class="service-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>Content Packages</div><div class="service-desc">Bundled content creation + AI video + ad copy delivered monthly. Recurring and predictable for clients.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>Analytics &amp; Reporting</div><div class="service-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</div></li>
+    <li class="service-item"><div class="service-name"><span class="dot">&#9679;</span>3D Virtual Staging</div><div class="service-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</div></li>
+  </ul>
+</section>
+
+</body>
+</html>

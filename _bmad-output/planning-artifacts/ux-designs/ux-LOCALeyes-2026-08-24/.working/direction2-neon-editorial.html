@@ -1,0 +1,130 @@
+<!--
+DIRECTION: Neon Editorial (saturated gradient type / duotone glow)
+
+Rationale: The headline itself carries the color -- a rich cyan-to-violet gradient clipped into
+the accent words, sitting over a faint technical grid and one large saturated color bloom. Icon
+badges are filled gradient discs, not outlines. This is "look good" as a bold, editorial-poster
+statement -- color as the headline's texture, not a background accent.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Direction: Neon Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #060608; --sky: #38BDF8; --sky-light: #7DD3FC; --violet: #A78BFA; --text: #F5F3EE; --text-2: #8C8A82; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(ellipse 900px 500px at 30% 0%, rgba(56,189,248,0.22), transparent 65%),
+      radial-gradient(ellipse 700px 500px at 90% 20%, rgba(167,139,250,0.16), transparent 60%),
+      linear-gradient(var(--bg), var(--bg));
+    background-color: var(--bg);
+    color: var(--text); font-family: 'DM Sans', sans-serif; position: relative;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5;
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  nav { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 26px 56px; }
+  .logo { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 19px; }
+  .logo span { background: linear-gradient(90deg, var(--sky-light), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .nav-links { display: flex; gap: 28px; list-style: none; }
+  .nav-links a { color: var(--text-2); text-decoration: none; font-size: 14px; font-weight: 500; }
+  .nav-cta { background: var(--text); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; }
+
+  main { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; padding: 90px 40px 60px; text-align: center; }
+  .eyebrow {
+    display: inline-block; font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    background: linear-gradient(90deg, var(--sky-light), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-family: 'Inter Tight', sans-serif; font-weight: 900; font-size: clamp(44px,6vw,72px);
+    line-height: 1.02; letter-spacing: -2px; margin-bottom: 26px;
+  }
+  h1 .accent {
+    background: linear-gradient(100deg, var(--sky-light) 10%, var(--sky) 45%, var(--violet) 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 30px rgba(56,189,248,0.35));
+  }
+  .sub { font-size: 17.5px; line-height: 1.65; color: var(--text-2); max-width: 540px; margin: 0 auto 38px; }
+  .ctas { display: flex; gap: 14px; justify-content: center; margin-bottom: 54px; }
+  .btn-primary {
+    background: linear-gradient(100deg, var(--sky), var(--violet)); color: #05070a; font-weight: 800;
+    padding: 16px 32px; border-radius: 100px; text-decoration: none; font-size: 15px;
+    box-shadow: 0 14px 40px rgba(56,189,248,0.3);
+  }
+  .btn-ghost { color: var(--text); font-weight: 700; padding: 16px 30px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.16); text-decoration: none; font-size: 15px; }
+  .stats-row { display: flex; gap: 50px; justify-content: center; }
+  .stat-num { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 28px; }
+  .stat-label { font-size: 12.5px; color: var(--text-2); margin-top: 4px; }
+
+  .services-section { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 40px 40px 110px; }
+  .sh { text-align: center; margin-bottom: 46px; }
+  .sh-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-light); margin-bottom: 12px; }
+  h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: clamp(26px,3vw,34px); letter-spacing: -0.8px; margin-bottom: 10px; }
+  .sh-sub { color: var(--text-2); font-size: 14.5px; max-width: 420px; margin: 0 auto; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .service-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 18px; padding: 28px 22px;
+    text-align: left;
+  }
+  .service-icon {
+    width: 46px; height: 46px; border-radius: 50%; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; font-size: 19px;
+    background: linear-gradient(135deg, var(--sky), var(--violet)); box-shadow: 0 8px 24px rgba(56,189,248,0.3);
+  }
+  .service-name { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+  .service-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Local<span>Eyes</span></div>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Services</a></li>
+    <li><a href="#">Case Studies</a></li>
+    <li><a href="#">Content Creation &amp; AI Video</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Book a Call</a>
+</nav>
+
+<main>
+  <div class="eyebrow">Est. 2025 &middot; Full-Service Growth Agency</div>
+  <h1>Ads, content, and creative production <span class="accent">under one roof.</span></h1>
+  <p class="sub">Meta, Google, TikTok &amp; YouTube campaigns. Real content creators. AI video and 3D virtual staging at scale. One team, one dashboard, built to convert.</p>
+  <div class="ctas">
+    <a href="#" class="btn-primary">Book a Call</a>
+    <a href="#" class="btn-ghost">See Our Services</a>
+  </div>
+  <div class="stats-row">
+    <div><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+    <div><div class="stat-num">3.2x</div><div class="stat-label">Avg. return on ad spend</div></div>
+    <div><div class="stat-num">48hr</div><div class="stat-label">Brief to live campaign</div></div>
+  </div>
+</main>
+
+<section class="services-section">
+  <div class="sh">
+    <div class="sh-eyebrow">What We Do</div>
+    <h2>Seven services. One accountable team.</h2>
+    <p class="sh-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card"><div class="service-icon">⚡</div><div class="service-name">Paid Ads Management</div><div class="service-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</div></div>
+    <div class="service-card"><div class="service-icon">🎬</div><div class="service-name">Content Creation</div><div class="service-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</div></div>
+    <div class="service-card"><div class="service-icon">✨</div><div class="service-name">AI Video Generation</div><div class="service-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</div></div>
+    <div class="service-card"><div class="service-icon">🧠</div><div class="service-name">Creative Strategy</div><div class="service-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</div></div>
+    <div class="service-card"><div class="service-icon">📦</div><div class="service-name">Content Packages</div><div class="service-desc">Bundled content creation + AI video + ad copy delivered monthly. Recurring and predictable for clients.</div></div>
+    <div class="service-card"><div class="service-icon">📊</div><div class="service-name">Analytics &amp; Reporting</div><div class="service-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</div></div>
+    <div class="service-card"><div class="service-icon">🏠</div><div class="service-name">3D Virtual Staging</div><div class="service-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</div></div>
+  </div>
+</section>
+</body>
+</html>

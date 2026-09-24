@@ -1,0 +1,154 @@
+<!--
+DIRECTION: Quiet Confidence (Swiss / editorial minimal)
+
+Rationale: Strips almost every ornament the current site leans on — no glow, no
+card borders, no icon boxes — and replaces visual noise with typographic
+hierarchy and a strict left-aligned grid. "Minimalist but informative" here
+means: the same facts survive (all 3 stats, all 7 services, every one-line
+description) but they're carried by scale and spacing rather than containers.
+The accent blue is rationed to exactly three places (the eyebrow rule, the H1
+span, the CTA) so it reads as a considered mark, not a wash. Services become a
+numbered index rather than a card grid — closer to a magazine contents page
+than a SaaS feature grid, which is the biggest structural break from "generic
+agency template."
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Direction: Quiet Confidence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000000;
+    --text: #F5F3EE;
+    --text-2: #8C8A82;
+    --sky: #38BDF8;
+    --rule: rgba(245,243,238,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 28px 32px; max-width: 1040px; margin: 0 auto;
+    border-bottom: 1px solid var(--rule);
+  }
+  .logo { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
+  .logo span { color: var(--sky); }
+  .nav-links { display: flex; gap: 36px; list-style: none; font-size: 13px; color: var(--text-2); }
+  .nav-links a { color: inherit; text-decoration: none; }
+  .nav-cta { color: var(--text); border: 1px solid var(--rule); padding: 8px 16px; border-radius: 2px; font-size: 12.5px; }
+
+  header.hero { padding: 120px 32px 100px; max-width: 1040px; margin: 0 auto; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-2);
+    margin-bottom: 32px;
+  }
+  .eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--sky); }
+
+  h1.hero-title {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    max-width: 780px;
+    margin-bottom: 36px;
+  }
+  h1.hero-title .accent { color: var(--sky); font-weight: 600; }
+
+  p.hero-sub {
+    font-size: 18px; font-weight: 300; color: var(--text-2);
+    max-width: 540px; line-height: 1.6; margin-bottom: 48px;
+  }
+
+  .hero-ctas { display: flex; gap: 28px; align-items: center; margin-bottom: 96px; }
+  .btn-primary {
+    background: var(--text); color: #000; font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 14px; padding: 14px 28px; text-decoration: none;
+  }
+  .btn-ghost {
+    color: var(--text); font-size: 14px; text-decoration: none;
+    border-bottom: 1px solid var(--rule); padding-bottom: 2px;
+  }
+
+  .stats-row { display: flex; gap: 64px; padding-top: 40px; border-top: 1px solid var(--rule); }
+  .stat-num { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 28px; }
+  .stat-label { font-size: 12.5px; color: var(--text-2); margin-top: 6px; }
+
+  section.services { padding: 0 32px 140px; max-width: 1040px; margin: 0 auto; }
+  .services-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 56px; padding-top: 90px; border-top: 1px solid var(--rule); }
+  .services-eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-2); margin-bottom: 14px; }
+  h2.services-title { font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 30px; max-width: 420px; }
+  .services-sub { font-size: 14px; color: var(--text-2); max-width: 280px; text-align: right; }
+
+  .service-index { list-style: none; }
+  .service-row {
+    display: grid; grid-template-columns: 56px 1fr 1fr; gap: 24px;
+    padding: 28px 0; border-top: 1px solid var(--rule); align-items: baseline;
+  }
+  .service-row:last-child { border-bottom: 1px solid var(--rule); }
+  .service-num { font-family: 'Inter Tight', sans-serif; font-size: 13px; color: var(--sky); font-weight: 600; }
+  .service-name { font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 17px; }
+  .service-desc { font-size: 14px; color: var(--text-2); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Local<span>Eyes</span></div>
+  <ul class="nav-links">
+    <li>Home</li><li>Services</li><li>Case Studies</li><li>Content &amp; AI Video</li><li>About</li>
+  </ul>
+  <div class="nav-cta">Book a Call</div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Est. 2025 &middot; Full-Service Growth Agency</div>
+  <h1 class="hero-title">Ads, content, and creative production <span class="accent">under one roof.</span></h1>
+  <p class="hero-sub">Meta, Google, TikTok &amp; YouTube campaigns. Real content creators. AI video and 3D virtual staging at scale. One team, one dashboard, built to convert.</p>
+  <div class="hero-ctas">
+    <a href="#" class="btn-primary">Book a Call</a>
+    <a href="#" class="btn-ghost">See Our Services</a>
+  </div>
+  <div class="stats-row">
+    <div><div class="stat-num">200+</div><div class="stat-label">Businesses served</div></div>
+    <div><div class="stat-num">3.2x</div><div class="stat-label">Average return on ad spend</div></div>
+    <div><div class="stat-num">48hr</div><div class="stat-label">Brief to live campaign</div></div>
+  </div>
+</header>
+
+<section class="services">
+  <div class="services-head">
+    <div>
+      <div class="services-eyebrow">What We Do</div>
+      <h2 class="services-title">Seven services. One accountable team.</h2>
+    </div>
+    <p class="services-sub">Mix and match, or hand us the whole thing — every service is built to work together.</p>
+  </div>
+
+  <ul class="service-index">
+    <li class="service-row"><span class="service-num">01</span><span class="service-name">Paid Ads Management</span><span class="service-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</span></li>
+    <li class="service-row"><span class="service-num">02</span><span class="service-name">Content Creation</span><span class="service-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</span></li>
+    <li class="service-row"><span class="service-num">03</span><span class="service-name">AI Video Generation</span><span class="service-desc">Fast, affordable ad creatives using Higgsfield — great for volume without a big production budget.</span></li>
+    <li class="service-row"><span class="service-num">04</span><span class="service-name">Creative Strategy</span><span class="service-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</span></li>
+    <li class="service-row"><span class="service-num">05</span><span class="service-name">Content Packages</span><span class="service-desc">Bundled content creation + AI video + ad copy delivered monthly. Recurring and predictable for clients.</span></li>
+    <li class="service-row"><span class="service-num">06</span><span class="service-name">Analytics &amp; Reporting</span><span class="service-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</span></li>
+    <li class="service-row"><span class="service-num">07</span><span class="service-name">3D Virtual Staging</span><span class="service-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</span></li>
+  </ul>
+</section>
+
+</body>
+</html>
