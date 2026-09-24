@@ -1509,54 +1509,6 @@
   // after a long upload that the storage API rejects.
   const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
-  /* ── Server-side video converter (Vercel API) ── */
-  // Uploads the original file to a temp path, then calls the serverless
-  // function to convert to MP4. Falls back to direct upload if the API
-  // is unreachable (local dev).
-  const CONVERT_API = '/api/convert-video';
-
-  async function uploadAndConvert(rawFile, label) {
-    // Upload original to a temp path
-    var ext = (rawFile.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
-    var tmpPath = 'tmp/' + crypto.randomUUID() + '.' + ext;
-    var { error: tmpErr } = await client.storage.from('content-videos').upload(tmpPath, rawFile, {
-      contentType: rawFile.type || 'video/quicktime',
-      upsert: false,
-    });
-    if (tmpErr) throw tmpErr;
-
-    // Try the API conversion
-    try {
-      var resp = await fetch(CONVERT_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storagePath: tmpPath, label: label || null }),
-      });
-      if (!resp.ok) throw new Error('API returned ' + resp.status);
-      var result = await resp.json();
-      return result; // { videoUrl, id }
-    } catch (apiErr) {
-      // API unreachable (local dev) — upload the original as-is
-      console.warn('Convert API unavailable, uploading original format:', apiErr);
-      // Move from tmp to final video path
-      var finalPath = 'video/' + crypto.randomUUID() + '.' + ext;
-      var { data: moved } = await client.storage.from('content-videos').move(tmpPath, finalPath);
-      if (!moved) {
-        // move failed — re-upload
-        var { data: dl } = await client.storage.from('content-videos').download(tmpPath);
-        if (!dl) throw new Error('could not recover original file');
-        var buf = await dl.arrayBuffer();
-        await client.storage.from('content-videos').upload(finalPath, new File([buf], rawFile.name), {
-          contentType: rawFile.type || 'video/mp4',
-          upsert: false,
-        });
-      }
-      client.storage.from('content-videos').remove([tmpPath]);
-      var { data: pub } = client.storage.from('content-videos').getPublicUrl(finalPath);
-      return { videoUrl: pub.publicUrl, id: null, note: 'original-format' };
-    }
-  }
-
   let allContentVideos = [];
   // Serialises the display_order writes fired by the reorder arrows.
   let orderWriteChain = Promise.resolve();
@@ -1818,14 +1770,14 @@
     e.preventDefault();
     addVideoStatus.textContent = '';
     addVideoStatus.style.color = '';
-    var rawVideoFile = addVideoFile.files[0];
+    const videoFile = addVideoFile.files[0];
     const posterFile = addVideoPoster.files[0];
-    if (!rawVideoFile) {
+    if (!videoFile) {
       addVideoStatus.textContent = 'Pick a video file.';
       return;
     }
-    if (rawVideoFile.size > MAX_VIDEO_BYTES) {
-      const mb = (rawVideoFile.size / 1024 / 1024).toFixed(1);
+    if (videoFile.size > MAX_VIDEO_BYTES) {
+      const mb = (videoFile.size / 1024 / 1024).toFixed(1);
       addVideoStatus.textContent = `That video is ${mb}MB — the limit is 50MB. Compress it or trim it shorter and try again.`;
       return;
     }
@@ -1833,28 +1785,22 @@
     addVideoSubmitBtn.disabled = true;
     addVideoSubmitBtn.textContent = 'Uploading\u2026';
     try {
-      var label = addVideoLabel.value.trim() || null;
-      var result = await uploadAndConvert(rawVideoFile, label);
-      var videoUrl = result.videoUrl;
-
-      // Upload poster if provided
-      var posterUrl = null;
-      if (posterFile) {
-        posterUrl = await uploadVideoFile(posterFile, 'poster');
-      }
-
-      // If the API handled the DB insert, skip it here
-      if (!result.id) {
-        var nextOrder = allContentVideos.reduce(function (max, v) { return Math.max(max, v.display_order || 0); }, -1) + 1;
-        var { error: insertErr } = await client.from('content_videos').insert([{
-          label: label,
-          video_url: videoUrl,
-          poster_url: posterUrl,
-          display_order: nextOrder,
-        }]);
-        if (insertErr) throw insertErr;
-      }
-
+      // Videos are large, so the poster (if any) uploads alongside rather than
+      // after — same parallel pattern as the staging before/after pair.
+      const [videoUrl, posterUrl] = await Promise.all([
+        uploadVideoFile(videoFile, 'video'),
+        posterFile ? uploadVideoFile(posterFile, 'poster') : Promise.resolve(null),
+      ]);
+      // Land new uploads at the end of the gallery. Defaulting display_order
+      // to 0 would push every new video ahead of the ones already ordered.
+      const nextOrder = allContentVideos.reduce((max, v) => Math.max(max, v.display_order || 0), -1) + 1;
+      const { error } = await client.from('content_videos').insert([{
+        label: addVideoLabel.value.trim() || null,
+        video_url: videoUrl,
+        poster_url: posterUrl,
+        display_order: nextOrder,
+      }]);
+      if (error) throw error;
       addVideoStatus.textContent = 'Uploaded. Toggle it to Published to show it on the site.';
       addVideoStatus.style.color = 'var(--sky)';
       addVideoForm.reset();
