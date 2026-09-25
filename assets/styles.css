@@ -1546,6 +1546,15 @@ footer {
   .nav-links a.btn { display: inline-flex; padding: 13px 22px; }
 }
 
+/* ── PHONE-SIZE TWEAKS ── */
+@media (max-width: 480px) {
+  .page-hero { padding: 100px 20px 60px; }
+  .page-hero-title { font-size: 26px; letter-spacing: -1.2px; margin-bottom: 14px; }
+  .page-hero-sub { font-size: 14px; line-height: 1.5; }
+  .back-link { font-size: 12px; margin-bottom: 14px; }
+  .video-gallery { grid-template-columns: 1fr; }
+}
+
 /* ── STICKY MOBILE CTA BAR ── */
 .mobile-cta-bar {
   display: none;
