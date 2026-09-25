@@ -2,13 +2,19 @@
 (function () {
   var link = document.createElement('a');
   link.className = 'skip-link';
-  link.href = '#main-content';
   link.textContent = 'Skip to content';
   document.body.insertBefore(link, document.body.firstChild);
 
+  // Point the skip link at the first section's existing id (e.g. #hero) so
+  // we never overwrite an id that CSS/JS elsewhere already keys off of.
+  // Only assign the generic "main-content" id as a fallback when the
+  // section has no id of its own.
   var firstSection = document.querySelector('section');
-  if (firstSection && !document.getElementById('main-content')) {
-    firstSection.id = 'main-content';
+  if (firstSection) {
+    if (!firstSection.id) firstSection.id = 'main-content';
+    link.href = '#' + firstSection.id;
+  } else {
+    link.href = '#main-content';
   }
 })();
 
