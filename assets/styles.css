@@ -1674,3 +1674,73 @@ footer {
   .marquee-track { animation: none; }
   .hero-logo-glow { animation: none; opacity: 0.1; }
 }
+
+/* ── EDITORIAL LAYOUT ──
+   Nothing sits dead-centre. Page heroes put the headline on the left and
+   the summary in a narrow right-hand column, bottom-aligned to the title
+   (same move as the homepage intro). Section headers use that split too,
+   and alternate sides down the page so each page reads as a zigzag. CTAs
+   put the question left and the button right. */
+:root { --side-col: clamp(330px, 22.9167vw, 594px); --split-gap: clamp(48px, 3.3333vw, 86.4px); }
+
+.page-hero {
+  text-align: left;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--side-col));
+  column-gap: var(--split-gap);
+  align-items: end;
+}
+.page-hero > * { grid-column: 1; }
+.page-hero > br { display: none; }
+.page-hero-eyebrow, .page-hero .back-link { justify-self: start; margin-bottom: clamp(24px, 1.6667vw, 43.2px); }
+.page-hero-title { margin: 0; max-width: none; }
+.page-hero-sub {
+  grid-column: 2; grid-row: 1 / span 3; align-self: end;
+  margin: 0; font-size: clamp(16px, 1.1111vw, 28.8px);
+}
+
+.section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--side-col));
+  column-gap: var(--split-gap);
+  align-items: end;
+}
+.section-header > * { grid-column: 1; }
+.section-header .section-title { margin-bottom: 0; }
+.section-header .section-sub { grid-column: 2; grid-row: 1 / span 2; align-self: end; max-width: none; }
+/* Every other section flips: summary on the left, title pushed right. */
+section:nth-of-type(odd):not(:first-of-type) > .section-header {
+  grid-template-columns: minmax(0, var(--side-col)) minmax(0, 1fr);
+}
+section:nth-of-type(odd):not(:first-of-type) > .section-header > * { grid-column: 2; }
+section:nth-of-type(odd):not(:first-of-type) > .section-header .section-sub { grid-column: 1; }
+
+#cta, .cta-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--split-gap);
+  align-items: end;
+  max-width: none;
+  padding: clamp(96px, 6.6667vw, 172.8px) var(--page-x);
+  border-top: 1px solid var(--border);
+}
+#cta > *, .cta-section > * { grid-column: 1; }
+.cta-sub { margin-bottom: 0; }
+/* Id-qualified so it outranks `#cta > *` above. */
+#cta > .cta-ctas, #cta > .cta-form,
+.cta-section > .cta-ctas, .cta-section > .cta-form { grid-column: 2; grid-row: 1 / span 2; align-self: end; justify-content: flex-end; }
+
+.case-filter-bar { justify-content: flex-start; }
+
+@media (max-width: 860px) {
+  .page-hero, .section-header,
+  section:nth-of-type(odd):not(:first-of-type) > .section-header,
+  #cta, .cta-section { grid-template-columns: minmax(0, 1fr); }
+  .page-hero > *, .section-header > *, .section-header .section-sub,
+  section:nth-of-type(odd):not(:first-of-type) > .section-header > *,
+  #cta > *, .cta-section > *, #cta > .cta-ctas, #cta > .cta-form,
+  .cta-section > .cta-ctas, .cta-section > .cta-form { grid-column: 1; grid-row: auto; }
+  .page-hero-sub, .section-header .section-sub { margin-top: 20px; }
+  #cta > .cta-ctas, #cta > .cta-form,
+  .cta-section > .cta-ctas, .cta-section > .cta-form { margin-top: 32px; justify-content: flex-start; }
+}
