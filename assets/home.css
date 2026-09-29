@@ -120,6 +120,19 @@ body.home .nav-toggle::after { background: var(--ink); }
 /* ── INTRO ── */
 #intro { padding-top: 220px; padding-bottom: 140px; align-items: start; }
 #intro .h-aside { padding-top: 14px; }
+/* The slow-pulsing logo from the old hero (.hero-logo-glow in styles.css).
+   isolation keeps its z-index:-1 above the page background but behind the
+   intro text; it's absolutely positioned, so it takes no grid cell. */
+#intro { position: relative; isolation: isolate; }
+#intro .hero-logo-glow {
+  --glow-w: min(clamp(700px, 43.75vw, 980px), 100vw);
+  /* The pulse keyframes centre it with translate(-50%, -50%), so `top` is its
+     centre: half its height (logo is ~0.94 as tall as wide) plus room for the
+     nav, so the top of the mark isn't hidden behind the solid header. */
+  top: calc(var(--glow-w) * 0.47 + 100px);
+  z-index: -1;
+  width: var(--glow-w);
+}
 #intro .h-lead { font-size: clamp(17px, 1.0625vw, 23.8px); line-height: 1.5; color: var(--ink); margin-bottom: 12px; }
 
 

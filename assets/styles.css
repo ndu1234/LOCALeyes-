@@ -1671,5 +1671,5 @@ footer {
   .reveal, .tier, .service-card, .testimonial, .case-card, .price-card { opacity: 1; transform: none; transition: none !important; }
   .step-slide { transition: none !important; }
   .marquee-track { animation: none; }
-  .hero-logo-glow { animation: none; opacity: 0.45; }
+  .hero-logo-glow { animation: none; opacity: 0.1; }
 }
