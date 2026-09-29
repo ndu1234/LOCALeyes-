@@ -27,11 +27,44 @@
     }
     .lp-topbar .logo { font-size: clamp(18px, 1.25vw, 32.4px); }
 
+    /* Copy on the left, the promo video on the right. On phones it stacks
+       with the video straight under the headline, so it's seen before any
+       scrolling. */
     .lp-hero {
-      max-width: clamp(720px, 50vw, 1296px); margin: 0 auto;
-      padding: clamp(64px, 10vw, 120px) clamp(20px, 5vw, 64px) clamp(56px, 3.8889vw, 100.8px);
-      text-align: center;
+      max-width: clamp(1100px, 76.3889vw, 1980px); margin: 0 auto;
+      padding: clamp(64px, 8vw, 120px) clamp(20px, 5vw, 64px) clamp(56px, 3.8889vw, 100.8px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(300px, 22.2222vw, 576px);
+      grid-template-areas: "badge video" "title video" "sub video" "ctas video" "note video";
+      grid-template-rows: auto auto auto auto 1fr;
+      column-gap: clamp(48px, 5vw, 128px);
+      align-items: start;
+      text-align: left;
       position: relative;
+    }
+    .lp-badge { grid-area: badge; justify-self: start; }
+    .lp-hero h1 { grid-area: title; }
+    .lp-hero-sub { grid-area: sub; }
+    .lp-hero-ctas { grid-area: ctas; }
+    .lp-hero-note { grid-area: note; }
+    .lp-video {
+      grid-area: video; align-self: center;
+      width: 100%; aspect-ratio: 9 / 16; display: block;
+      border-radius: clamp(20px, 1.3889vw, 36px);
+      border: 1px solid var(--border-2);
+      background: #050709 center / cover no-repeat;
+      object-fit: cover;
+    }
+    @media (max-width: 860px) {
+      .lp-hero {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "badge" "title" "video" "sub" "ctas" "note";
+        grid-template-rows: none;
+        text-align: center;
+      }
+      .lp-badge { justify-self: center; }
+      .lp-video { width: min(64vw, 300px); justify-self: center; margin: 8px 0 32px; }
+      .lp-hero-ctas { justify-content: center; }
     }
     .lp-badge {
       display: inline-flex; align-items: center; gap: clamp(7px, 0.4861vw, 12.6px);
@@ -53,9 +86,9 @@
     .lp-hero h1 .accent { color: var(--sky); }
     .lp-hero-sub {
       font-size: clamp(16px, 2vw, 19px); color: var(--text-2);
-      line-height: 1.65; max-width: clamp(560px, 38.8889vw, 1008px); margin: 0 auto clamp(34px, 2.3611vw, 61.2px);
+      line-height: 1.65; max-width: clamp(560px, 38.8889vw, 1008px); margin: 0 0 clamp(34px, 2.3611vw, 61.2px);
     }
-    .lp-hero-ctas { display: flex; gap: clamp(14px, 0.9722vw, 25.2px); justify-content: center; flex-wrap: wrap; margin-bottom: clamp(12px, 0.8333vw, 21.6px); }
+    .lp-hero-ctas { display: flex; gap: clamp(14px, 0.9722vw, 25.2px); justify-content: flex-start; flex-wrap: wrap; margin-bottom: clamp(12px, 0.8333vw, 21.6px); }
     .lp-hero-note { font-size: clamp(13px, 0.9028vw, 23.4px); color: var(--text-2); }
 
     .lp-stats {
@@ -123,6 +156,8 @@
     <a href="services/" class="btn btn-ghost">See What We Do</a>
   </div>
   <p class="lp-hero-note">No pressure, no sales script — just a real plan.</p>
+  <video class="lp-video" src="videos/localeyes-promo.mp4" poster="assets/promo-poster.jpg"
+         muted loop playsinline preload="metadata" aria-label="LocalEyes: every ad tracked, every lead counted"></video>
 </section>
 
 <!-- TRUST STRIP -->
@@ -196,5 +231,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/lead-form.js"></script>
+<script src="assets/promo-video.js"></script>
 </body>
 </html>

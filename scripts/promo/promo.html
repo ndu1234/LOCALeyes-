@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LocalEyes Promo</title>
+<!--
+  LocalEyes promo — 12.6s vertical (1080×1920) "blueprint HUD" motion piece.
+
+  Everything is a pure function of time: render(t) sets every element from t,
+  so the same file previews live in a browser and renders frame-exact to MP4
+  (scripts/promo/render.mjs calls window.renderAt(t) per frame).
+
+  Preview:  bash scripts/serve.sh  →  http://localhost:8080/scripts/promo/promo.html
+  Render:   node scripts/promo/render.mjs
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body { display: grid; place-items: center; }
+  #stage { width: 1080px; height: 1920px; transform-origin: center; }
+  body.render #stage { transform: none !important; }
+  svg { display: block; }
+  .mono { font-family: Menlo, 'SF Mono', 'Courier New', monospace; }
+  .serif { font-family: 'Times New Roman', Times, serif; }
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="svg" width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60 0H0V60" fill="none" stroke="#38BDF8" stroke-width="1" />
+    </pattern>
+    <radialGradient id="vignette" cx="50%" cy="46%" r="70%">
+      <stop offset="55%" stop-color="#000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000" stop-opacity="0.7" />
+    </radialGradient>
+    <radialGradient id="spot" cx="50%" cy="44%" r="55%">
+      <stop offset="0%" stop-color="#16222c" />
+      <stop offset="100%" stop-color="#050709" />
+    </radialGradient>
+    <linearGradient id="adImg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="55%" stop-color="#0b3a55" />
+      <stop offset="100%" stop-color="#05121b" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18" result="b" />
+      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+  </defs>
+
+  <!-- BACKDROP -->
+  <rect width="1080" height="1920" fill="url(#spot)" />
+  <rect id="grid-layer" width="1080" height="1920" fill="url(#grid)" opacity="0" />
+
+  <!-- CAMERA: everything in the scene pushes in slowly -->
+  <g id="camera">
+    <!-- top label -->
+    <g id="overview" opacity="0">
+      <text x="120" y="330" class="mono" font-size="26" fill="#cfe9f7" letter-spacing="4">CAMPAIGN OVERVIEW</text>
+      <path id="overview-line" d="M120 350H720" stroke="#38BDF8" stroke-width="2" pathLength="1" fill="none" />
+      <text x="120" y="392" class="mono" font-size="20" fill="#5b7384" letter-spacing="3">META · GOOGLE · TIKTOK · YOUTUBE</text>
+    </g>
+
+    <!-- blueprint frame around the phone -->
+    <path id="frame" d="M250 440H830V1400H250Z" fill="none" stroke="#38BDF8" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="1" pathLength="1" />
+    <g id="corners" stroke="#38BDF8" stroke-width="3" fill="none" opacity="0">
+      <path d="M230 470V420H280" /><path d="M800 420H850V470" />
+      <path d="M230 1370V1420H280" /><path d="M800 1420H850V1370" />
+    </g>
+
+    <!-- PHONE -->
+    <g id="phone">
+      <rect x="-210" y="-430" width="420" height="860" rx="62" fill="#0b0e11" stroke="#2a3a46" stroke-width="3" />
+      <rect id="phone-rim" x="-210" y="-430" width="420" height="860" rx="62" fill="none" stroke="#38BDF8" stroke-width="3" opacity="0" />
+      <rect x="-192" y="-412" width="384" height="824" rx="46" fill="#04070a" />
+      <rect x="-50" y="-398" width="100" height="26" rx="13" fill="#0b0e11" />
+      <!-- ad on screen -->
+      <g id="ad">
+        <text x="-160" y="-330" class="mono" font-size="18" fill="#7f96a6">Sponsored</text>
+        <rect x="-160" y="-310" width="320" height="330" rx="18" fill="url(#adImg)" />
+        <circle id="ad-sun" cx="60" cy="-210" r="46" fill="#e6f6ff" opacity="0.85" />
+        <path d="M-160 -60L-60 -170L20 -90L80 -140L160 -40V2Q160 20 142 20H-142Q-160 20 -160 2Z" fill="#04121b" opacity="0.8" />
+        <rect id="ad-l1" x="-160" y="50" width="300" height="22" rx="6" fill="#e8eef2" />
+        <rect id="ad-l2" x="-160" y="86" width="230" height="22" rx="6" fill="#e8eef2" />
+        <rect x="-160" y="130" width="280" height="14" rx="5" fill="#44525c" />
+        <rect x="-160" y="154" width="250" height="14" rx="5" fill="#44525c" />
+        <rect id="ad-cta" x="-160" y="210" width="320" height="64" rx="32" fill="#38BDF8" />
+        <text x="0" y="252" class="mono" font-size="24" fill="#041018" text-anchor="middle" font-weight="700">Book now</text>
+        <rect id="ad-scan" x="-192" y="-412" width="384" height="6" fill="#38BDF8" opacity="0" />
+      </g>
+    </g>
+
+    <!-- CALLOUTS (drawn on) -->
+    <g id="callouts" fill="none" stroke="#e6f6ff" stroke-width="2">
+      <g id="c-hook" opacity="0">
+        <circle cx="620" cy="700" r="7" fill="#38BDF8" stroke="none" />
+        <path class="draw" d="M620 700L700 620H900" pathLength="1" />
+        <text x="900" y="604" class="mono" font-size="28" fill="#38BDF8" stroke="none" text-anchor="end" letter-spacing="3">HOOK</text>
+        <text x="900" y="652" class="mono" font-size="18" fill="#7f96a6" stroke="none" text-anchor="end">first 2 seconds</text>
+      </g>
+      <g id="c-offer" opacity="0">
+        <circle cx="400" cy="945" r="7" fill="#38BDF8" stroke="none" />
+        <path class="draw" d="M400 945L320 1025H150" pathLength="1" />
+        <text x="150" y="1009" class="mono" font-size="28" fill="#38BDF8" stroke="none" letter-spacing="3">OFFER</text>
+        <text x="150" y="1057" class="mono" font-size="18" fill="#7f96a6" stroke="none">one clear promise</text>
+      </g>
+      <g id="c-cta" opacity="0">
+        <circle cx="690" cy="1140" r="7" fill="#38BDF8" stroke="none" />
+        <path class="draw" d="M690 1140L760 1210H930" pathLength="1" />
+        <text x="930" y="1194" class="mono" font-size="28" fill="#38BDF8" stroke="none" text-anchor="end" letter-spacing="3">CTA</text>
+        <text x="930" y="1242" class="mono" font-size="18" fill="#7f96a6" stroke="none" text-anchor="end">tracked to the lead</text>
+      </g>
+    </g>
+
+    <!-- LIVE PANEL -->
+    <g id="panel" opacity="0">
+      <rect x="50" y="470" width="170" height="330" fill="#071019" stroke="#38BDF8" stroke-opacity="0.5" stroke-width="2" />
+      <text x="70" y="512" class="mono" font-size="20" fill="#38BDF8" letter-spacing="2">LIVE</text>
+      <circle id="live-dot" cx="192" cy="505" r="7" fill="#4ADE80" />
+      <g id="bars" fill="#38BDF8">
+        <rect x="72" width="18" rx="3" /><rect x="98" width="18" rx="3" />
+        <rect x="124" width="18" rx="3" /><rect x="150" width="18" rx="3" />
+        <rect x="176" width="18" rx="3" />
+      </g>
+      <text x="70" y="790" class="mono" font-size="16" fill="#5b7384" letter-spacing="2">SPEND · LEADS</text>
+    </g>
+
+    <!-- RULER -->
+    <g id="ruler" opacity="0">
+      <path id="ruler-line" d="M150 1540H930" stroke="#e6f6ff" stroke-opacity="0.6" stroke-width="2" pathLength="1" fill="none" />
+      <g id="ticks" stroke="#e6f6ff" stroke-opacity="0.5" stroke-width="2"></g>
+      <text x="170" y="1600" class="mono" font-size="20" fill="#7f96a6" text-anchor="middle" letter-spacing="2">WEEK 1</text>
+      <text x="540" y="1600" class="mono" font-size="20" fill="#7f96a6" text-anchor="middle" letter-spacing="2">WEEK 4</text>
+      <text x="910" y="1600" class="mono" font-size="20" fill="#7f96a6" text-anchor="middle" letter-spacing="2">WEEK 12</text>
+      <path id="marker" d="M0 0L-14 -24H14Z" fill="#38BDF8" />
+      <path id="trend" d="M150 1500L230 1492L310 1496L390 1478L470 1470L550 1452L630 1446L710 1420L790 1404L870 1380L930 1366" fill="none" stroke="#38BDF8" stroke-width="3" pathLength="1" stroke-dasharray="1" />
+    </g>
+
+  </g>
+
+  <!-- TERMINAL ACT -->
+  <rect id="dim" width="1080" height="1920" fill="#000" opacity="0" />
+  <g id="sys" opacity="0" class="mono">
+    <text x="980" y="250" font-size="120" fill="#38BDF8" fill-opacity="0.08" text-anchor="end" letter-spacing="18">SYS·LIVE</text>
+    <text x="100" y="1690" font-size="22" fill="#5b7384" letter-spacing="2">CAMPAIGN.RUN    &gt;&gt;  OK</text>
+    <text x="100" y="1730" font-size="22" fill="#5b7384" letter-spacing="2">TRACKING.PX     &gt;&gt;  OK</text>
+    <text x="100" y="1770" font-size="22" fill="#5b7384" letter-spacing="2">REPORT.LIVE     &gt;&gt;  OK</text>
+  </g>
+  <g id="term" opacity="0">
+    <rect x="110" y="860" width="860" height="220" rx="16" fill="#0a1016" stroke="#243441" stroke-width="2" />
+    <path d="M110 918H970" stroke="#243441" stroke-width="2" />
+    <circle cx="146" cy="889" r="9" fill="#ff5f57" /><circle cx="176" cy="889" r="9" fill="#febc2e" /><circle cx="206" cy="889" r="9" fill="#28c840" />
+    <text x="540" y="897" class="mono" font-size="20" fill="#7f96a6" text-anchor="middle">localeyes — zsh</text>
+    <rect x="110" y="918" width="6" height="162" fill="#38BDF8" />
+    <text id="type" x="160" y="1012" class="mono" font-size="40" fill="#e6f6ff" xml:space="preserve"></text>
+    <rect id="caret" y="980" width="24" height="42" fill="#e6f6ff" />
+  </g>
+
+  <!-- END CARD -->
+  <g id="end" opacity="0">
+    <image id="logo" href="../../assets/logo.png" x="330" y="600" width="420" height="393" filter="url(#glow)" />
+    <text x="540" y="1200" class="serif" font-size="104" fill="#fff" text-anchor="middle" letter-spacing="8">LOCAL<tspan fill="#38BDF8">EYES</tspan></text>
+    <text id="tag" x="540" y="1290" class="mono" font-size="28" fill="#9fb3c1" text-anchor="middle" letter-spacing="4">MAKE YOUR BUSINESS UNDENIABLE</text>
+  </g>
+
+  <rect width="1080" height="1920" fill="url(#vignette)" pointer-events="none" />
+  <!-- BIG WORDS (above the vignette so they stay bright) -->
+  <text id="w1" x="120" y="1710" class="serif" font-size="132" fill="#fff" opacity="0"></text>
+  <text id="w2" x="960" y="1840" class="serif" font-size="132" fill="#38BDF8" font-style="italic" text-anchor="end" opacity="0"></text>
+  <rect id="fade" width="1080" height="1920" fill="#000" opacity="1" pointer-events="none" />
+</svg>
+</div>
+
+<script>
+const DURATION = 12.6;
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const out3 = x => 1 - Math.pow(1 - x, 3);
+const inOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const lerp = (a, b, x) => a + (b - a) * x;
+const draw = (el, p) => { el.style.strokeDasharray = 1; el.style.strokeDashoffset = 1 - p; };
+const set = (el, o) => { for (const k in o) el.setAttribute(k, o[k]); };
+
+// Ruler ticks, built once.
+const ticks = $('ticks');
+for (let i = 0; i <= 39; i++) {
+  const x = 150 + i * 20, major = i % 13 === 1 || i === 39;
+  const l = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  l.setAttribute('d', `M${x} 1540V${1540 - (major ? 26 : 12)}`);
+  ticks.appendChild(l);
+}
+const barRects = [...$('bars').children];
+const barTargets = [0.35, 0.5, 0.45, 0.72, 0.95];
+
+const LINE1 = '>> no one starts off great';
+const LINE2 = '>> we make you undeniable.';
+
+function typed(t) {
+  // type line 1, hold, backspace, type line 2, hold
+  if (t < 6.7) return '';
+  if (t < 8.1) return LINE1.slice(0, Math.floor(prog(t, 6.7, 8.0) * LINE1.length));
+  if (t < 8.5) return LINE1;
+  if (t < 8.8) return LINE1.slice(0, Math.ceil((1 - prog(t, 8.5, 8.8)) * LINE1.length));
+  if (t < 8.9) return '';
+  return LINE2.slice(0, Math.floor(prog(t, 8.9, 10.0) * LINE2.length));
+}
+
+function render(t) {
+  // ── backdrop + camera push
+  $('grid-layer').setAttribute('opacity', 0.07 * out3(prog(t, 0, 0.8)));
+  const push = lerp(1, 1.07, inOut(prog(t, 0, 6.4)));
+  const shake = t > 5.0 && t < 5.25 ? Math.sin(t * 90) * 6 : 0;
+  $('camera').setAttribute('transform', `translate(540 ${960 + shake}) scale(${push}) rotate(${lerp(-1.2, 0.8, prog(t, 0, 6.4))}) translate(-540 -960)`);
+
+  // ── phone: drops in rotated, settles, snaps to a new angle at the 5s cut
+  const pin = out3(prog(t, 0.2, 1.6));
+  let rot = lerp(-24, 0, pin), sc = lerp(1.25, 1, pin), py = lerp(980, 920, pin);
+  if (t >= 5.0) { const k = out3(prog(t, 5.0, 5.5)); rot = lerp(0, -7, k); sc = lerp(1.06, 1.02, k); }
+  $('phone').setAttribute('transform', `translate(540 ${py}) rotate(${rot}) scale(${sc})`);
+  $('phone').setAttribute('opacity', out3(prog(t, 0.1, 0.7)));
+  $('phone-rim').setAttribute('opacity', t >= 5.0 ? 0.9 * (1 - prog(t, 5.0, 6.2)) + 0.25 : 0);
+  // scan line sweeps the screen once the phone lands
+  const scan = prog(t, 1.4, 2.4);
+  set($('ad-scan'), { y: -412 + scan * 818, opacity: scan > 0 && scan < 1 ? 0.8 : 0 });
+  $('ad-cta').setAttribute('fill', t > 4.3 && t < 4.6 ? '#7DD3FC' : '#38BDF8');
+
+  // ── HUD
+  $('overview').setAttribute('opacity', out3(prog(t, 0.6, 1.1)));
+  draw($('overview-line'), out3(prog(t, 0.6, 1.5)));
+  draw($('frame'), inOut(prog(t, 0.5, 2.0)));
+  $('corners').setAttribute('opacity', prog(t, 1.6, 2.0));
+
+  [['c-hook', 1.7], ['c-offer', 2.2], ['c-cta', 2.7]].forEach(([id, s]) => {
+    const g = $(id);
+    g.setAttribute('opacity', prog(t, s, s + 0.15));
+    draw(g.querySelector('.draw'), out3(prog(t, s, s + 0.55)));
+  });
+
+  $('panel').setAttribute('opacity', out3(prog(t, 2.9, 3.3)));
+  barRects.forEach((r, i) => {
+    const h = 230 * barTargets[i] * out3(prog(t, 3.0 + i * 0.12, 3.8 + i * 0.12)) + 6 * Math.sin(t * 3 + i) * prog(t, 3.8, 4.2);
+    set(r, { y: 760 - h, height: Math.max(0, h) });
+  });
+  $('live-dot').setAttribute('opacity', 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * 6)));
+
+  $('ruler').setAttribute('opacity', prog(t, 1.2, 1.5));
+  draw($('ruler-line'), out3(prog(t, 1.2, 2.0)));
+  draw($('trend'), inOut(prog(t, 2.4, 4.6)));
+  const mk = inOut(prog(t, 2.4, 4.6));
+  $('marker').setAttribute('transform', `translate(${lerp(170, 910, mk)} 1532)`);
+
+  // ── big words: two beats, swapped at the 5s cut
+  const beat2 = t >= 5.0;
+  $('w1').textContent = beat2 ? 'Every lead,' : 'Every ad,';
+  $('w2').textContent = beat2 ? 'counted.' : 'tracked.';
+  const w1in = beat2 ? prog(t, 5.05, 5.35) : prog(t, 3.3, 3.6);
+  const w2in = beat2 ? prog(t, 5.5, 5.8) : prog(t, 3.8, 4.1);
+  const wout = 1 - prog(t, 6.1, 6.4);
+  $('w1').setAttribute('opacity', out3(w1in) * wout);
+  $('w2').setAttribute('opacity', out3(w2in) * wout);
+  $('w1').setAttribute('transform', `translate(${lerp(-40, 0, out3(w1in))} 0)`);
+  $('w2').setAttribute('transform', `translate(${lerp(40, 0, out3(w2in))} 0)`);
+
+  // ── terminal act
+  $('dim').setAttribute('opacity', 0.82 * inOut(prog(t, 6.1, 6.6)) + 0.18 * prog(t, 10.2, 10.6));
+  $('sys').setAttribute('opacity', out3(prog(t, 6.3, 6.8)) * (1 - prog(t, 10.1, 10.4)));
+  const termIn = out3(prog(t, 6.3, 6.7)), termOut = prog(t, 10.1, 10.4);
+  $('term').setAttribute('opacity', termIn * (1 - termOut));
+  $('term').setAttribute('transform', `translate(540 970) scale(${lerp(0.94, 1, termIn) * lerp(1, 0.9, termOut)}) translate(-540 -970)`);
+  const txt = typed(t);
+  const typeEl = $('type');
+  typeEl.innerHTML = '';
+  if (txt.startsWith('>> we make you ') && txt.length > 15) {
+    typeEl.appendChild(document.createTextNode(txt.slice(0, 15)));
+    const hl = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    hl.setAttribute('fill', '#38BDF8'); hl.textContent = txt.slice(15);
+    typeEl.appendChild(hl);
+  } else {
+    typeEl.textContent = txt;
+  }
+  const charW = 24.1; // Menlo at 40px
+  $('caret').setAttribute('x', 160 + txt.length * charW + 4);
+  const typing = (t > 6.7 && t < 8.1) || (t > 8.5 && t < 10.0);
+  $('caret').setAttribute('opacity', typing || Math.floor(t * 2.4) % 2 === 0 ? 1 : 0);
+
+  // ── end card
+  const endIn = out3(prog(t, 10.3, 11.0));
+  $('end').setAttribute('opacity', endIn);
+  const pulse = 1 + 0.03 * Math.sin((t - 10.3) * 3.2) * prog(t, 10.6, 11.2);
+  $('logo').setAttribute('transform', `translate(540 796) scale(${lerp(0.86, 1, endIn) * pulse}) translate(-540 -796)`);
+  $('logo').setAttribute('opacity', lerp(0.0, 1, endIn));
+  $('tag').setAttribute('opacity', out3(prog(t, 10.9, 11.4)));
+
+  // ── fade in from / out to black so the loop is seamless
+  $('fade').setAttribute('opacity', 1 - out3(prog(t, 0, 0.35)) + prog(t, 12.2, 12.6));
+}
+
+window.DURATION = DURATION;
+window.renderAt = t => render(clamp(t, 0, DURATION));
+
+// Live preview unless the renderer drives it (?render).
+if (new URLSearchParams(location.search).has('render')) {
+  document.body.classList.add('render');
+  render(0);
+} else {
+  const fit = () => {
+    const s = Math.min(innerWidth / 1080, innerHeight / 1920);
+    $('stage').style.transform = `scale(${s})`;
+    $('stage').style.margin = `${(1920 * s - 1920) / 2}px ${(1080 * s - 1080) / 2}px`;
+  };
+  addEventListener('resize', fit); fit();
+  const start = performance.now();
+  const loop = now => { render(((now - start) / 1000) % DURATION); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
