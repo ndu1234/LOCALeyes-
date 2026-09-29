@@ -1,0 +1,341 @@
+/* ── HOMEPAGE (index.html only) ──
+   Editorial layout in the LocalEyes black and sky blue: one light serif,
+   hairline rules, blue used as a flat accent — no glows or gradients.
+   Loaded after styles.css and scoped to body.home. */
+
+body.home {
+  /* Same palette as the rest of the site (see :root in styles.css). */
+  --paper:   var(--bg);
+  --ink:     var(--text);
+  --ink-2:   var(--gray);
+  --line:    var(--border);
+  --grey:    var(--bg-2);
+  --grey-2:  var(--bg-3);
+  /* How We Work band: warm earth tones instead of blue-steel, so it reads
+     natural rather than metallic. */
+  --dark:    #16130f;          /* warm near-black, like dark walnut */
+  --dark-2:  #b5aca0;          /* warm stone grey for body copy */
+  --dark-card: #1f1b16;
+  --dark-num:  #c8a97e;        /* muted sand */
+  --accent:  var(--sky);
+  --gutter:  clamp(20px, 7vw, 104px);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+}
+body.home h1,
+body.home h2,
+body.home h3 {
+  font-family: inherit;
+  font-weight: 300;
+  line-height: 1.2;
+}
+body.home :focus-visible,
+body.home a:focus-visible,
+body.home button:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+
+/* ── LAYOUT ── */
+.h-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.h-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 330px);
+  gap: 48px;
+  align-items: start;
+}
+.h-rule { border-top: 1px solid var(--line); }
+.h-aside { font-size: 15px; color: var(--ink-2); }
+.h-aside p { margin-bottom: 28px; }
+
+/* ── NAV ── */
+body.home nav {
+  height: 88px;
+  background: var(--paper);
+  border-bottom: 1px solid transparent;
+}
+body.home nav.scrolled {
+  background: var(--paper);
+  backdrop-filter: none;
+  border-color: var(--line);
+}
+body.home .logo {
+  gap: 0;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+body.home .nav-links { gap: 36px; }
+body.home .nav-links a {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 300;
+}
+body.home .nav-links a:hover { color: var(--accent); }
+body.home .nav-toggle { border-color: var(--line); border-radius: 0; }
+body.home .nav-toggle span,
+body.home .nav-toggle::before,
+body.home .nav-toggle::after { background: var(--ink); }
+
+/* ── BUTTONS ── */
+.h-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 38px;
+  border: 1px solid var(--ink);
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.h-btn:hover { background: var(--accent); border-color: var(--accent); color: #071019; }
+/* Solid sky fill, same as .btn-primary on the interior pages, minus the glow. */
+.h-btn-primary { background: var(--accent); border-color: var(--accent); color: #071019; font-weight: 400; }
+.h-btn-primary:hover { background: transparent; color: var(--accent); }
+.h-btn-block { width: 100%; padding: 8px 20px; font-size: 13px; }
+
+/* ── TYPE ── */
+.h-display {
+  font-size: clamp(44px, 6vw, 84px);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.h-heading { font-size: clamp(28px, 2.6vw, 36px); }
+.h-heading-lg { font-size: clamp(30px, 3.1vw, 44px); line-height: 1.35; }
+.h-heading-center { text-align: center; }
+
+/* ── INTRO ── */
+#intro { padding-top: 220px; padding-bottom: 140px; align-items: start; }
+#intro .h-aside { padding-top: 14px; }
+#intro .h-lead { font-size: 17px; line-height: 1.5; color: var(--ink); margin-bottom: 12px; }
+
+
+/* ── WHAT WE DO ── */
+#what-we-do { padding-top: 64px; padding-bottom: 120px; }
+.h-split-head { margin-bottom: 64px; }
+.h-cards {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 56px 32px;
+}
+.h-card {
+  display: flex;
+  flex-direction: column;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.h-card h3 { font-size: 21px; margin-bottom: 6px; }
+.h-card-meta { font-size: 12px; color: var(--ink-2); margin-bottom: 16px; letter-spacing: 0.02em; }
+.h-card p:not(.h-card-meta) { font-size: 15px; color: var(--ink-2); margin-bottom: 24px; flex: 1; }
+
+/* ── BANDS ── */
+.h-band { padding: 100px 0 120px; }
+.h-band-grey { background: var(--grey); }
+.h-band-dark { background: var(--dark); color: var(--ink); }
+
+/* ── GROWTH CHART ──
+   The SVG stretches to the box (preserveAspectRatio="none"), so strokes use
+   non-scaling-stroke and the dots/chips are HTML placed by --x/--y percent
+   of the same box — they stay round and legible at any width. */
+.h-chart {
+  position: relative;
+  height: clamp(300px, 34vw, 440px);
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+.h-chart-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.h-chart-area { fill: var(--accent); fill-opacity: 0.08; }
+.h-chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.h-chart-guide {
+  stroke: var(--accent);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.h-chart-marks { list-style: none; }
+.h-mark {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 0;
+  height: 0;
+}
+/* The dot sits on the line; the chip floats above it. */
+.h-mark::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--accent);
+}
+.h-mark-chip {
+  position: absolute;
+  bottom: 22px;
+  left: 0;
+  transform: translateX(-24px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid rgba(56,189,248,0.28);
+  border-radius: 10px;
+}
+.h-mark-end .h-mark-chip { left: auto; right: 0; transform: translateX(24px); }
+.h-mark-tag { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+
+/* Draw-in once the chart scrolls into view (main.js adds .in).
+   Wipe left to right with clip-path: a dash-offset draw doesn't work here,
+   because non-scaling-stroke measures dashes in screen pixels. */
+.h-chart.reveal { opacity: 1; transform: none; }
+.h-chart .h-chart-svg { clip-path: inset(-2px 100% -2px 0); transition: clip-path 1.8s cubic-bezier(.4,0,.2,1); }
+.h-chart .h-mark { opacity: 0; transition: opacity .6s ease var(--d); }
+.h-chart.in .h-chart-svg { clip-path: inset(-2px -2px -2px 0); }
+.h-chart.in .h-mark { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .h-chart .h-chart-svg,
+  .h-chart .h-mark { transition: none; }
+}
+
+/* Steps alternate left/right like the reference's testimonial column. */
+.h-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 64px;
+}
+.h-step {
+  width: min(100%, 520px);
+  padding: 28px 32px;
+  background: var(--dark-card);
+  border: 1px solid rgba(255,236,210,0.06);
+  border-radius: 14px;
+}
+.h-step:nth-child(even) { align-self: flex-end; }
+.h-step-num { display: block; font-size: 14px; font-style: italic; color: var(--dark-num); margin-bottom: 10px; }
+.h-step h3 { font-size: 21px; margin-bottom: 8px; color: #f3ece2; }
+.h-step p { font-size: 15px; color: var(--dark-2); }
+
+/* ── CONTACT ── */
+.h-contact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 48px;
+  align-items: end;
+  padding-top: 100px;
+  padding-bottom: 72px;
+}
+.h-contact .h-heading { margin-bottom: 16px; }
+.h-contact p { font-size: 15px; color: var(--ink-2); margin-bottom: 28px; }
+.h-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-style: normal;
+  font-size: 15px;
+}
+.h-contact-info a { color: var(--ink); text-decoration: none; }
+.h-contact-info a:hover { color: var(--accent); }
+
+/* ── FOOTER ── */
+body.home footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 28px var(--gutter) 40px;
+  border-top: none;
+  background: transparent;
+}
+body.home .footer-links { gap: 32px; }
+body.home .footer-links a,
+body.home #cookie-pref-link { font-size: 13px !important; color: var(--ink-2) !important; text-decoration: none; }
+body.home .footer-links a:hover { color: var(--ink) !important; }
+body.home .footer-copy { font-size: 13px; color: var(--ink-2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 980px) {
+  .h-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
+  body.home nav { height: 68px; }
+  body.home .nav-links {
+    top: 68px;
+    background: var(--paper);
+    backdrop-filter: none;
+    border-top: 1px solid var(--line);
+  }
+  body.home .nav-links li { border-bottom: 1px solid var(--line); }
+  body.home .nav-links li:last-child { border-bottom: 1px solid var(--line); margin-top: 0; }
+
+  .h-split,
+  .h-contact { grid-template-columns: minmax(0, 1fr); }
+  .h-split { gap: 28px; }
+
+  #intro { padding-top: 132px; padding-bottom: 80px; }
+  #intro .h-aside { padding-top: 0; }
+  .h-split-head { margin-bottom: 40px; }
+  #what-we-do { padding-bottom: 88px; }
+  .h-band { padding: 72px 0 88px; }
+  .h-steps { margin-top: 40px; }
+  .h-step { width: 100%; }
+  .h-contact { align-items: start; padding-top: 72px; }
+
+  /* Sticky Book a Call bar from main.js, restyled to match. */
+  body.home .mobile-cta-bar {
+    background: var(--paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: 1px solid var(--line);
+  }
+  body.home .mobile-cta-bar .btn {
+    background: var(--accent);
+    color: #071019;
+    border-radius: 100px;
+    font-family: inherit;
+    font-weight: 400;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .h-cards { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .h-step { padding: 24px; }
+  /* Phone: taller plot, one-line chips, so the three callouts clear each other. */
+  .h-chart { height: 360px; }
+  .h-mark-tag { display: none; }
+  .h-mark-chip { padding: 5px 10px; font-size: 12px; border-radius: 8px; bottom: 16px; transform: translateX(-16px); }
+  .h-mark-end .h-mark-chip { transform: translateX(16px); }
+  body.home footer { flex-direction: column; align-items: flex-start; }
+  body.home .footer-links { gap: 12px 24px; }
+}

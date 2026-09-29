@@ -51,7 +51,9 @@ document.querySelectorAll('.reveal').forEach((el, i) => {
 
 /* ══ STEP SLIDESHOWS (supports multiple per page) ══ */
 document.querySelectorAll('.steps-slideshow').forEach(slideshow => {
-  const wrap = slideshow.closest('section, div');
+  // Start from the parent: closest() matches the element itself, and the
+  // slideshow is a div, so the progress pips (its sibling) were never found.
+  const wrap = slideshow.parentElement.closest('section, div');
   const slides = Array.from(slideshow.querySelectorAll('.step-slide'));
   const progress = wrap ? wrap.querySelector('.steps-progress') : null;
   const pips = progress ? Array.from(progress.querySelectorAll('.step-pip')) : [];

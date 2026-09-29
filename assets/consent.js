@@ -16,7 +16,7 @@
     banner.id = 'consent-banner';
     banner.className = 'cookie-banner visible';
     banner.innerHTML =
-      '<p>This site uses first-party analytics to understand how visitors use it. No personal data is sold or shared. <a href="privacy.html">Learn more</a></p>'
+      '<p>This site uses first-party analytics to understand how visitors use it. No personal data is sold or shared. <a href="/privacy.html">Learn more</a></p>'
       + '<div class="cookie-banner-actions">'
       + '<button class="btn btn-ghost" id="consent-deny" style="padding:8px 16px;font-size:12.5px;">Decline</button>'
       + '<button class="btn btn-primary" id="consent-accept" style="padding:8px 16px;font-size:12.5px;">Accept</button>'

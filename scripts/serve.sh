@@ -21,4 +21,17 @@ echo ""
 (sleep 1 && open "http://localhost:$PORT") &
 
 cd "$DIR"
-python3 -m http.server "$PORT"
+# Plain `http.server` sends no Cache-Control, so Safari heuristically caches
+# files that haven't changed in a while (e.g. styles.css) and keeps serving
+# the stale copy after you edit it. no-cache makes it revalidate every load.
+python3 - "$PORT" <<'PY'
+import sys
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+class NoCache(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
+ThreadingHTTPServer(("", int(sys.argv[1])), NoCache).serve_forever()
+PY

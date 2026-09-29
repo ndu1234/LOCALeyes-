@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LocalEyes — Growth Agency for Local &amp; Online Businesses</title>
   <meta name="description" content="LocalEyes is a growth agency: paid ads, content creation, 3D virtual staging, creative strategy, and reporting — all under one roof." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/home.css" />
   <link rel="icon" type="image/png" href="assets/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
@@ -29,108 +28,145 @@
 
 <!-- NAV -->
 <nav id="nav">
-  <a href="index.html" class="logo"><img src="assets/logo-icon.png" alt="" class="logo-icon" /><span class="logo-text">Local<span>Eyes</span></span></a>
+  <a href="index.html" class="logo">Local<span>Eyes</span></a>
   <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu"><span></span></button>
   <ul class="nav-links">
-    <li><a href="index.html" class="active">Home</a></li>
     <li><a href="services/">Services</a></li>
     <li><a href="about.html">About</a></li>
-    <li class="nav-cta-item"><a href="contact.html" class="btn btn-primary">Book a Call</a></li>
+    <li><a href="case-studies.html">Case Studies</a></li>
+    <li><a href="contact.html">Contact</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
-<section id="hero">
-  <h1 class="hero-title"><span class="lead">Redesign </span>what is possible.</h1>
-  <p class="hero-title-secondary">Command your market.</p>
-  <p class="hero-sub">LocalEyes brings the vision, strategy, and execution to put your business in a position to lead. We unite brand strategy, creative, data, and technology to reshape your presence, create demand, and drive expansion. Every move serves one goal: making your business undeniable.</p>
-  <div class="hero-ctas">
-    <a href="contact.html" class="btn btn-primary">Book a Call</a>
-    <a href="services/" class="btn btn-ghost">See Our Services</a>
+<main>
+
+<!-- INTRO -->
+<section id="intro" class="h-wrap h-split">
+  <h1 class="h-display">Redesign what<br />is possible.</h1>
+  <div class="h-aside">
+    <p class="h-lead">The vision, strategy, and execution to put your business in a position to lead.</p>
+    <p>Brand, creative, data, and technology working as one &mdash; to reshape your presence, create demand, and drive expansion. One goal: making your business undeniable.</p>
+    <a href="contact.html" class="h-btn h-btn-primary">Book a Call</a>
   </div>
 </section>
 
-<!-- SERVICES -->
-<section id="services">
-  <div class="service-category">
-    <h2><a class="service-cat-title" href="services/paid-ads.html">Paid Ads Management.</a></h2>
-    <p class="service-cat-desc">Meta, Google, TikTok &amp; YouTube campaigns — full setup, targeting, optimization, and reporting.</p>
-    <ul class="service-items">
-      <li class="service-item">Meta Ads</li>
-      <li class="service-item">Google Ads</li>
-      <li class="service-item">TikTok Ads</li>
-      <li class="service-item">YouTube Ads</li>
-      <li class="service-item">Campaign Optimization</li>
-    </ul>
+<!-- WHAT WE DO -->
+<section id="what-we-do" class="h-wrap h-rule">
+  <div class="h-split h-split-head">
+    <h2 class="h-heading h-heading-lg">Everything your business<br />needs to grow</h2>
+    <p class="h-aside">Five services, one team. Pick what you need or let us build the full plan &mdash; either way, the people who write your strategy also run it.</p>
   </div>
+  <ul class="h-cards">
+    <li class="h-card">
+      <h3>Paid Ads Management</h3>
+      <p class="h-card-meta">Meta &middot; Google &middot; TikTok &middot; YouTube</p>
+      <p>Full setup, targeting, optimization, and reporting.</p>
+      <a href="services/paid-ads.html" class="h-btn h-btn-block">View Details</a>
+    </li>
+    <li class="h-card">
+      <h3>Content Creation</h3>
+      <p class="h-card-meta">Video &middot; Photo &middot; Testimonials</p>
+      <p>Real creators making authentic content for your brand.</p>
+      <a href="services/ugc-content.html" class="h-btn h-btn-block">View Details</a>
+    </li>
+    <li class="h-card">
+      <h3>Creative Strategy</h3>
+      <p class="h-card-meta">Hooks &middot; Copy &middot; A/B Testing</p>
+      <p>The thinking behind what runs &mdash; briefs, scripts, and testing frameworks.</p>
+      <a href="services/creative-strategy.html" class="h-btn h-btn-block">View Details</a>
+    </li>
+    <li class="h-card">
+      <h3>Analytics &amp; Reporting</h3>
+      <p class="h-card-meta">ROAS &middot; Dashboards &middot; Monthly Reports</p>
+      <p>Know exactly where the money went and what it brought back.</p>
+      <a href="services/analytics-reporting.html" class="h-btn h-btn-block">View Details</a>
+    </li>
+    <li class="h-card">
+      <h3>3D Virtual Staging</h3>
+      <p class="h-card-meta">Real Estate &middot; Ready in Days</p>
+      <p>Photorealistic furniture for empty properties &mdash; no movers, no staging costs.</p>
+      <a href="services/virtual-staging.html" class="h-btn h-btn-block">View Details</a>
+    </li>
+  </ul>
+</section>
 
-  <div class="service-category">
-    <h2><a class="service-cat-title" href="services/ugc-content.html">Content Creation.</a></h2>
-    <p class="service-cat-desc">Real creators making authentic content for your brand — video, photo, and written testimonials.</p>
-    <ul class="service-items">
-      <li class="service-item">Video Testimonials</li>
-      <li class="service-item">Product Photography</li>
-      <li class="service-item">Written Testimonials</li>
-      <li class="service-item">Day-in-the-Life</li>
-      <li class="service-item">Content Strategy</li>
-    </ul>
-  </div>
-
-  <div class="service-category">
-    <h2><a class="service-cat-title" href="services/creative-strategy.html">Creative Strategy.</a></h2>
-    <p class="service-cat-desc">Ad hooks, copywriting, content briefs, and A/B testing frameworks — the thinking behind what runs.</p>
-    <ul class="service-items">
-      <li class="service-item">Ad Hooks</li>
-      <li class="service-item">Copywriting</li>
-      <li class="service-item">Content Briefs</li>
-      <li class="service-item">A/B Testing</li>
-      <li class="service-item">Brand Strategy</li>
-    </ul>
-  </div>
-
-  <div class="service-category">
-    <h2><a class="service-cat-title" href="services/analytics-reporting.html">Analytics &amp; Reporting.</a></h2>
-    <p class="service-cat-desc">ROAS tracking, campaign dashboards, and monthly performance reports for every client.</p>
-    <ul class="service-items">
-      <li class="service-item">ROAS Tracking</li>
-      <li class="service-item">Campaign Dashboards</li>
-      <li class="service-item">Monthly Reports</li>
-      <li class="service-item">Attribution Modeling</li>
-      <li class="service-item">Conversion Tracking</li>
-    </ul>
-  </div>
-
-  <div class="service-category">
-    <h2><a class="service-cat-title" href="services/virtual-staging.html">3D Virtual Staging.</a></h2>
-    <p class="service-cat-desc">Photorealistic virtual furniture for empty properties — no movers, no staging costs, ready in days.</p>
-    <ul class="service-items">
-      <li class="service-item">Virtual Furniture</li>
-      <li class="service-item">Property Visualization</li>
-      <li class="service-item">Interior Design</li>
-      <li class="service-item">Real Estate Marketing</li>
-      <li class="service-item">Photorealistic Rendering</li>
-    </ul>
+<!-- GROWTH CHART -->
+<section id="growth" class="h-band h-band-grey">
+  <div class="h-wrap">
+    <div class="h-split h-split-head">
+      <h2 class="h-heading h-heading-lg">Growth that compounds,<br />one campaign at a time</h2>
+      <p class="h-aside">Launch on the platforms that fit, find the creative that works, then put the budget behind it &mdash; across Meta, Google, TikTok, and YouTube.</p>
+    </div>
+    <!-- Illustrative curve, not client data: the shape of the process, no axis values. -->
+    <figure class="h-chart reveal" aria-label="Illustrative growth curve rising in steps: launch, first winning creative, then scaling across platforms.">
+      <svg class="h-chart-svg" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+        <line class="h-chart-guide" x1="240" y1="362.4" x2="240" y2="400" />
+        <line class="h-chart-guide" x1="624" y1="279.7" x2="624" y2="400" />
+        <line class="h-chart-guide" x1="1008" y1="106.7" x2="1008" y2="400" />
+        <path class="h-chart-area" d="M0 385 L48 373.7 L96 388.7 L144 377.4 L192 377.4 L240 362.4 L288 369.9 L336 354.9 L384 354.9 L432 343.6 L480 358.6 L528 347.4 L576 347.4 L624 279.7 L672 268.4 L720 294.7 L768 279.7 L816 272.2 L864 204.5 L912 197 L960 174.4 L1008 106.7 L1056 110.5 L1104 87.9 L1152 87.9 L1200 31.5 L1200 400 L0 400 Z" />
+        <path class="h-chart-line" pathLength="1" d="M0 385 L48 373.7 L96 388.7 L144 377.4 L192 377.4 L240 362.4 L288 369.9 L336 354.9 L384 354.9 L432 343.6 L480 358.6 L528 347.4 L576 347.4 L624 279.7 L672 268.4 L720 294.7 L768 279.7 L816 272.2 L864 204.5 L912 197 L960 174.4 L1008 106.7 L1056 110.5 L1104 87.9 L1152 87.9 L1200 31.5" />
+      </svg>
+      <ol class="h-chart-marks">
+        <li class="h-mark" style="--x:20%;--y:90.6%;--d:.5s"><span class="h-mark-chip"><span class="h-mark-tag">Meta</span>Campaign launched</span></li>
+        <li class="h-mark" style="--x:52%;--y:69.9%;--d:1s"><span class="h-mark-chip"><span class="h-mark-tag">TikTok</span>Winning creative found</span></li>
+        <li class="h-mark h-mark-end" style="--x:84%;--y:26.7%;--d:1.5s"><span class="h-mark-chip"><span class="h-mark-tag">Google + YouTube</span>Scaled what works</span></li>
+      </ol>
+    </figure>
   </div>
 </section>
 
-<!-- CTA -->
-<section id="cta">
-  <h2 class="cta-title">Ready to grow?</h2>
-  <p class="cta-sub">Book a free strategy call and we'll map out a growth plan for your business.</p>
-  <div class="cta-ctas">
-    <a href="contact.html" class="btn btn-primary">Book a Call</a>
+<!-- PROCESS -->
+<section id="process" class="h-band h-band-dark">
+  <div class="h-wrap">
+    <h2 class="h-heading h-heading-center">How We Work</h2>
+    <ol class="h-steps">
+      <li class="h-step">
+        <span class="h-step-num">01</span>
+        <h3>Share Your Brief</h3>
+        <p>Tell us about your business, your customers, and your goals. Takes about 10 minutes.</p>
+      </li>
+      <li class="h-step">
+        <span class="h-step-num">02</span>
+        <h3>We Build the Plan</h3>
+        <p>Strategy, creative mix, and platform selection &mdash; mapped out before anything gets produced.</p>
+      </li>
+      <li class="h-step">
+        <span class="h-step-num">03</span>
+        <h3>Produce &amp; Launch</h3>
+        <p>Content gets produced, you approve it, and campaigns go live across the right platforms.</p>
+      </li>
+      <li class="h-step">
+        <span class="h-step-num">04</span>
+        <h3>Track &amp; Scale</h3>
+        <p>We report weekly, kill what&rsquo;s underperforming, and scale what&rsquo;s working.</p>
+      </li>
+    </ol>
   </div>
 </section>
+
+<!-- CONTACT -->
+<section id="get-started" class="h-wrap h-contact">
+  <div>
+    <h2 class="h-heading">Ready to grow?<br />Book a free strategy call.</h2>
+    <p>We&rsquo;ll map out a growth plan for your business &mdash; no commitment.</p>
+    <a href="contact.html" class="h-btn h-btn-primary">Book a Call</a>
+  </div>
+  <address class="h-contact-info">
+    <a href="mailto:info@thelocaleyes.net">info@thelocaleyes.net</a>
+    <a href="contact.html">Contact form</a>
+  </address>
+</section>
+
+</main>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-brand"><img src="assets/logo-icon.png" alt="" class="footer-logo" /><p class="footer-copy">2026 LOCALeyes. All rights reserved.</p></div>
+<footer class="h-wrap">
   <ul class="footer-links">
     <li><a href="services/">Services</a></li>
-    <li><a href="contact.html">Contact</a></li>
     <li><a href="privacy.html">Privacy Policy</a></li>
     <li><a href="terms.html">Terms &amp; Conditions</a></li>
   </ul>
+  <p class="footer-copy">&copy; 2026 LocalEyes</p>
 </footer>
 
 <script src="assets/supabase-config.js"></script>
